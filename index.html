@@ -13,50 +13,49 @@ body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;
 .nav{background:#221208;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:54px;border-bottom:2px solid #B8935A;position:sticky;top:0;z-index:200;gap:10px;}
 .nav-logo img{height:30px;filter:brightness(0) invert(1);display:block;}
 .nav-tabs{display:flex;gap:3px;flex-shrink:0;}
-.nav-tab{padding:6px 14px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.nav-tab{padding:6px 16px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
 .nav-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
-.nav-select{padding:5px 8px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;outline:none;max-width:90px;}
+.nav-select{padding:5px 8px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;outline:none;max-width:90px;}
 .save-btn{padding:6px 12px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .save-btn:hover{background:#B8935A;color:#221208;}
 .save-btn.saved{background:#3D6636;color:#fff;border-color:#3D6636;}
 .save-btn.error{background:#8B3A2E;color:#fff;border-color:#8B3A2E;}
 
-/* ── LAYOUT ── */
-.main{display:flex;min-height:calc(100vh - 54px);}
-.sidebar{width:280px;min-width:280px;background:#fff;border-right:1px solid #DDD0BA;padding:18px 15px;overflow-y:auto;transition:transform .25s;}
-.content{flex:1;padding:20px 16px;overflow-y:auto;min-width:0;}
+/* ── VIEWS ── */
+.view{display:none;padding:24px 20px;}
+.view.active{display:block;}
 
-/* Mobile sidebar toggle */
-.sidebar-toggle{display:none;background:#B8935A;border:none;color:#221208;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:6px 12px;border-radius:3px;cursor:pointer;margin-bottom:14px;}
-
-/* ── SIDEBAR ── */
-.s-section{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#B8935A;margin:18px 0 9px;padding-top:12px;border-top:1px solid #EDE3D4;}
+/* ── EDIT FORM ── */
+.form-wrap{max-width:680px;margin:0 auto;}
+.s-section{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#B8935A;margin:22px 0 10px;padding-top:14px;border-top:1px solid #EDE3D4;}
 .s-section:first-child{margin-top:0;padding-top:0;border-top:none;}
-.fg{margin-bottom:12px;}
+.fg{margin-bottom:13px;}
 .fg label{display:block;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;font-weight:600;margin-bottom:4px;}
-.fg input,.fg select,.fg textarea{width:100%;padding:7px 9px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;color:#2C2416;background:#FDFAF5;outline:none;transition:border-color .15s;}
+.fg input,.fg select,.fg textarea{width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;color:#2C2416;background:#FDFAF5;outline:none;transition:border-color .15s;}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#8B7355;background:#fff;}
 .fg textarea{resize:vertical;line-height:1.6;}
-.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.fg-row3{display:grid;grid-template-columns:auto 1fr 1fr;gap:7px;align-items:center;}
-.fg-row3 .vname{font-family:'Lora',serif;font-size:11px;color:#2C2416;white-space:nowrap;}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg-row3{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;}
 .hint{font-size:9px;color:#A08060;font-style:italic;margin-top:3px;}
-.villa-box{border:1px solid #EDE3D4;border-radius:4px;padding:9px 10px;margin-bottom:9px;background:#FDFAF5;}
-.villa-box-hd{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#5C3D2E;margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.villa-box{border:1px solid #EDE3D4;border-radius:4px;padding:10px 12px;margin-bottom:10px;background:#FDFAF5;}
+.villa-box-hd{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
 .villa-box-hd input{width:auto;}
-.villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .villa-fields.disabled{opacity:.4;pointer-events:none;}
-.radio-grp{display:flex;flex-direction:column;gap:5px;margin-top:2px;}
-.radio-grp label{font-size:11px;text-transform:none;letter-spacing:0;color:#333;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Lora',serif;}
+.radio-grp{display:flex;gap:16px;margin-top:4px;flex-wrap:wrap;}
+.radio-grp label{font-size:12px;text-transform:none;letter-spacing:0;color:#333;display:flex;align-items:center;gap:5px;cursor:pointer;font-family:'Lora',serif;}
 .radio-grp input{width:auto;}
-.print-btn{width:100%;padding:9px;background:#3a3228;color:#fff;border:none;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-top:6px;transition:background .18s;}
-.print-btn:hover{background:#5a4e42;}
-.print-btn.gold{background:linear-gradient(135deg,#221208,#4A2E1A);}
-.print-btn.gold:hover{background:linear-gradient(135deg,#4A2E1A,#7A4E2E);}
+.action-row{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap;}
+.action-btn{flex:1;min-width:140px;padding:11px;border:none;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;}
+.action-btn.dark{background:#3a3228;color:#fff;}
+.action-btn.dark:hover{background:#5a4e42;}
+.action-btn.gold{background:linear-gradient(135deg,#221208,#4A2E1A);color:#F5ECD7;}
+.action-btn.gold:hover{background:linear-gradient(135deg,#4A2E1A,#7A4E2E);}
 
 /* ── OFFER PREVIEW ── */
-.email-wrap{background:#e8e3dc;padding:16px 8px;border-radius:4px;overflow-x:auto;}
+.offer-wrap{max-width:620px;margin:0 auto;}
+.email-wrap{background:#e8e3dc;padding:16px 10px;border-radius:4px;overflow-x:auto;}
 .email{background:#fff;width:560px;margin:0 auto;font-family:Verdana,Geneva,sans-serif;font-size:10px;color:#2a2520;}
 .e-header{background:#3a3228;text-align:center;padding:22px 32px 18px;}
 .e-logo{max-width:56px;margin:0 auto 11px;display:block;filter:brightness(0) invert(1);}
@@ -100,7 +99,8 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}
 
 /* ── CONTRACT ── */
-.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:32px 28px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;box-shadow:0 4px 20px rgba(34,18,8,.08);}
+.contract-wrap{max-width:760px;margin:0 auto;}
+.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:40px 36px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;box-shadow:0 4px 20px rgba(34,18,8,.08);}
 .c-hd{text-align:center;margin-bottom:26px;border-bottom:2px solid #221208;padding-bottom:20px;}
 .c-hd-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}
 .c-hd-sub{font-family:'Lora',serif;font-size:11px;color:#8B7355;font-style:italic;}
@@ -131,46 +131,31 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}
 .bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}
 .bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}
-.sec-label{font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#B8935A;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid #EDE3D4;}
+.view-label{font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#B8935A;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #EDE3D4;}
 
-/* ── MOBILE ── */
-@media(max-width:768px){
-  .nav{padding:0 12px;height:50px;}
-  .nav-title{display:none;}
-  .main{flex-direction:column;}
-  .sidebar{width:100%;min-width:0;border-right:none;border-bottom:1px solid #DDD0BA;padding:14px 14px 8px;display:none;}
-  .sidebar.open{display:block;}
-  .sidebar-toggle{display:block;}
-  .content{padding:14px 12px;}
-  .email-wrap{padding:10px 4px;}
-  .email{width:100%;min-width:300px;}
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .nav-tab{padding:5px 10px;font-size:8px;}
+  .fg-row{grid-template-columns:1fr;}
+  .villa-fields{grid-template-columns:1fr 1fr;}
   .c-parties{grid-template-columns:1fr;}
   .c-party:first-child{border-right:none;border-bottom:1px solid #B8935A;}
-  .c-sigs-grid{grid-template-columns:1fr;gap:28px;}
-  .contract-doc{padding:20px 16px;}
-  .fg-row{grid-template-columns:1fr 1fr;}
-  .nav-actions{gap:4px;}
-  .nav-select{max-width:75px;font-size:7.5px;}
-  .save-btn{font-size:7.5px;padding:5px 9px;}
-  .c-datebar{font-size:9.5px;}
-}
-@media(max-width:420px){
-  .fg-row{grid-template-columns:1fr;}
-  .c-table{font-size:10px;}
-  .c-table thead th{font-size:7.5px;padding:6px 8px;}
-  .c-table tbody td{padding:5px 8px;}
+  .c-sigs-grid{grid-template-columns:1fr;gap:26px;}
+  .contract-doc{padding:20px 14px;}
+  .action-row{flex-direction:column;}
+  .radio-grp{flex-direction:column;gap:6px;}
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <div class="nav">
   <div class="nav-logo">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('offer')">Offer</button>
+    <button class="nav-tab active" onclick="switchTab('edit')">Edit</button>
+    <button class="nav-tab" onclick="switchTab('offer')">Offer</button>
     <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
   </div>
   <div class="nav-actions">
@@ -184,18 +169,21 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   </div>
 </div>
 
-<div class="main">
-
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
+<!-- ═══ EDIT VIEW ═══ -->
+<div class="view active" id="view-edit">
+<div class="form-wrap">
 
   <div class="s-section">Contact</div>
-  <div class="fg"><label>Organizer Name</label><input type="text" id="f-name" oninput="render()"></div>
-  <div class="fg"><label>Company</label><input type="text" id="f-company" oninput="render()"></div>
-  <div class="fg"><label>Address</label><input type="text" id="f-address" placeholder="Optional" oninput="render()"></div>
-  <div class="fg"><label>Phone</label><input type="text" id="f-phone" placeholder="Optional" oninput="render()"></div>
-  <div class="fg"><label>Website</label><input type="text" id="f-website" placeholder="Optional" oninput="render()"></div>
-  <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title" placeholder="Optional" oninput="render()"></div>
+  <div class="fg-row">
+    <div class="fg"><label>Organizer Name</label><input type="text" id="f-name" oninput="render()"></div>
+    <div class="fg"><label>Company</label><input type="text" id="f-company" oninput="render()"></div>
+  </div>
+  <div class="fg"><label>Address</label><input type="text" id="f-address" oninput="render()"></div>
+  <div class="fg-row">
+    <div class="fg"><label>Phone</label><input type="text" id="f-phone" oninput="render()"></div>
+    <div class="fg"><label>Website</label><input type="text" id="f-website" oninput="render()"></div>
+  </div>
+  <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title" oninput="render()"></div>
 
   <div class="s-section">Intro Text</div>
   <div class="fg"><label>Opening paragraph</label>
@@ -207,11 +195,13 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="fg"><label>Check-in</label><input type="date" id="f-checkin" oninput="render()"></div>
     <div class="fg"><label>Check-out</label><input type="date" id="f-checkout" oninput="render()"></div>
   </div>
-  <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate" oninput="render()"></div>
-  <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil" oninput="render()"><div class="hint">Default: 7 days after offer date</div></div>
+  <div class="fg-row">
+    <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate" oninput="render()"></div>
+    <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil" oninput="render()"><div class="hint">Default: 7 days after offer date</div></div>
+  </div>
 
   <div class="s-section">Retreat Details</div>
-  <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname" placeholder="e.g. Healing Retreat" oninput="render()"></div>
+  <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname" oninput="render()"></div>
   <div class="fg-row">
     <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50" oninput="render()"></div>
     <div class="fg"><label>Facilitators</label><input type="number" id="f-facilitators" value="1" min="0" max="10" oninput="render()"></div>
@@ -258,21 +248,25 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <option value="13">13</option><option value="14">14</option><option value="15" selected>15</option>
     </select>
   </div>
-  <div class="fg"><label>Early Bird Discount % (0 = none)</label>
-    <input type="number" id="f-discount" value="20" min="0" max="20" oninput="render()">
-    <div class="hint">Max 20%.</div>
-  </div>
-  <div class="fg"><label>Individual Room Discount</label>
-    <div class="fg-row">
-      <div class="fg" style="margin-bottom:0"><label># of Rooms</label>
-        <select id="f-disc-room" onchange="render()">
-          <option value="0">None</option><option value="1">1 room</option><option value="2">2 rooms</option>
-          <option value="3">3 rooms</option><option value="4">4 rooms</option><option value="5">5 rooms</option>
-        </select>
-      </div>
-      <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-disc-pct" value="0" min="0" max="50" oninput="render()"></div>
+  <div class="fg-row">
+    <div class="fg"><label>Early Bird Discount %</label>
+      <input type="number" id="f-discount" value="5" min="0" max="20" oninput="render()">
+      <div class="hint">Max 20%.</div>
     </div>
-    <div class="hint">Max 50%.</div>
+    <div class="fg"><label>Individual Room Discount</label>
+      <div class="fg-row" style="gap:6px;">
+        <div><label style="font-size:8px;"># Rooms</label>
+          <select id="f-disc-room" onchange="render()">
+            <option value="0">None</option><option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+        </div>
+        <div><label style="font-size:8px;">Discount %</label>
+          <input type="number" id="f-disc-pct" value="0" min="0" max="50" oninput="render()">
+        </div>
+      </div>
+      <div class="hint">Max 50%.</div>
+    </div>
   </div>
   <div class="fg"><label>Show Price Totals</label>
     <div class="radio-grp">
@@ -284,39 +278,58 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
   <div class="s-section">Offer Note</div>
   <div class="fg"><label>Package note</label>
-    <textarea id="f-note" rows="5" oninput="render()">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest. You can also increase your own profitability by offering guests the option to share a Gladak or a Villa — keeping your accommodation costs fixed while freeing up margin on your retreat pricing.</textarea>
+    <textarea id="f-note" rows="4" oninput="render()">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest. You can also increase your own profitability by offering guests the option to share a Gladak or a Villa — keeping your accommodation costs fixed while freeing up margin on your retreat pricing.</textarea>
   </div>
-  <div class="hint" style="margin-top:-8px;margin-bottom:12px;">Use {guests} to auto-insert guest count.</div>
-  <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid" value="2026-04-07" oninput="render()"></div>
-
-  <div class="s-section">Deposit</div>
-  <div class="fg"><label>Deposit % (0 = none)</label>
-    <input type="number" id="f-deposit" value="0" min="0" max="100" oninput="render()">
-    <div class="hint">Drives contract payment schedule.</div>
+  <div class="hint" style="margin-top:-9px;margin-bottom:13px;">Use {guests} to auto-insert guest count.</div>
+  <div class="fg-row">
+    <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid" oninput="render()"></div>
+    <div class="fg"><label>Deposit % (0 = none)</label>
+      <input type="number" id="f-deposit" value="0" min="0" max="100" oninput="render()">
+      <div class="hint">Drives contract payment schedule.</div>
+    </div>
   </div>
 
   <div class="s-section">Contract</div>
   <div class="fg"><label>IDR Exchange Rate</label>
-    <div style="display:flex;align-items:center;gap:7px;">
-      <span style="font-size:11px;color:#5C3D2E;font-family:'Lora',serif;white-space:nowrap;">1 USD =</span>
-      <input type="number" id="f-idrrate" value="17085" style="width:100px;" oninput="render()">
-      <span style="font-size:11px;color:#5C3D2E;font-family:'Lora',serif;">IDR</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;white-space:nowrap;">1 USD =</span>
+      <input type="number" id="f-idrrate" value="17085" style="max-width:130px;" oninput="render()">
+      <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;">IDR</span>
     </div>
-    <div class="hint">XE.com Apr 13 2026.</div>
+    <div class="hint">XE.com Apr 13 2026. Edit if needed.</div>
   </div>
 
-  <div class="s-section">Export</div>
-  <button class="print-btn" onclick="printOffer()">Print Offer PDF</button>
-  <button class="print-btn gold" onclick="printContract()" style="margin-top:7px;">Print Contract PDF</button>
+  <div class="action-row">
+    <button class="action-btn dark" onclick="switchTab('offer')">Preview Offer →</button>
+    <button class="action-btn gold" onclick="switchTab('contract')">Preview Contract →</button>
+  </div>
 
-</div><!-- end sidebar -->
+</div>
+</div><!-- end edit view -->
 
-<!-- CONTENT -->
-<div class="content" id="content-area">
-  <!-- rendered by JS -->
+<!-- ═══ OFFER VIEW ═══ -->
+<div class="view" id="view-offer">
+  <div class="offer-wrap">
+    <div class="view-label">Offer Preview</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="action-btn dark" style="flex:none;padding:8px 18px;" onclick="switchTab('edit')">← Edit</button>
+      <button class="action-btn gold" style="flex:none;padding:8px 18px;" onclick="printOffer()">Print / Save PDF</button>
+    </div>
+    <div class="email-wrap"><div class="email" id="offer-output"></div></div>
+  </div>
 </div>
 
-</div><!-- end main -->
+<!-- ═══ CONTRACT VIEW ═══ -->
+<div class="view" id="view-contract">
+  <div class="contract-wrap">
+    <div class="view-label">Contract Preview</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="action-btn dark" style="flex:none;padding:8px 18px;" onclick="switchTab('edit')">← Edit</button>
+      <button class="action-btn gold" style="flex:none;padding:8px 18px;" onclick="printContract()">Print / Save PDF</button>
+    </div>
+    <div id="contract-output"></div>
+  </div>
+</div>
 
 <script>
 const $=id=>document.getElementById(id);
@@ -327,19 +340,20 @@ const todayStr=()=>new Date().toISOString().split('T')[0];
 const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
 const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
 
-let activeTab='offer';
+let activeTab='edit';
 function switchTab(t){
   activeTab=t;
-  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['offer','contract'][i]===t));
-  render();
+  ['edit','offer','contract'].forEach(v=>{
+    $(`view-${v}`).classList.toggle('active',v===t);
+  });
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>{
+    b.classList.toggle('active',['edit','offer','contract'][i]===t);
+  });
+  if(t==='offer') renderOffer();
+  if(t==='contract') renderContract();
 }
 
-function toggleSidebar(){
-  $('sidebar').classList.toggle('open');
-  $('sidebar-toggle').textContent=$('sidebar').classList.contains('open')?'▲ Hide Settings':'▼ Edit Details';
-}
-
-function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);render();}
+function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);}
 
 function pricing(){
   const bales=parseInt($('f-rooms').value)||0;
@@ -380,7 +394,7 @@ function payments(total,checkin,depositPct){
   };
 }
 
-function offerHTML(){
+function buildOfferHTML(){
   const name=$('f-name').value||'';
   const company=$('f-company').value;
   const address=$('f-address').value;
@@ -406,12 +420,12 @@ function offerHTML(){
   const introParagraphs=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteResolved=noteText.replace(/\{guests\}/g,totalPeople);
   const noteParagraphs=noteResolved.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
-  const villaRateLbl=(orig,disc)=>orig!==disc?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)}`:`USD ${fmtN(disc)}`;
+  const vRateLbl=(orig,disc)=>orig!==disc?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)}`:`USD ${fmtN(disc)}`;
   const villaNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
   const villaBodyLine=villaNames.length>0?` We are pleased to include ${villaNames.join(' and ')} in this package.`:'';
   const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
-  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${villaRateLbl(P.parvOrig,P.parvDisc)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
-  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${villaRateLbl(P.buddOrig,P.buddDisc)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
+  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vRateLbl(P.parvOrig,P.parvDisc)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vRateLbl(P.buddOrig,P.buddDisc)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
   const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
   const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
   const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
@@ -464,7 +478,7 @@ function offerHTML(){
   <div class="e-footer-contact">Ubuntu Bali &nbsp;·&nbsp; namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</div></div>`;
 }
 
-function contractHTML(){
+function buildContractHTML(){
   const name=$('f-name').value||'___________';
   const company=$('f-company').value||'___________';
   const address=$('f-address').value||'___________';
@@ -593,22 +607,15 @@ function contractHTML(){
 </div>`;
 }
 
-function render(){
-  const area=$('content-area');
-  const toggle=`<button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebar-toggle">▼ Edit Details</button>`;
-  if(activeTab==='offer'){
-    area.innerHTML=toggle+`<div class="sec-label">Offer Preview</div><div class="email-wrap"><div class="email">${offerHTML()}</div></div>`;
-  } else {
-    area.innerHTML=toggle+`<div class="sec-label">Contract Preview</div>${contractHTML()}`;
-  }
-}
+function renderOffer(){$('offer-output').innerHTML=buildOfferHTML();}
+function renderContract(){$('contract-output').innerHTML=buildContractHTML();}
+function render(){}
 
-const OFFER_STYLES=`.email{background:#fff;width:560px;margin:0 auto;font-family:Verdana,Geneva,sans-serif;font-size:10px;color:#2a2520;}body{background:#e8e3dc;padding:16px;margin:0;font-family:Verdana,Geneva,sans-serif;}.e-header{background:#3a3228;text-align:center;padding:22px 32px 18px;}.e-logo{max-width:56px;margin:0 auto 11px;display:block;filter:brightness(0) invert(1);}.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:4px;}.e-header-line{width:34px;height:1px;background:#c8b89a;margin:6px auto;opacity:.6;}.e-header-date,.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}.e-body{padding:16px 32px 0;line-height:1.9;color:#2a2520;}.e-body p{margin-bottom:9px;}.e-badge{margin:11px 32px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:7px 12px;text-align:center;font-size:10px;color:#3a3228;}.e-package{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}.e-pkg-hd{background:#3a3228;padding:10px 14px;}.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}.e-pkg-body{padding:0 14px;}table.ptable{width:100%;border-collapse:collapse;font-size:10px;}.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}.pt-item td{padding:5px 0;border-top:1px solid #eee;}.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}.pt-divider td{padding:0 0 5px;}.pt-divline{height:1px;background:#eee;font-size:1px;}.pt-grand td{padding:2px 0;font-weight:bold;}.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}.e-note{margin:9px 32px 0;border-left:3px solid #c8b89a;padding:5px 10px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}.e-note p{margin-bottom:5px;}.e-included{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;padding:10px 14px 6px;}.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-included table{width:100%;border-collapse:collapse;font-size:10px;}.e-included td{padding:2px 0;vertical-align:top;width:50%;}.e-also{margin:13px 32px 0;}.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}.e-closing{padding:18px 32px 0;line-height:1.9;font-size:10px;}.e-closing p{margin-bottom:5px;}.e-footer-band{background:#3a3228;margin-top:24px;padding:14px 32px 18px;text-align:center;}.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:5px;letter-spacing:1px;}.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}@media print{body{background:#e8e3dc;padding:0;}}`;
+const OFFER_STYLES=`body{font-family:Verdana,Geneva,sans-serif;font-size:10px;background:#e8e3dc;margin:0;padding:16px;color:#2a2520;}.email{background:#fff;width:560px;margin:0 auto;}.e-header{background:#3a3228;text-align:center;padding:22px 32px 18px;}.e-logo{max-width:56px;margin:0 auto 11px;display:block;filter:brightness(0) invert(1);}.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:4px;}.e-header-line{width:34px;height:1px;background:#c8b89a;margin:6px auto;opacity:.6;}.e-header-date,.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}.e-body{padding:16px 32px 0;line-height:1.9;color:#2a2520;}.e-body p{margin-bottom:9px;}.e-badge{margin:11px 32px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:7px 12px;text-align:center;font-size:10px;color:#3a3228;}.e-package{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}.e-pkg-hd{background:#3a3228;padding:10px 14px;}.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}.e-pkg-body{padding:0 14px;}table.ptable{width:100%;border-collapse:collapse;font-size:10px;}.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}.pt-item td{padding:5px 0;border-top:1px solid #eee;}.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}.pt-divider td{padding:0 0 5px;}.pt-divline{height:1px;background:#eee;font-size:1px;}.pt-grand td{padding:2px 0;font-weight:bold;}.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}.e-note{margin:9px 32px 0;border-left:3px solid #c8b89a;padding:5px 10px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}.e-note p{margin-bottom:5px;}.e-included{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;padding:10px 14px 6px;}.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-included table{width:100%;border-collapse:collapse;font-size:10px;}.e-included td{padding:2px 0;vertical-align:top;width:50%;}.e-also{margin:13px 32px 0;}.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}.e-closing{padding:18px 32px 0;line-height:1.9;font-size:10px;}.e-closing p{margin-bottom:5px;}.e-footer-band{background:#3a3228;margin-top:24px;padding:14px 32px 18px;text-align:center;}.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:5px;letter-spacing:1px;}.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}@media print{body{padding:0;}}`;
+const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Lora',serif;background:#F0E9DF;padding:20px;color:#1A1208;}@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:40px 36px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;}.c-hd{text-align:center;margin-bottom:26px;border-bottom:2px solid #221208;padding-bottom:20px;}.c-hd-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}.c-hd-sub{font-family:'Lora',serif;font-size:11px;color:#8B7355;font-style:italic;}.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:22px;}.c-party{padding:13px 16px;background:#FDFAF5;}.c-party:first-child{border-right:1px solid #B8935A;}.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;}.c-party p{font-size:11.5px;margin-bottom:3px;}.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:9px 0;margin-bottom:22px;color:#221208;}.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:9px 14px;margin-bottom:22px;font-size:11.5px;color:#3D2B1F;line-height:1.65;}.c-sec{margin-bottom:20px;}.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:4px;margin-bottom:11px;}.c-sec p{margin-bottom:7px;font-size:12px;}.c-sec ul{margin:0 0 9px 18px;font-size:12px;}.c-sec ul li{margin-bottom:3px;}.c-table{width:100%;border-collapse:collapse;font-size:11.5px;margin:9px 0;}.c-table thead tr{background:#221208;}.c-table thead th{padding:7px 11px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.08em;text-align:left;font-weight:700;}.c-table tbody tr:nth-child(odd){background:#FDFAF5;}.c-table tbody tr:nth-child(even){background:#F5ECD7;}.c-table tbody td{padding:6px 11px;border-bottom:1px solid #EDE3D4;}.c-sigs{border-top:2px solid #221208;padding-top:22px;}.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:22px;}.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;}.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:10px;}.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:16px 0 5px;}.c-sig-note{font-size:10.5px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}.bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}.bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}@media print{body{padding:0;}}`;
 
-const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Lora',serif;background:#F0E9DF;padding:20px;color:#1A1208;}@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:40px 36px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;}.c-hd{text-align:center;margin-bottom:26px;border-bottom:2px solid #221208;padding-bottom:20px;}.c-hd-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}.c-hd-sub{font-family:'Lora',serif;font-size:11px;color:#8B7355;font-style:italic;}.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:22px;}.c-party{padding:13px 16px;background:#FDFAF5;}.c-party:first-child{border-right:1px solid #B8935A;}.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;}.c-party p{font-size:11.5px;margin-bottom:3px;}.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:9px 0;margin-bottom:22px;color:#221208;}.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:9px 14px;margin-bottom:22px;font-size:11.5px;color:#3D2B1F;line-height:1.65;}.c-sec{margin-bottom:20px;}.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:4px;margin-bottom:11px;}.c-sec p{margin-bottom:7px;font-size:12px;}.c-sec ul{margin:0 0 9px 18px;font-size:12px;}.c-sec ul li{margin-bottom:3px;}.c-table{width:100%;border-collapse:collapse;font-size:11.5px;margin:9px 0;}.c-table thead tr{background:#221208;}.c-table thead th{padding:7px 11px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.08em;text-align:left;font-weight:700;}.c-table tbody tr:nth-child(odd){background:#FDFAF5;}.c-table tbody tr:nth-child(even){background:#F5ECD7;}.c-table tbody td{padding:6px 11px;border-bottom:1px solid #EDE3D4;}.c-sigs{border-top:2px solid #221208;padding-top:22px;}.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:22px;}.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;}.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:10px;}.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:16px 0 5px;}.c-sig-note{font-size:10.5px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}.bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}.bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}@media print{body{background:#F0E9DF;padding:0;}}`;
-
-function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${offerHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
-function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${contractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
+function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
+function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 
 async function saveToNotion(){
   const btn=$('save-btn');
@@ -621,7 +628,6 @@ async function saveToNotion(){
 
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
-render();
 </script>
 </body>
 </html>
