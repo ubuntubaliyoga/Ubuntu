@@ -1,757 +1,759 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ubuntu Bali · Contract Generator</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #F0E9DF; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Ubuntu Bali · Offer & Contract Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;}
+
+/* ── NAV ── */
+.nav{background:#221208;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:58px;border-bottom:2px solid #B8935A;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:14px;}
+.nav-logo img{height:34px;filter:brightness(0) invert(1);}
+.nav-title{font-family:'Libre Baskerville',serif;font-size:14px;color:#F5ECD7;font-weight:700;letter-spacing:.04em;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{padding:7px 20px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;}
+.nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
+.nav-actions{display:flex;gap:8px;align-items:center;}
+.save-btn{padding:7px 18px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;}
+.save-btn:hover{background:#B8935A;color:#221208;}
+.save-btn.saved{background:#3D6636;color:#fff;border-color:#3D6636;}
+.save-btn.error{background:#8B3A2E;color:#fff;border-color:#8B3A2E;}
+
+/* ── LAYOUT ── */
+.main{display:flex;min-height:calc(100vh - 58px);}
+.sidebar{width:300px;min-width:300px;background:#fff;border-right:1px solid #DDD0BA;padding:22px 18px;overflow-y:auto;}
+.content{flex:1;padding:28px 24px;overflow-y:auto;}
+
+/* ── SIDEBAR ── */
+.s-section{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#B8935A;margin:20px 0 10px;padding-top:14px;border-top:1px solid #EDE3D4;}
+.s-section:first-child{margin-top:0;padding-top:0;border-top:none;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;font-weight:600;margin-bottom:5px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:11px;color:#2C2416;background:#FDFAF5;outline:none;transition:border-color .15s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#8B7355;background:#fff;}
+.fg textarea{resize:vertical;line-height:1.6;}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fg-row3{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;}
+.fg-row3 .vname{font-family:'Lora',serif;font-size:11px;color:#2C2416;white-space:nowrap;}
+.hint{font-size:9.5px;color:#A08060;font-style:italic;margin-top:3px;}
+.villa-box{border:1px solid #EDE3D4;border-radius:4px;padding:10px 11px;margin-bottom:10px;background:#FDFAF5;}
+.villa-box-hd{font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.villa-box-hd input{width:auto;}
+.villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.villa-fields.disabled{opacity:.4;pointer-events:none;}
+.radio-grp{display:flex;flex-direction:column;gap:5px;margin-top:2px;}
+.radio-grp label{font-size:11px;text-transform:none;letter-spacing:0;color:#333;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Lora',serif;}
+.radio-grp input{width:auto;}
+.print-btn{width:100%;padding:9px;background:#3a3228;color:#fff;border:none;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;margin-top:6px;transition:background .18s;}
+.print-btn:hover{background:#5a4e42;}
+.print-btn.gold{background:linear-gradient(135deg,#221208,#4A2E1A);}
+.print-btn.gold:hover{background:linear-gradient(135deg,#4A2E1A,#7A4E2E);}
+
+/* ── OFFER PREVIEW ── */
+.email-wrap{background:#e8e3dc;padding:24px 16px;border-radius:4px;}
+.email{background:#fff;width:580px;margin:0 auto;font-family:Verdana,Geneva,sans-serif;font-size:10px;color:#2a2520;}
+.e-header{background:#3a3228;text-align:center;padding:24px 36px 20px;}
+.e-logo{max-width:60px;margin:0 auto 12px;display:block;filter:brightness(0) invert(1);}
+.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:5px;}
+.e-header-line{width:36px;height:1px;background:#c8b89a;margin:7px auto;opacity:.6;}
+.e-header-date{font-size:9px;color:#c8b89a;}
+.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}
+.e-body{padding:18px 36px 0;line-height:1.9;color:#2a2520;}
+.e-body p{margin-bottom:9px;}
+.e-badge{margin:12px 36px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:8px 13px;text-align:center;font-size:10px;color:#3a3228;}
+.e-package{margin:14px 36px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}
+.e-pkg-hd{background:#3a3228;padding:11px 15px;}
+.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}
+.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}
+.e-pkg-body{padding:0 15px;}
+table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
+.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}
+.pt-item td{padding:5px 0;border-top:1px solid #eee;}
+.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}
+.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}
+.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}
+.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}
+.pt-divider td{padding:0 0 5px;}
+.pt-divline{height:1px;background:#eee;font-size:1px;}
+.pt-grand td{padding:2px 0;font-weight:bold;}
+.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}
+.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}
+.e-note{margin:10px 36px 0;border-left:3px solid #c8b89a;padding:6px 11px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}
+.e-note p{margin-bottom:5px;}.e-note p:last-child{margin-bottom:0;}
+.e-included{margin:15px 36px 0;border:1px solid #d8d0c4;border-radius:4px;padding:11px 15px 7px;}
+.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:8px;}
+.e-included table{width:100%;border-collapse:collapse;font-size:10px;}
+.e-included td{padding:2px 0;vertical-align:top;width:50%;}
+.e-also{margin:15px 36px 0;}
+.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:8px;}
+.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}
+.e-closing{padding:20px 36px 0;line-height:1.9;font-size:10px;}
+.e-closing p{margin-bottom:5px;}
+.e-footer-band{background:#3a3228;margin-top:26px;padding:16px 36px 20px;text-align:center;}
+.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:6px;letter-spacing:1px;}
+.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}
+
+/* ── CONTRACT PREVIEW ── */
+.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:52px 56px;font-family:'Lora',serif;color:#1A1208;font-size:13px;line-height:1.75;box-shadow:0 6px 30px rgba(34,18,8,.09);}
+.c-hd{text-align:center;margin-bottom:30px;border-bottom:2px solid #221208;padding-bottom:22px;}
+.c-hd-title{font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;}
+.c-hd-sub{font-family:'Lora',serif;font-size:12px;color:#8B7355;font-style:italic;}
+.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:26px;}
+.c-party{padding:15px 18px;background:#FDFAF5;}
+.c-party:first-child{border-right:1px solid #B8935A;}
+.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:9px;}
+.c-party p{font-size:12px;margin-bottom:3px;}
+.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:10px 0;margin-bottom:26px;color:#221208;}
+.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:10px 15px;margin-bottom:26px;font-size:12px;color:#3D2B1F;line-height:1.65;}
+.c-sec{margin-bottom:22px;}
+.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:5px;margin-bottom:12px;}
+.c-sec p{margin-bottom:8px;font-size:12.5px;}
+.c-sec ul{margin:0 0 10px 20px;font-size:12.5px;}
+.c-sec ul li{margin-bottom:3px;}
+.c-table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;}
+.c-table thead tr{background:#221208;}
+.c-table thead th{padding:8px 12px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.09em;text-align:left;font-weight:700;}
+.c-table tbody tr:nth-child(odd){background:#FDFAF5;}
+.c-table tbody tr:nth-child(even){background:#F5ECD7;}
+.c-table tbody td{padding:7px 12px;border-bottom:1px solid #EDE3D4;}
+.c-sigs{border-top:2px solid #221208;padding-top:24px;}
+.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:24px;}
+.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:11px;}
+.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:18px 0 6px;}
+.c-sig-note{font-size:11px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}
+
+/* Bank table */
+.bank-table{border-collapse:collapse;font-size:12px;margin:8px 0 10px;}
+.bank-table td{padding:4px 20px 4px 0;font-family:'Lora',serif;}
+.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.05em;white-space:nowrap;}
+
+/* Notion status pill */
+.status-pill{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;font-weight:700;}
+.status-Draft{background:#E8E4E0;color:#666;}
+.status-Sent{background:#D6E8F5;color:#1A5F8A;}
+.status-Signed{background:#D6F0D6;color:#1A6A1A;}
+.status-Cancelled{background:#F5D6D6;color:#8A1A1A;}
+
+/* Section label */
+.sec-label{font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#B8935A;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #EDE3D4;}
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useRef, useCallback } = React;
 
-    const LOGO_URI = null;
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-logo">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
+    <div class="nav-title">Offer & Contract Hub</div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('offer')">Offer</button>
+    <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
+  </div>
+  <div class="nav-actions">
+    <select id="notion-status" style="padding:6px 10px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;outline:none;">
+      <option value="Draft">Draft</option>
+      <option value="Sent">Sent</option>
+      <option value="Signed">Signed</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+    <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save to Notion</button>
+  </div>
+</div>
 
-    const FIXED_PRICING = {
-      accommodationRate: 60,
-      retreatPackageRate: 30.25,
-      taxRate: 0.10,
-      serviceRate: 0.05,
-      discountRate: 0.2277,
-      bankDetails: {
-        Currency: "IDR",
-        "Account Holder": "PT PURUSA YOGA BALI",
-        Bank: "PT Bank Permata, Tbk",
-        "Account Number": "4122048077",
-        "BIC / SWIFT": "BBBAIDJAXXX",
-        "Bank Address": "Jalan Subak Sari No. 1, Badung, Bali"
-      }
-    };
+<div class="main">
 
-    const CANCELLATION_POLICY = [
-      { period: "12+ months prior", refund: "100%" },
-      { period: "9–12 months prior", refund: "80%" },
-      { period: "6–9 months prior", refund: "60%" },
-      { period: "3–6 months prior", refund: "40%" },
-      { period: "1–3 months prior", refund: "20%" },
-      { period: "Less than 1 month prior", refund: "No refund (0%)" },
-    ];
+<!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════════════ -->
+<div class="sidebar">
 
-    function computePricing(rooms, nights, guests) {
-      const r = parseFloat(rooms) || 0;
-      const n = parseFloat(nights) || 0;
-      const g = parseFloat(guests) || 0;
-      const accommodation = r * n * FIXED_PRICING.accommodationRate;
-      const retreatPkg = g * n * FIXED_PRICING.retreatPackageRate;
-      const subtotal = accommodation + retreatPkg;
-      const tax = subtotal * FIXED_PRICING.taxRate;
-      const service = subtotal * FIXED_PRICING.serviceRate;
-      const grossTotal = subtotal + tax + service;
-      const discount = grossTotal * FIXED_PRICING.discountRate;
-      const total = grossTotal - discount;
-      return { accommodation, retreatPkg, subtotal, tax, service, grossTotal, discount, total };
-    }
+  <!-- CONTACT -->
+  <div class="s-section">Contact</div>
+  <div class="fg"><label>Organizer Name</label><input type="text" id="f-name" value="Eza" oninput="render()"></div>
+  <div class="fg"><label>Company</label><input type="text" id="f-company" value="Samadi Wellness" oninput="render()"></div>
+  <div class="fg"><label>Address</label><input type="text" id="f-address" placeholder="Optional" oninput="render()"></div>
+  <div class="fg"><label>Phone</label><input type="text" id="f-phone" placeholder="Optional" oninput="render()"></div>
+  <div class="fg"><label>Website</label><input type="text" id="f-website" placeholder="Optional" oninput="render()"></div>
+  <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title" placeholder="Optional" oninput="render()"></div>
 
-    function computePayments(total, checkinDate) {
-      const deposit = total * 0.5;
-      const second = total * 0.3;
-      const fin = total * 0.2;
-      const depositDue = new Date();
-      depositDue.setDate(depositDue.getDate() + 2);
-      let secondDue = "", finalDue = "";
-      if (checkinDate) {
-        const d = new Date(checkinDate + "T00:00:00");
-        const s = new Date(checkinDate + "T00:00:00");
-        s.setMonth(s.getMonth() - 3);
-        secondDue = s.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-        finalDue = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-      }
-      return {
-        deposit: { pct: "50%", amount: deposit.toFixed(2), due: depositDue.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) },
-        second: { pct: "30%", amount: second.toFixed(2), due: secondDue || "___________" },
-        final:  { pct: "20%", amount: fin.toFixed(2),    due: finalDue  || "___________" }
-      };
-    }
+  <!-- INTRO -->
+  <div class="s-section">Intro Text</div>
+  <div class="fg"><label>Opening paragraph</label>
+    <textarea id="f-intro" rows="4" oninput="render()">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
+  </div>
 
-    const fmtDate = (d) => {
-      if (!d) return "___________";
-      const p = new Date(d + "T00:00:00");
-      if (isNaN(p)) return d;
-      return p.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-    };
+  <!-- DATES -->
+  <div class="s-section">Booking Dates</div>
+  <div class="fg-row">
+    <div class="fg"><label>Check-in</label><input type="date" id="f-checkin" oninput="render()"></div>
+    <div class="fg"><label>Check-out</label><input type="date" id="f-checkout" oninput="render()"></div>
+  </div>
+  <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate" oninput="render()"></div>
+  <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil" oninput="render()"><div class="hint">Default: 7 days after offer date</div></div>
 
-    const fmtDateShort = (d) => {
-      if (!d) return "___________";
-      const p = new Date(d + "T00:00:00");
-      if (isNaN(p)) return d;
-      return p.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    };
+  <!-- RETREAT -->
+  <div class="s-section">Retreat Details</div>
+  <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname" placeholder="e.g. Healing Retreat" oninput="render()"></div>
+  <div class="fg-row">
+    <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50" oninput="render()"></div>
+    <div class="fg"><label>Facilitators</label><input type="number" id="f-facilitators" value="1" min="0" max="10" oninput="render()"></div>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30" oninput="render()"></div>
+    <div class="fg"><label>Gladaks (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15" oninput="render()"></div>
+  </div>
+  <div class="fg"><label>Booking Type</label>
+    <select id="f-bookingtype" onchange="render()">
+      <option value="STANDARD">Standard (&gt;120 days)</option>
+      <option value="SHORT-NOTICE">Short-Notice (&lt;120 days)</option>
+    </select>
+  </div>
 
-    const fmt$ = (n) => `$${Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    const fmtIDR = (n) => `Rp ${Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  <!-- VILLAS -->
+  <div class="s-section">Villas</div>
+  <div class="villa-box">
+    <div class="villa-box-hd"><input type="checkbox" id="f-parvati-on" onchange="toggleVilla('parvati')" checked> Parvati Villa</div>
+    <div class="villa-fields" id="parvati-fields">
+      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-parvati-orig" value="80" min="0" oninput="render()"></div>
+      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-parvati-disc" value="60" min="0" oninput="render()"></div>
+    </div>
+  </div>
+  <div class="villa-box">
+    <div class="villa-box-hd"><input type="checkbox" id="f-buddha-on" onchange="toggleVilla('buddha')" checked> Buddha Villa</div>
+    <div class="villa-fields" id="buddha-fields">
+      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-buddha-orig" value="80" min="0" oninput="render()"></div>
+      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-buddha-disc" value="60" min="0" oninput="render()"></div>
+    </div>
+  </div>
 
-    function defaultValidUntil(contractDate) {
-      if (!contractDate) return "";
-      const d = new Date(contractDate + "T00:00:00");
-      d.setDate(d.getDate() + 7);
-      return d.toISOString().split("T")[0];
-    }
+  <!-- PRICING -->
+  <div class="s-section">Pricing</div>
+  <div class="fg-row">
+    <div class="fg"><label>Gladak Rate / night</label><input type="number" id="f-roomrate" value="60" min="0" oninput="render()"></div>
+    <div class="fg"><label>Package Rate / night</label><input type="number" id="f-pkgrate" value="30.25" min="0" step=".01" oninput="render()"></div>
+  </div>
+  <div class="fg"><label>Retreat Packages (people)</label>
+    <select id="f-pkgcount" onchange="render()">
+      <option value="0">None</option>
+      <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+      <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+      <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+      <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+      <option value="13">13</option><option value="14">14</option><option value="15" selected>15</option>
+    </select>
+  </div>
+  <div class="fg"><label>Early Bird Discount % (0 = none)</label>
+    <input type="number" id="f-discount" value="20" min="0" max="20" oninput="render()">
+    <div class="hint">Max 20%.</div>
+  </div>
+  <div class="fg"><label>Individual Room Discount</label>
+    <div class="fg-row">
+      <div class="fg" style="margin-bottom:0"><label># of Rooms</label>
+        <select id="f-disc-room" onchange="render()">
+          <option value="0">None</option><option value="1">1 room</option><option value="2">2 rooms</option>
+          <option value="3">3 rooms</option><option value="4">4 rooms</option><option value="5">5 rooms</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-disc-pct" value="0" min="0" max="50" oninput="render()"></div>
+    </div>
+    <div class="hint">Max 50%.</div>
+  </div>
+  <div class="fg"><label>Show Price Totals</label>
+    <div class="radio-grp">
+      <label><input type="radio" name="price-display" value="daily" onchange="render()"> Daily only</label>
+      <label><input type="radio" name="price-display" value="total" onchange="render()"> Total only</label>
+      <label><input type="radio" name="price-display" value="both" onchange="render()" checked> Both</label>
+    </div>
+  </div>
 
-    const Bold = ({ children }) => <strong>{children}</strong>;
+  <!-- OFFER NOTE -->
+  <div class="s-section">Offer Note</div>
+  <div class="fg"><label>Package note</label>
+    <textarea id="f-note" rows="5" oninput="render()">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest. You can also increase your own profitability by offering guests the option to share a Gladak or a Villa — keeping your accommodation costs fixed while freeing up margin on your retreat pricing.</textarea>
+  </div>
+  <div class="hint" style="margin-top:-10px;margin-bottom:14px;">Use {guests} to auto-insert guest count.</div>
+  <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid" value="2026-04-07" oninput="render()"></div>
 
-    function ContractGenerator() {
-      const today = new Date().toISOString().split("T")[0];
-      const [form, setForm] = useState({
-        contractDate: today,
-        validUntil: defaultValidUntil(today),
-        checkinDate: "", checkoutDate: "", retreatName: "",
-        organizerCompany: "", organizerContact: "", organizerAddress: "",
-        organizerPhone: "", organizerWebsite: "", organizerTitle: "",
-        rooms: "", nights: "", guests: "", ubuntuRooms: "", partnerRooms: "",
-        bookingType: "STANDARD"
-      });
-      const [idrRate, setIdrRate] = useState("17085");
-      const [aiStatus, setAiStatus] = useState(null);
-      const [aiMessage, setAiMessage] = useState("");
-      const [view, setView] = useState("form");
-      const [dragOver, setDragOver] = useState(false);
-      const [saveStatus, setSaveStatus] = useState(null);
-      const fileRef = useRef();
+  <!-- DEPOSIT -->
+  <div class="s-section">Deposit</div>
+  <div class="fg"><label>Deposit % (0 = none)</label>
+    <input type="number" id="f-deposit" value="0" min="0" max="100" oninput="render()">
+    <div class="hint">Shown in offer note + drives contract payment schedule.</div>
+  </div>
 
-      const pricing = computePricing(form.rooms, form.nights, form.guests);
-      const payments = computePayments(pricing.total, form.checkinDate);
-      const offerLoaded = !!(form.organizerCompany || form.retreatName || form.rooms);
-      const idrTotal = idrRate ? pricing.total * parseFloat(idrRate) : null;
+  <!-- CONTRACT DATES -->
+  <div class="s-section">Contract</div>
+  <div class="fg"><label>IDR Exchange Rate</label>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;color:#5C3D2E;font-family:'Lora',serif;">1 USD =</span>
+      <input type="number" id="f-idrrate" value="17085" style="width:110px;" oninput="render()">
+      <span style="font-size:11px;color:#5C3D2E;font-family:'Lora',serif;">IDR</span>
+    </div>
+    <div class="hint">XE.com Apr 13 2026. Edit if needed.</div>
+  </div>
 
-      const setContractDate = (val) => setForm(f => ({
-        ...f,
-        contractDate: val,
-        validUntil: f.validUntil === defaultValidUntil(f.contractDate) ? defaultValidUntil(val) : f.validUntil
-      }));
+  <!-- PRINT -->
+  <div class="s-section">Export</div>
+  <button class="print-btn" onclick="printOffer()">Print Offer PDF</button>
+  <button class="print-btn gold" onclick="printContract()" style="margin-top:8px;">Print Contract PDF</button>
 
-      const saveToNotion = async () => {
-        setSaveStatus('saving');
-        try {
-          const resp = await fetch('/api/notion', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contractData: { ...form, total: pricing.total } })
-          });
-          if (!resp.ok) throw new Error('Failed');
-          setSaveStatus('saved');
-          setTimeout(() => setSaveStatus(null), 3000);
-        } catch {
-          setSaveStatus('error');
-          setTimeout(() => setSaveStatus(null), 3000);
-        }
-      };
+</div>
+<!-- end sidebar -->
 
-      // ✅ FIX: calls /api/claude (Vercel serverless proxy) instead of Anthropic directly
-      const handleFile = useCallback((file) => {
-        if (!file) return;
-        setAiStatus("loading");
-        setAiMessage("Reading offer…");
-        (async () => {
-          try {
-            const base64 = await new Promise((res, rej) => {
-              const r = new FileReader();
-              r.onload = () => res(r.result.split(",")[1]);
-              r.onerror = rej;
-              r.readAsDataURL(file);
-            });
-            const resp = await fetch("/api/claude", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                model: "claude-haiku-4-5-20251001",
-                max_tokens: 2000,
-                messages: [{ role: "user", content: [
-                  { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
-                  { type: "text", text: `Extract the following fields from this retreat booking offer. Return ONLY a raw JSON object — no markdown, no backticks, no explanation. Use "" for missing fields.\n\n{\n  "retreatName": "name/theme of the retreat",\n  "organizerCompany": "company or organisation name",\n  "organizerContact": "full name of contact person",\n  "organizerAddress": "full postal address",\n  "organizerPhone": "phone number",\n  "organizerWebsite": "website URL",\n  "organizerTitle": "title or role of contact person",\n  "checkinDate": "YYYY-MM-DD",\n  "checkoutDate": "YYYY-MM-DD",\n  "rooms": "total number of rooms as integer string",\n  "nights": "number of nights as integer string",\n  "guests": "number of guests as integer string",\n  "ubuntuRooms": "Ubuntu Bali rooms as integer string",\n  "partnerRooms": "partner resort rooms as integer string",\n  "bookingType": "STANDARD or SHORT-NOTICE"\n}` }
-                ]}]
-              })
-            });
-            const data = await resp.json();
-            if (data.error) throw new Error(data.error.message || "API error");
-            const text = data.content?.map(b => b.text || "").join("") || "";
-            if (!text) throw new Error("Empty response from API");
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("No JSON found in response");
-            const parsed = JSON.parse(jsonMatch[0]);
-            setForm(f => ({ ...f, ...Object.fromEntries(Object.entries(parsed).filter(([,v]) => v !== "")) }));
-            setAiStatus("done");
-            setAiMessage(`"${file.name}" processed — all fields extracted`);
-          } catch(err) {
-            setAiStatus("error");
-            setAiMessage("Error: " + (err.message || "Could not parse file. Please try a different PDF."));
-          }
-        })();
-      }, []);
+<!-- ═══════════════════════════════════ CONTENT ═══════════════════════════════════ -->
+<div class="content" id="content-area">
+  <!-- rendered by JS -->
+</div>
 
-      const onDrop = (e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); };
+</div><!-- end main -->
 
-      const bodyText = { fontSize: "12.5px", lineHeight: "1.75", fontFamily: "'Lora', serif" };
-      const ulStyle = { margin: "0 0 10px 20px", padding: 0, ...bodyText };
+<script>
+// ─── helpers ───────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmtN = (n, d=0) => Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtD = dateStr => { if(!dateStr) return ''; const d = new Date(dateStr+'T00:00:00'); return d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); };
+const fmtDS = dateStr => { if(!dateStr) return '___________'; const d = new Date(dateStr+'T00:00:00'); return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); };
+const today = () => new Date().toISOString().split('T')[0];
+const addDays = (date,n) => { if(!date) return ''; const d=new Date(date+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; };
+const addMonths = (date,n) => { if(!date) return ''; const d=new Date(date+'T00:00:00'); d.setMonth(d.getMonth()+n); return d.toISOString().split('T')[0]; };
 
-      const secHead = (letter, title, gold = false) => (
-        <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10.5px", fontWeight: "700", letterSpacing: "0.14em", textTransform: "uppercase", color: "#221208", borderBottom: `1.5px solid ${gold ? "#B8935A" : "#DDD0BA"}`, paddingBottom: "5px", marginBottom: "13px" }}>
-          {letter}) {title}
-        </div>
-      );
+// ─── tab state ─────────────────────────────────────────────────────────────────
+let activeTab = 'offer';
+function switchTab(t){
+  activeTab=t;
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['offer','contract'][i]===t));
+  render();
+}
 
-      function PricingTable() {
-        return (
-          <div>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", margin: "12px 0 0 0" }}>
-              <thead>
-                <tr style={{ background: "#221208" }}>
-                  {["ITEM","RATE","SUBTOTAL"].map(h => (
-                    <th key={h} style={{ padding: "8px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.09em", textAlign: "left", fontWeight: "700" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  [`Accommodation – ${form.rooms||"?"} Rooms (${form.nights||"?"} nights × $${FIXED_PRICING.accommodationRate}/night)`, `$${FIXED_PRICING.accommodationRate}/night`, fmt$(pricing.accommodation)],
-                  [`Retreat Package (Meals, Shala, Staff – ${form.guests||"?"} guests × ${form.nights||"?"} nights × $${FIXED_PRICING.retreatPackageRate}/night)`, `$${FIXED_PRICING.retreatPackageRate}/night`, fmt$(pricing.retreatPkg)],
-                  ["Tax (10%) Service (5%)", "", fmt$(pricing.tax + pricing.service)],
-                  [<><Bold>Discount</Bold></>, <><Bold>22.77%</Bold></>, <><Bold>– {fmt$(pricing.discount)}</Bold></>],
-                ].map((row, i) => (
-                  <tr key={i} style={{ background: i%2===0 ? "#FDFAF5" : "#F5ECD7" }}>
-                    {row.map((cell, j) => <td key={j} style={{ padding: "7px 13px", borderBottom: "1px solid #EDE3D4" }}>{cell}</td>)}
-                  </tr>
-                ))}
-                <tr style={{ background: "#F5ECD7" }}>
-                  <td colSpan={2} style={{ padding: "9px 13px", color: "#2C2416", fontFamily: "'Lora', serif", fontSize: "12px", fontWeight: "400", borderBottom: "1px solid #EDE3D4" }}>
-                    Total incl. tax &amp; service (reference only)
-                  </td>
-                  <td style={{ padding: "9px 13px", color: "#2C2416", fontFamily: "'Lora', serif", fontSize: "12px", fontWeight: "400", borderBottom: "1px solid #EDE3D4" }}>{fmt$(pricing.total)}</td>
-                </tr>
-                {idrTotal && (
-                  <tr style={{ background: "#2E1A0A" }}>
-                    <td colSpan={2} style={{ padding: "9px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", fontWeight: "700" }}>
-                      IDR for transaction (rate: 1 USD = {Number(idrRate).toLocaleString("id-ID")} · interbank rate on date of issue)
-                    </td>
-                    <td style={{ padding: "9px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "12.5px", fontWeight: "700" }}>{fmtIDR(idrTotal)}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            {idrTotal && (
-              <p style={{ fontSize: "10.5px", color: "#7A6040", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "6px", marginBottom: "0" }}>
-                The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. This rate is valid for the duration of contract validity. All payments must be made in IDR at the interbank rate on the actual date of each transaction.
-              </p>
-            )}
-          </div>
-        );
-      }
+// ─── villa toggle ──────────────────────────────────────────────────────────────
+function toggleVilla(n){ $(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked); render(); }
 
-      function GenericTable({ head, rows }) {
-        return (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", margin: "12px 0" }}>
-            <thead>
-              <tr style={{ background: "#221208" }}>
-                {head.map(h => <th key={h} style={{ padding: "8px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.09em", textAlign: "left", fontWeight: "700" }}>{h}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} style={{ background: i%2===0 ? "#FDFAF5" : "#F5ECD7" }}>
-                  {row.map((cell, j) => <td key={j} style={{ padding: "7px 13px", borderBottom: "1px solid #EDE3D4" }}>{cell}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        );
-      }
+// ─── compute pricing ───────────────────────────────────────────────────────────
+function pricing(){
+  const bales = parseInt($('f-rooms').value)||0;
+  const roomRate = parseFloat($('f-roomrate').value)||60;
+  const pkgRate = parseFloat($('f-pkgrate').value)||30.25;
+  const pkgCount = parseInt($('f-pkgcount').value)||0;
+  const discPct = Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
+  const parvOn = $('f-parvati-on').checked;
+  const parvOrig = parseFloat($('f-parvati-orig').value)||80;
+  const parvDisc = parseFloat($('f-parvati-disc').value)||60;
+  const buddOn = $('f-buddha-on').checked;
+  const buddOrig = parseFloat($('f-buddha-orig').value)||80;
+  const buddDisc = parseFloat($('f-buddha-disc').value)||60;
+  const discRooms = parseInt($('f-disc-room').value)||0;
+  const discRoomPct = Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
 
-      return (
-        <div style={{ minHeight: "100vh", background: "#F0E9DF", fontFamily: "'Lora', serif" }}>
-          <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            .tab { cursor: pointer; transition: all 0.18s; border: none; }
-            .upload-zone { transition: border-color 0.2s, background 0.2s; cursor: pointer; }
-            .preview-btn { transition: all 0.2s; }
-            .preview-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(42,26,14,0.3) !important; }
-            p { margin-bottom: 8px; }
-          `}</style>
+  const villaTotal = (parvOn?parvDisc:0)+(buddOn?buddDisc:0);
+  const accomSub = bales*roomRate + villaTotal;
+  const pkgSub = pkgCount*pkgRate;
+  const stdSub = accomSub+pkgSub;
+  const earlyAmt = discPct>0 ? stdSub*(discPct/100) : 0;
+  const roomDiscAmt = discRooms>0&&discRoomPct>0 ? roomRate*(discRoomPct/100)*discRooms : 0;
+  const perNight = stdSub - earlyAmt - roomDiscAmt;
+  const perNightTax = perNight*1.15;
+  const nights = parseInt($('f-nights').value)||7;
+  const totalEx = perNight*nights;
+  const totalIn = perNightTax*nights;
 
-          {/* Header */}
-          <div style={{ background: "#221208", padding: "18px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #B8935A" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "60px", objectFit: "contain", filter: "brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.88)" }} />}
-              <div>
-                <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.24em", color: "#B8935A", textTransform: "uppercase", marginBottom: "5px" }}>PT Purusa Yoga Bali · Ubuntu Bali</div>
-                <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "19px", color: "#F5ECD7", fontWeight: "700" }}>Retreat Contract Generator</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              {[["form","Build"],["preview","Preview"]].map(([v, label]) => (
-                <button key={v} className="tab" onClick={() => setView(v)} style={{
-                  padding: "8px 20px", borderRadius: "3px",
-                  border: `1px solid ${view===v ? "#B8935A" : "rgba(184,147,90,0.35)"}`,
-                  background: view===v ? "#B8935A" : "transparent",
-                  color: view===v ? "#221208" : "#B8935A",
-                  fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
-                  letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: "700"
-                }}>{label}</button>
-              ))}
-            </div>
-          </div>
+  return {bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,buddOn,buddOrig,buddDisc,
+    discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,totalEx,totalIn,nights};
+}
 
-          <div style={{ maxWidth: "780px", margin: "0 auto", padding: "36px 24px" }}>
+// ─── payment schedule ──────────────────────────────────────────────────────────
+function payments(total,checkin,depositPct){
+  const d = depositPct>0 ? depositPct/100 : 0.5;
+  const remaining = 1 - d;
+  // split remaining 60/40
+  const p2pct = remaining * 0.6;
+  const p3pct = remaining * 0.4;
+  const depDue = addDays(today(),2);
+  const p2due = checkin ? addMonths(checkin,-3) : '';
+  return {
+    dep:{pct:Math.round(d*100)+'%', amt:total*d, due:fmtDS(depDue)},
+    p2:{pct:Math.round(p2pct*100)+'%', amt:total*p2pct, due:checkin?fmtDS(p2due):'___________'},
+    p3:{pct:Math.round(p3pct*100)+'%', amt:total*p3pct, due:checkin?fmtDS(checkin):'___________'},
+  };
+}
 
-            {/* ── FORM VIEW ── */}
-            {view === "form" && (
-              <>
-                {/* Upload zone */}
-                <div
-                  className="upload-zone"
-                  onClick={() => fileRef.current?.click()}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={onDrop}
-                  style={{
-                    border: `2px dashed ${dragOver ? "#7A5C3A" : offerLoaded ? "#9A7A4A" : "#C4A87A"}`,
-                    borderRadius: "8px",
-                    background: dragOver ? "#E8DCCF" : offerLoaded ? "#EDE3D4" : "#FAF5ED",
-                    padding: "40px 28px", textAlign: "center", marginBottom: "28px"
-                  }}
-                >
-                  <input ref={fileRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
-                  {aiStatus === "loading" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>⏳</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "14px", color: "#5C3D2E", fontWeight: "700" }}>{aiMessage}</div></>}
-                  {aiStatus === "done" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>✓</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "14px", color: "#3D6636", fontWeight: "700", marginBottom: "4px" }}>{aiMessage}</div><div style={{ fontSize: "12px", color: "#8B7355", fontStyle: "italic", fontFamily: "'Lora', serif" }}>Drop another PDF to replace</div></>}
-                  {aiStatus === "error" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>⚠️</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "13px", color: "#8B3A2E", fontWeight: "700", marginBottom: "4px" }}>{aiMessage}</div><div style={{ fontSize: "12px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic" }}>Click to try again</div></>}
-                  {!aiStatus && <><div style={{ fontSize: "38px", marginBottom: "12px" }}>📄</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "15px", color: "#2A1A0E", fontWeight: "700", marginBottom: "7px" }}>Upload the Offer PDF</div><div style={{ fontSize: "12.5px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic", lineHeight: "1.7" }}>Drop or click — AI reads organizer details, dates, rooms & guests<br />Pricing is calculated automatically at fixed Ubuntu Bali rates</div></>}
-                </div>
+// ─── OFFER HTML ────────────────────────────────────────────────────────────────
+function offerHTML(){
+  const name = $('f-name').value||'Guest';
+  const company = $('f-company').value;
+  const address = $('f-address').value;
+  const intro = $('f-intro').value.trim();
+  const guests = parseInt($('f-guests').value)||10;
+  const facilitators = parseInt($('f-facilitators').value)||0;
+  const retreatName = $('f-retreatname').value||'Healing Retreat';
+  const noteText = $('f-note').value.trim();
+  const offerValid = $('f-offervalid').value;
+  const depositPct = Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const checkin = $('f-checkin').value;
+  const checkout = $('f-checkout').value;
+  const pd = document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  const showDaily = pd==='daily'||pd==='both';
+  const showTotal = pd==='total'||pd==='both';
+  const P = pricing();
+  const totalPeople = guests+facilitators;
+  const days = P.nights+1;
+  const checkinStr = fmtD(checkin);
+  const checkoutStr = fmtD(checkout);
+  const monthStr = new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const offerValidStr = fmtD(offerValid);
+  const hasEB = P.discPct>0;
+  const depositAmt = depositPct>0 ? P.totalEx*(depositPct/100) : 0;
 
-                {/* Section 01: Dates */}
-                <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "24px", overflow: "hidden" }}>
-                  <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>01</span>
-                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Contract & Retreat Dates</span>
-                    <span style={{ fontFamily: "'Lora', serif", fontSize: "11px", color: "rgba(245,236,215,0.45)", fontStyle: "italic", marginLeft: "4px" }}>— override if not in offer</span>
-                  </div>
-                  <div style={{ padding: "18px 20px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px" }}>
-                    {[
-                      { label: "Date of Agreement", key: "contractDate" },
-                      { label: "Valid Until", key: "validUntil", hint: "Default: 7 days after issue" },
-                      { label: "Check-in Date", key: "checkinDate", warn: true },
-                      { label: "Check-out Date", key: "checkoutDate", warn: true },
-                    ].map(({ label, key, hint, warn }) => (
-                      <div key={key}>
-                        <label style={{ display: "block", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", marginBottom: "7px" }}>{label}</label>
-                        <input type="date" value={form[key]}
-                          onChange={e => key === "contractDate" ? setContractDate(e.target.value) : setForm(f => ({ ...f, [key]: e.target.value }))}
-                          style={{ width: "100%", padding: "9px 14px", border: `1px solid ${key === "validUntil" ? "#B8935A" : "#D4C4A8"}`, borderRadius: "3px", background: key === "validUntil" ? "#FDF8EF" : "#FDFAF5", fontFamily: "'Lora', serif", fontSize: "13px", color: "#2C2416", outline: "none" }}
-                          onFocus={e => e.target.style.borderColor="#8B7355"}
-                          onBlur={e => e.target.style.borderColor= key === "validUntil" ? "#B8935A" : "#D4C4A8"}
-                        />
-                        {hint && <div style={{ fontSize: "10px", color: "#B8935A", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "4px" }}>{hint}</div>}
-                        {warn && !form[key] && <div style={{ fontSize: "10px", color: "#B8935A", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "4px" }}>⚠ needed for payment schedule</div>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+  const introParagraphs = intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+  const noteResolved = noteText.replace(/\{guests\}/g,totalPeople);
+  const noteParagraphs = noteResolved.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
 
-                {/* Sections 02 + 03: shown after offer is loaded */}
-                {offerLoaded && (
-                  <>
-                    {/* Section 02: Extracted fields */}
-                    <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "20px", overflow: "hidden" }}>
-                      <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>02</span>
-                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Extracted from Offer</span>
-                      </div>
-                      <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-                        {[
-                          ["Retreat", form.retreatName], ["Organizer", form.organizerCompany],
-                          ["Contact", form.organizerContact], ["Title", form.organizerTitle],
-                          ["Phone", form.organizerPhone], ["Website", form.organizerWebsite],
-                          ["Total Rooms", form.rooms], ["Nights", form.nights],
-                          ["Guests", form.guests], ["Ubuntu Rooms", form.ubuntuRooms],
-                          ["Partner Rooms", form.partnerRooms], ["Booking Type", form.bookingType],
-                        ].map(([label, value]) => (
-                          <div key={label} style={{ display: "flex", gap: "10px", padding: "6px 0", borderBottom: "1px solid #EDE3D4" }}>
-                            <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.07em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", minWidth: "96px", paddingTop: "2px" }}>{label}</span>
-                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: value ? "#1A1208" : "#BBA882", fontStyle: value ? "normal" : "italic" }}>{value || "not found"}</span>
-                          </div>
-                        ))}
-                        {form.organizerAddress && (
-                          <div style={{ display: "flex", gap: "10px", padding: "6px 0", borderBottom: "1px solid #EDE3D4", gridColumn: "1 / -1" }}>
-                            <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.07em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", minWidth: "96px", paddingTop: "2px" }}>Address</span>
-                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#1A1208" }}>{form.organizerAddress}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+  const villaRateLbl = (orig,disc) => orig!==disc
+    ? `<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)}`
+    : `USD ${fmtN(disc)}`;
 
-                    {/* Section 03: Pricing */}
-                    <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "32px", overflow: "hidden" }}>
-                      <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>03</span>
-                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Pricing (Auto-Calculated · Fixed Rates)</span>
-                      </div>
-                      <div style={{ padding: "18px 20px" }}>
-                        <div style={{ fontSize: "11px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic", marginBottom: "14px" }}>
-                          {form.rooms} rooms × {form.nights} nights · {form.guests} guests
-                        </div>
-                        <div style={{ fontSize: "10.5px", color: "#7A6040", fontFamily: "'Libre Baskerville', serif", background: "#F5ECD7", borderRadius: "3px", padding: "8px 12px", marginBottom: "14px", lineHeight: "1.6" }}>
-                          <strong>Payment schedule:</strong> Deposit due 2 days after contract date · 2nd payment 3 months before check-in · Final payment on check-in date
-                        </div>
-                        <div style={{ marginBottom: "16px" }}>
-                          <label style={{ display: "block", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", marginBottom: "7px" }}>IDR Exchange Rate (on issue date)</label>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#5C3D2E" }}>1 USD =</span>
-                            <input type="number" value={idrRate} onChange={e => setIdrRate(e.target.value)} placeholder="e.g. 16250"
-                              style={{ padding: "8px 12px", border: "1px solid #B8935A", borderRadius: "3px", background: "#FDF8EF", fontFamily: "'Lora', serif", fontSize: "13px", color: "#2C2416", outline: "none", width: "160px" }}
-                              onFocus={e => e.target.style.borderColor="#8B7355"}
-                              onBlur={e => e.target.style.borderColor="#B8935A"}
-                            />
-                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#5C3D2E" }}>IDR</span>
-                            {idrRate && <span style={{ fontFamily: "'Lora', serif", fontSize: "12px", color: "#3D6636", fontStyle: "italic" }}>→ Total: {fmtIDR(pricing.total * parseFloat(idrRate))}</span>}
-                          </div>
-                          <div style={{ fontSize: "10px", color: "#A08060", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "5px" }}>Auto-fetched: 1 USD = 17,085 IDR (XE.com, Apr 13 2026) · Edit if needed</div>
-                        </div>
-                        {[
-                          [`Accommodation — ${form.rooms} rooms × ${form.nights} nights × $${FIXED_PRICING.accommodationRate}/night`, fmt$(pricing.accommodation), false],
-                          [`Retreat Package — ${form.guests} guests × ${form.nights} nights × $${FIXED_PRICING.retreatPackageRate}/night`, fmt$(pricing.retreatPkg), false],
-                          ["Tax (10%) + Service (5%)", fmt$(pricing.tax + pricing.service), false],
-                          ["Discount (22.77%)", `– ${fmt$(pricing.discount)}`, false],
-                          ["TOTAL (incl. 10% tax & 5% service)", fmt$(pricing.total), true],
-                          ...(idrRate ? [["≈ IDR equivalent (reference only)", fmtIDR(pricing.total * parseFloat(idrRate)), false]] : []),
-                        ].map(([label, val, bold], i) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #EDE3D4", fontFamily: bold ? "'Libre Baskerville', serif" : "'Lora', serif", fontSize: bold ? "13px" : "12.5px", fontWeight: bold ? "700" : "400", color: bold ? "#221208" : "#2C2416" }}>
-                            <span>{label}</span><span>{val}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
+  const villaNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
+  const villaBodyLine = villaNames.length>0?` We are pleased to include ${villaNames.join(' and ')} in this package.`:'';
 
-                {/* Action buttons */}
-                <div style={{ textAlign: "center", display: "flex", gap: "12px", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
-                  <button className="preview-btn" onClick={() => setView("preview")} disabled={!offerLoaded} style={{
-                    padding: "14px 44px", border: "none", borderRadius: "4px",
-                    background: offerLoaded ? "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)" : "#C8BAA8",
-                    color: offerLoaded ? "#F5ECD7" : "#9A8A78",
-                    fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
-                    letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
-                    cursor: offerLoaded ? "pointer" : "not-allowed",
-                    boxShadow: offerLoaded ? "0 4px 16px rgba(34,18,8,0.22)" : "none"
-                  }}>{offerLoaded ? "Generate Contract Preview →" : "Upload an offer to continue"}</button>
-                  {offerLoaded && (
-                    <button onClick={saveToNotion} disabled={saveStatus === "saving" || saveStatus === "saved"} style={{
-                      padding: "14px 32px", border: "1.5px solid #B8935A", borderRadius: "4px",
-                      background: saveStatus === "saved" ? "#3D6636" : saveStatus === "error" ? "#8B3A2E" : "#FAF5ED",
-                      color: saveStatus === "saved" ? "#fff" : saveStatus === "error" ? "#fff" : "#B8935A",
-                      fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
-                      letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
-                      cursor: saveStatus ? "default" : "pointer"
-                    }}>
-                      {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "✓ Saved to Notion" : saveStatus === "error" ? "Error — try again" : "Save to Notion"}
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+  const baleRow = P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
+  const parvRow = P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${villaRateLbl(P.parvOrig,P.parvDisc)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow = P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${villaRateLbl(P.buddOrig,P.buddDisc)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
+  const pkgRow = P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
+  const ebRow = hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
+  const rdRow = P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
+  const dailyBlock = showDaily?`<tr class="pt-total"><td class="col-item">Total Investment</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl. tax &amp; service</td></tr>` :'';
+  const divBlock = (showDaily&&showTotal)?`<tr class="pt-divider"><td colspan="3"><div class="pt-divline">&nbsp;</div></td></tr>`:'';
+  const totalBlock = showTotal?`<tr class="pt-grand"><td class="col-item">Total for ${P.nights} Nights</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
+  const ebBadge = hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
+  const validLine = hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
+  const depositLine = depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (USD ${fmtN(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
+  const datesLine = checkinStr&&checkoutStr?`<div class="e-header-dates">Check-in: ${checkinStr} &nbsp;·&nbsp; Check-out: ${checkoutStr}</div>`:'';
+  const addrLine = address?`<br>${address}`:'';
 
-            {/* ── PREVIEW VIEW ── */}
-            {view === "preview" && (
-              <div style={{ background: "#FFF", border: "1px solid #D4C4A8", borderRadius: "8px", padding: "56px 60px", fontFamily: "'Lora', serif", color: "#1A1208", fontSize: "13px", lineHeight: "1.75", boxShadow: "0 8px 40px rgba(34,18,8,0.1)" }}>
+  return `<div class="e-header">
+    <img class="e-logo" src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
+    <div class="e-header-label">Retreat Hosting Offer</div>
+    <div class="e-header-line"></div>
+    <div class="e-header-date">${monthStr}</div>
+    ${datesLine}
+  </div>
+  <div class="e-body">
+    <p>${company?company:''}${addrLine}</p>
+    <p>Dear ${name},</p>
+    ${introParagraphs}
+    <p>${villaBodyLine}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} Kindly open the attached brochure for pictures of the full property.${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
+  </div>
+  ${ebBadge}
+  <div class="e-package">
+    <div class="e-pkg-hd">
+      <div class="e-pkg-hd-label">Package</div>
+      <div class="e-pkg-hd-title">${retreatName} &nbsp;·&nbsp; ${P.nights} Nights, ${days} Days &nbsp;·&nbsp; ${totalPeople} People</div>
+    </div>
+    <div class="e-pkg-body">
+      <table class="ptable">
+        <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate</td><td class="col-sub">Subtotal</td></tr>
+        ${baleRow}${parvRow}${buddRow}${pkgRow}
+        <tr class="pt-subtotal"><td class="col-item">Standard Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
+        ${ebRow}${rdRow}${dailyBlock}${divBlock}${totalBlock}
+      </table>
+    </div>
+  </div>
+  <div class="e-note">${noteParagraphs}${validLine}${depositLine}</div>
+  <div class="e-included">
+    <div class="e-included-label">What's Included</div>
+    <table><tr>
+      <td><span style="color:#c8b89a;">&middot;&nbsp;</span>2 organic meals per day</td>
+      <td><span style="color:#c8b89a;">&middot;&nbsp;</span>Tea &amp; afternoon snack</td>
+    </tr><tr>
+      <td><span style="color:#c8b89a;">&middot;&nbsp;</span>Shala of your choice + cleaning</td>
+      <td><span style="color:#c8b89a;">&middot;&nbsp;</span>Full staff support</td>
+    </tr><tr>
+      <td><span style="color:#c8b89a;">&middot;&nbsp;</span>Dedicated contact person</td><td></td>
+    </tr></table>
+  </div>
+  <div class="e-also">
+    <div class="e-also-label">Also of Interest</div>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Ayurvedic or Balinese menus available on request.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Day trips and activities around Bali can be arranged.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Massages, rituals, and photography available.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Airport pick-up available on request.</p>
+  </div>
+  <div class="e-closing">
+    <p>For any further questions, please don't hesitate to reach out.</p>
+    <p>Warmly,<br><strong>Kevin</strong></p>
+  </div>
+  <div class="e-footer-band">
+    <div class="e-footer-tagline">I am, because we are.</div>
+    <div class="e-footer-contact">Ubuntu Bali &nbsp;·&nbsp; namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</div>
+  </div>`;
+}
 
-                {/* Contract header */}
-                <div style={{ textAlign: "center", marginBottom: "34px", borderBottom: "2px solid #221208", paddingBottom: "24px" }}>
-                  {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "90px", objectFit: "contain", marginBottom: "18px", display: "block", marginLeft: "auto", marginRight: "auto", filter: "brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(0.35)" }} />}
-                  <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "16.5px", fontWeight: "700", letterSpacing: "0.07em", textTransform: "uppercase", color: "#1A1208", marginBottom: "7px" }}>RETREAT BOOKING CONFIRMATION & AGREEMENT</div>
-                  <div style={{ fontFamily: "'Lora', serif", fontSize: "12px", color: "#8B7355", fontStyle: "italic", letterSpacing: "0.06em" }}>PT Purusa Yoga Bali · Operating as Ubuntu Bali</div>
-                </div>
+// ─── CONTRACT HTML ─────────────────────────────────────────────────────────────
+function contractHTML(){
+  const name = $('f-name').value||'___________';
+  const company = $('f-company').value||'___________';
+  const address = $('f-address').value||'___________';
+  const phone = $('f-phone').value||'___________';
+  const website = $('f-website').value||'___________';
+  const contactTitle = $('f-title').value||'___________';
+  const retreatName = $('f-retreatname').value||'___________';
+  const guests = parseInt($('f-guests').value)||10;
+  const facilitators = parseInt($('f-facilitators').value)||0;
+  const totalPeople = guests+facilitators;
+  const checkin = $('f-checkin').value;
+  const checkout = $('f-checkout').value;
+  const contractDate = $('f-contractdate').value||today();
+  const validUntil = $('f-validuntil').value||addDays(contractDate,7);
+  const depositPct = Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const idrRate = parseFloat($('f-idrrate').value)||17085;
+  const bookingType = $('f-bookingtype').value;
+  const P = pricing();
+  const nights = P.nights;
+  const days = nights+1;
+  const idrTotal = P.totalIn * idrRate;
+  const PMT = payments(P.totalIn, checkin, depositPct);
 
-                {/* Parties */}
-                <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10px", fontWeight: "700", letterSpacing: "0.12em", textTransform: "uppercase", textAlign: "center", marginBottom: "14px", color: "#5C3D2E" }}>BETWEEN</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", border: "1px solid #B8935A", marginBottom: "28px" }}>
-                  {[
-                    { title: "RETREAT ORGANIZER", lines: [`Company Name: ${form.organizerCompany||"___________"}`, `Contact Person: ${form.organizerContact||"___________"}`, `Address: ${form.organizerAddress||"___________"}`, `Phone: ${form.organizerPhone||"___________"}`, `Website: ${form.organizerWebsite||"___________"}`] },
-                    { title: "VENUE HOLDER", lines: ["Company: PT Purusa Yoga Bali (Ubuntu Bali)", "Director: Witri Utari", "Contract: Andréa Drottholm", "Phone: +62 812 3862 0082", "Email: namaste@ubuntubali.com"] }
-                  ].map((col, i) => (
-                    <div key={i} style={{ padding: "16px 20px", borderRight: i===0 ? "1px solid #B8935A" : "none", background: "#FDFAF5" }}>
-                      <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", color: "#5C3D2E", marginBottom: "10px" }}>{col.title}</div>
-                      {col.lines.map((l,j) => <div key={j} style={{ fontSize: "12px", marginBottom: "4px" }}>{l}</div>)}
-                    </div>
-                  ))}
-                </div>
+  const BANK = {Currency:'IDR','Account Holder':'PT PURUSA YOGA BALI',Bank:'PT Bank Permata, Tbk','Account Number':'4122048077','BIC / SWIFT':'BBBAIDJAXXX','Bank Address':'Jalan Subak Sari No. 1, Badung, Bali'};
+  const CANCEL = [
+    ['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],
+    ['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']
+  ];
 
-                {/* Date bar */}
-                <div style={{ textAlign: "center", fontFamily: "'Libre Baskerville', serif", fontSize: "11px", fontWeight: "700", color: "#221208", borderTop: "1px solid #DDD0BA", borderBottom: "1px solid #DDD0BA", padding: "11px 0", marginBottom: "30px" }}>
-                  Date: {fmtDate(form.contractDate)} &nbsp;|&nbsp; Check-in: {fmtDate(form.checkinDate)} &nbsp;|&nbsp; Check-out: {fmtDate(form.checkoutDate)}
-                </div>
+  const baleRows = P.bales>0?`<tr><td>Accommodation — ${P.bales} Gladak${P.bales>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.bales*P.roomRate*nights,2)}</td></tr>`:'';
+  const parvContractRow = P.parvOn?`<tr><td>Parvati Villa × ${nights} nights × USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc*nights,2)}</td></tr>`:'';
+  const buddContractRow = P.buddOn?`<tr><td>Buddha Villa × ${nights} nights × USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc*nights,2)}</td></tr>`:'';
+  const pkgContractRow = P.pkgCount>0?`<tr><td>Retreat Package — ${P.pkgCount} people × ${nights} nights × USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgSub*nights,2)}</td></tr>`:'';
+  const taxRow=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(P.totalIn - P.totalEx,2)}</td></tr>`;
+  const ebContractRow = P.discPct>0?`<tr><td><strong>${P.discPct}% Early Bird Discount</strong></td><td></td><td><strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong></td></tr>`:'';
+  const rdContractRow = P.discRooms>0&&P.discRoomPct>0?`<tr><td><strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong></td><td></td><td><strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong></td></tr>`:'';
+  const totalRow=`<tr style="background:#F5ECD7;"><td colspan="2" style="font-weight:normal;">Total incl. tax &amp; service</td><td style="font-weight:normal;">USD ${fmtN(P.totalIn,2)}</td></tr>`;
+  const idrRow=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td colspan="2" style="font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;">IDR for transaction (rate: 1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue)</td><td style="font-family:'Libre Baskerville',serif;font-size:12px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
 
-                {/* Validity notice */}
-                <div style={{ background: "#F5ECD7", border: "1px solid #C8A96E", borderRadius: "4px", padding: "10px 16px", marginBottom: "28px", fontFamily: "'Lora', serif", fontSize: "12px", color: "#3D2B1F", lineHeight: "1.65" }}>
-                  <strong style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10.5px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Contract Validity: </strong>
-                  This contract offer is valid until <strong>{fmtDate(form.validUntil || defaultValidUntil(form.contractDate))}</strong>. If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.
-                </div>
+  return `<div class="contract-doc">
+  <div class="c-hd">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:50px;display:block;margin:0 auto 16px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
+    <div class="c-hd-title">Retreat Booking Confirmation & Agreement</div>
+    <div class="c-hd-sub">PT Purusa Yoga Bali · Operating as Ubuntu Bali</div>
+  </div>
+  <div style="font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-bottom:13px;color:#5C3D2E;">BETWEEN</div>
+  <div class="c-parties">
+    <div class="c-party">
+      <div class="c-party-title">Retreat Organizer</div>
+      <p>Company Name: ${company}</p>
+      <p>Contact Person: ${name}</p>
+      <p>Address: ${address}</p>
+      <p>Phone: ${phone}</p>
+      <p>Website: ${website}</p>
+    </div>
+    <div class="c-party">
+      <div class="c-party-title">Venue Holder</div>
+      <p>Company: PT Purusa Yoga Bali (Ubuntu Bali)</p>
+      <p>Director: Witri Utari</p>
+      <p>Contract: Andréa Drottholm</p>
+      <p>Phone: +62 812 3862 0082</p>
+      <p>Email: namaste@ubuntubali.com</p>
+    </div>
+  </div>
+  <div class="c-datebar">Date: ${fmtDS(contractDate)} &nbsp;|&nbsp; Check-in: ${fmtDS(checkin)} &nbsp;|&nbsp; Check-out: ${fmtDS(checkout)}</div>
+  <div class="c-validity"><strong style="font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;">Contract Validity: </strong>This contract offer is valid until <strong>${fmtDS(validUntil)}</strong>. If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.</div>
 
-                {/* Section A */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("A", "PURPOSE OF AGREEMENT", true)}
-                  <p style={bodyText}>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
-                  <p style={bodyText}>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">A) Purpose of Agreement</div>
+    <p>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
+    <p>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p>
+  </div>
 
-                {/* Section B */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("B", "PRICING & INCLUSIONS", true)}
-                  <p style={bodyText}>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
-                  <p style={{ ...bodyText, fontWeight: "700", marginTop: "10px" }}>Retreat Package: {form.retreatName||"___________"} · {form.nights||"?"} Nights, {form.nights?parseInt(form.nights)+1:"?"} Days · {form.guests||"?"} Guests</p>
-                  <p style={{ ...bodyText, marginBottom: "10px" }}>Check-in: {fmtDateShort(form.checkinDate)} · Check-out: {fmtDateShort(form.checkoutDate)}</p>
-                  <p style={{ ...bodyText, fontWeight: "700", marginBottom: "6px" }}>Room Allocation:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>Ubuntu Bali property: {form.ubuntuRooms||"?"} rooms (can accommodate single or shared occupancy; pricing per room, not per guest)</li>
-                    <li style={{ marginBottom: "4px" }}>Partner resort: {form.partnerRooms||"?"} rooms (single occupancy standard; shared occupancy available at +USD 15/night per additional guest)</li>
-                    <li style={{ marginBottom: "4px" }}>Total capacity: {form.rooms||"?"} rooms, up to {form.rooms && form.ubuntuRooms ? parseInt(form.rooms) + parseInt(form.ubuntuRooms) : "?"} guests if sharing is utilised (Ubuntu rooms only)</li>
-                    <li>Room assignment: Allocated by Retreat Organizer; changes require 30 days notice</li>
-                  </ul>
-                  <PricingTable />
-                  <p style={{ ...bodyText, fontWeight: "700", marginBottom: "5px", marginTop: "14px" }}>What's Included:</p>
-                  <ul style={ulStyle}>
-                    <li>2 organic plant-based meals per day</li>
-                    <li>Tea and afternoon snack</li>
-                    <li>Shala of your choice and cleaning</li>
-                    <li>Full staff support and dedicated contact person</li>
-                  </ul>
-                  <p style={bodyText}>The package price is fixed for {form.guests||"?"} guests. Should the group exceed {form.guests||"?"} people, the room rate remains the same (when rooms are shared) — only meals would be added for each additional guest.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">B) Pricing & Inclusions</div>
+    <p>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
+    <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
+    <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
+    <table class="c-table">
+      <thead><tr><th>ITEM</th><th>RATE</th><th>SUBTOTAL</th></tr></thead>
+      <tbody>
+        ${baleRows}${parvContractRow}${buddContractRow}${pkgContractRow}${taxRow}${ebContractRow}${rdContractRow}${totalRow}${idrRow}
+      </tbody>
+    </table>
+    <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
+    <p><strong>What's Included:</strong></p>
+    <ul><li>2 organic plant-based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
+    <p>The package price is fixed for ${totalPeople} guests. Should the group exceed ${totalPeople} people, the room rate remains the same — only meals would be added for each additional guest.</p>
+  </div>
 
-                {/* Section C */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("C", "PAYMENTS & BANK DETAILS", true)}
-                  <p style={bodyText}>Payments must be made to the following account:</p>
-                  <table style={{ borderCollapse: "collapse", fontSize: "12px", marginTop: "10px", marginBottom: "10px" }}>
-                    {Object.entries(FIXED_PRICING.bankDetails).map(([k,v]) => (
-                      <tr key={k}>
-                        <td style={{ padding: "5px 24px 5px 0", fontWeight: "700", color: "#1A1208", whiteSpace: "nowrap", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.05em" }}>{k}</td>
-                        <td style={{ padding: "5px 0", fontFamily: "'Lora', serif" }}>{v}</td>
-                      </tr>
-                    ))}
-                  </table>
-                  <p style={bodyText}>All bank and transfer fees are the responsibility of the Retreat Organizer.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">C) Payments & Bank Details</div>
+    <p>Payments must be made to the following account:</p>
+    <table class="bank-table">${Object.entries(BANK).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>
+    <p>All bank and transfer fees are the responsibility of the Retreat Organizer.</p>
+  </div>
 
-                {/* Section D */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("D", "PAYMENT SCHEDULE", true)}
-                  <p style={{ ...bodyText, fontWeight: "700", marginBottom: "12px" }}>This booking qualifies as a {form.bookingType} BOOKING {form.bookingType==="STANDARD" ? "(more than 120 days before retreat start)" : "(less than 120 days before retreat start)"}.</p>
-                  <GenericTable
-                    head={["Payment","Percentage","Amount (USD)","Due Date"]}
-                    rows={[
-                      ["Deposit", payments.deposit.pct, fmt$(payments.deposit.amount), payments.deposit.due],
-                      ["2nd Payment", payments.second.pct, fmt$(payments.second.amount), payments.second.due],
-                      ["Final Payment", payments.final.pct, fmt$(payments.final.amount), payments.final.due],
-                    ]}
-                  />
-                  <p style={bodyText}>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">D) Payment Schedule</div>
+    <p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p>
+    <table class="c-table">
+      <thead><tr><th>Payment</th><th>Percentage</th><th>Amount (USD)</th><th>Due Date</th></tr></thead>
+      <tbody>
+        <tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>USD ${fmtN(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr>
+        <tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>USD ${fmtN(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr>
+        <tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>USD ${fmtN(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr>
+      </tbody>
+    </table>
+    <p>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p>
+  </div>
 
-                {/* Section E */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("E", "CANCELLATION & REFUND POLICY", true)}
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Standard Bookings:</p>
-                  <p style={bodyText}>Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees. Any balance payments already received are non-refundable once the final payment deadline passes.</p>
-                  <GenericTable
-                    head={["Cancellation Period","Refund of Deposit (minus bank fees)"]}
-                    rows={CANCELLATION_POLICY.map(r => [r.period, r.refund])}
-                  />
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Short-Notice Bookings:</p>
-                  <p style={bodyText}>Deposits are non-refundable except in cases of force majeure as defined in Section L.</p>
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Rescheduling:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>One reschedule is permitted within 12 months of original dates, subject to availability and a 10% administrative fee</li>
-                    <li style={{ marginBottom: "4px" }}>Requests must be made at least 3 months prior to retreat start</li>
-                    <li>If Ubuntu Bali successfully rebooks cancelled dates, a partial refund or credit may be offered at its discretion</li>
-                  </ul>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">E) Cancellation & Refund Policy</div>
+    <p><strong>Standard Bookings:</strong></p>
+    <p>Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees. Any balance payments already received are non-refundable once the final payment deadline passes.</p>
+    <table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead><tbody>${CANCEL.map(([p,r],i)=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table>
+    <p><strong>Short-Notice Bookings:</strong> Deposits are non-refundable except in cases of force majeure as defined in Section L.</p>
+    <p><strong>Rescheduling:</strong></p>
+    <ul><li>One reschedule is permitted within 12 months of original dates, subject to availability and a 10% administrative fee</li><li>Requests must be made at least 3 months prior to retreat start</li><li>If Ubuntu Bali successfully rebooks cancelled dates, a partial refund or credit may be offered at its discretion</li></ul>
+  </div>
 
-                {/* Section F */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("F", "LIABILITY, INSURANCE & INDEMNIFICATION")}
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Retreat Organizer Responsibility:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>All participants must carry adequate travel insurance and health insurance covering yoga, wellness activities, and medical evacuation</li>
-                    <li>Retreat Organizer is responsible for communicating health and medical restrictions to Ubuntu Bali in writing at least 30 days prior to the retreat</li>
-                  </ul>
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Ubuntu Bali Liability:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>Ubuntu Bali shall not be held liable for personal injury, loss, damage, or theft of personal property, except in cases of Ubuntu Bali's gross negligence or wilful misconduct</li>
-                    <li style={{ marginBottom: "4px" }}>Ubuntu Bali's maximum liability under this agreement is limited to 50% of the total contract value</li>
-                    <li>Ubuntu Bali is not responsible for losses arising from participant non-compliance with house rules or unsafe behaviour</li>
-                  </ul>
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Property Damage:</p>
-                  <p style={bodyText}>Participant-caused damage to property shall be charged to the Retreat Organizer at cost of repair or replacement. Pre-damage photos and videos are available upon request.</p>
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Partner Resort Responsibility:</p>
-                  <p style={bodyText}>Ubuntu Bali assumes full responsibility for partner resort facilities and services as if they were part of the Ubuntu Bali property. Retreat Organizer shall not be held liable for any issues arising at partner resort locations.</p>
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Indemnification:</p>
-                  <p style={bodyText}>Retreat Organizer agrees to indemnify and hold harmless Ubuntu Bali from claims, injuries, or damages arising from participant conduct or actions.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">F) Liability, Insurance & Indemnification</div>
+    <p><strong>Retreat Organizer Responsibility:</strong></p>
+    <ul><li>All participants must carry adequate travel insurance and health insurance covering yoga, wellness activities, and medical evacuation</li><li>Retreat Organizer is responsible for communicating health and medical restrictions to Ubuntu Bali in writing at least 30 days prior to the retreat</li></ul>
+    <p><strong>Ubuntu Bali Liability:</strong></p>
+    <ul><li>Ubuntu Bali shall not be held liable for personal injury, loss, damage, or theft of personal property, except in cases of Ubuntu Bali's gross negligence or wilful misconduct</li><li>Ubuntu Bali's maximum liability under this agreement is limited to 50% of the total contract value</li><li>Ubuntu Bali is not responsible for losses arising from participant non-compliance with house rules or unsafe behaviour</li></ul>
+    <p><strong>Property Damage:</strong> Participant-caused damage to property shall be charged to the Retreat Organizer at cost of repair or replacement.</p>
+    <p><strong>Partner Resort Responsibility:</strong> Ubuntu Bali assumes full responsibility for partner resort facilities and services as if they were part of the Ubuntu Bali property.</p>
+    <p><strong>Indemnification:</strong> Retreat Organizer agrees to indemnify and hold harmless Ubuntu Bali from claims, injuries, or damages arising from participant conduct or actions.</p>
+  </div>
 
-                {/* Section G */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("G", "PROPERTY USE & CONDUCT")}
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>Quiet hours are observed between 9:30pm and 7:00am</li>
-                    <li style={{ marginBottom: "4px" }}>No smoking, alcohol, drugs, or intoxicants are permitted on the premises</li>
-                    <li style={{ marginBottom: "4px" }}>The Yoga Shala must be left tidied, with all fans and lights switched off</li>
-                    <li>Any property damage caused by participants will be charged to the Retreat Organizer</li>
-                  </ul>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">G) Property Use & Conduct</div>
+    <ul><li>Quiet hours are observed between 9:30pm and 7:00am</li><li>No smoking, alcohol, drugs, or intoxicants are permitted on the premises</li><li>The Yoga Shala must be left tidied, with all fans and lights switched off</li><li>Any property damage caused by participants will be charged to the Retreat Organizer</li></ul>
+  </div>
 
-                {/* Section H */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("H", "MEALS")}
-                  <p style={bodyText}>Two organic plant-based meals per day are included for registered overnight guests only.</p>
-                  <p style={bodyText}>Additional meals for facilitators, staff, or external participants must be arranged in advance and incur an additional fee.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">H) Meals</div>
+    <p>Two organic plant-based meals per day are included for registered overnight guests only.</p>
+    <p>Additional meals for facilitators, staff, or external participants must be arranged in advance and incur an additional fee.</p>
+  </div>
 
-                {/* Section I */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("I", "SWIMMING POOL")}
-                  <p style={bodyText}>The swimming pool is available to all registered retreat participants at all times.</p>
-                  <p style={bodyText}>All users must shower before entering the pool.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">I) Swimming Pool</div>
+    <p>The swimming pool is available to all registered retreat participants at all times. All users must shower before entering the pool.</p>
+  </div>
 
-                {/* Section J */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("J", "WI-FI")}
-                  <p style={bodyText}>Wi-Fi is provided across the property in common areas, subject to local service availability.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">J) Wi-Fi</div>
+    <p>Wi-Fi is provided across the property in common areas, subject to local service availability.</p>
+  </div>
 
-                {/* Section K */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("K", "PHOTOGRAPHY & MEDIA")}
-                  <p style={bodyText}>Ubuntu Bali may take photographs or videos during the retreat for internal and promotional purposes, subject to retreat leader permission only.</p>
-                  <p style={bodyText}>Ubuntu Bali will not identify participants by name in any promotional material without separate written consent from the individual.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">K) Photography & Media</div>
+    <p>Ubuntu Bali may take photographs or videos during the retreat for internal and promotional purposes, subject to retreat leader permission only.</p>
+    <p>Ubuntu Bali will not identify participants by name in any promotional material without separate written consent from the individual.</p>
+  </div>
 
-                {/* Section L */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("L", "FORCE MAJEURE & EXTRAORDINARY CIRCUMSTANCES")}
-                  <p style={bodyText}>In the event of circumstances beyond reasonable control—including but not limited to natural disasters (earthquake, tsunami, volcanic activity), government-imposed travel restrictions, pandemic or epidemic declarations, military action, or extreme weather rendering the property unsafe or inaccessible—Ubuntu Bali shall:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>Provide immediate notice to Retreat Organizer within 24 hours of determination</li>
-                    <li>Offer options (at Retreat Organiser's choice): (a) reschedule to alternative dates within 18 months with deposits applied in full, (b) issue 100% credit toward future bookings valid for 24 months, or (c) request pro-rata refund (Ubuntu Bali retains administrative fee of 5% of total contract value)</li>
-                  </ul>
-                  <p style={bodyText}>Non-refundable components remain non-refundable unless force majeure is officially declared by Indonesian government authority.</p>
-                  <p style={bodyText}>For short-notice bookings, deposits are non-refundable unless force majeure is officially declared.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">L) Force Majeure & Extraordinary Circumstances</div>
+    <p>In the event of circumstances beyond reasonable control—including but not limited to natural disasters, government-imposed travel restrictions, pandemic or epidemic declarations, military action, or extreme weather—Ubuntu Bali shall:</p>
+    <ul><li>Provide immediate notice to Retreat Organizer within 24 hours of determination</li><li>Offer options (at Retreat Organiser's choice): (a) reschedule within 18 months with deposits applied in full, (b) issue 100% credit toward future bookings valid for 24 months, or (c) request pro-rata refund (Ubuntu Bali retains administrative fee of 5%)</li></ul>
+    <p>Non-refundable components remain non-refundable unless force majeure is officially declared by Indonesian government authority.</p>
+  </div>
 
-                {/* Section M */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("M", "DISPUTE RESOLUTION & ESCALATION")}
-                  <p style={bodyText}>Before pursuing legal action, either party shall follow this escalation process:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>Informal Resolution (7 days): Written notice describing the issue, submitted to the other party</li>
-                    <li style={{ marginBottom: "4px" }}>Management Discussion (14 days): In-person or video meeting between Andréa (Ubuntu Bali) and Retreat Organizer to resolve</li>
-                    <li style={{ marginBottom: "4px" }}>Mediation (optional, 30 days): If unresolved, parties agree to seek mediation through a neutral third party agreed upon by both parties</li>
-                    <li>Legal Action: Only after the above steps have been attempted</li>
-                  </ul>
-                  <p style={bodyText}>Each party bears its own costs unless a court determines otherwise.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">M) Dispute Resolution & Escalation</div>
+    <ul><li>Informal Resolution (7 days): Written notice describing the issue</li><li>Management Discussion (14 days): In-person or video meeting between Andréa (Ubuntu Bali) and Retreat Organizer</li><li>Mediation (optional, 30 days): Neutral third party agreed upon by both parties</li><li>Legal Action: Only after the above steps have been attempted</li></ul>
+    <p>Each party bears its own costs unless a court determines otherwise.</p>
+  </div>
 
-                {/* Section N */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("N", "UBUNTU BALI CANCELLATION")}
-                  <p style={bodyText}>Ubuntu Bali may cancel this booking with 60 days written notice if:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>Property becomes unavailable due to emergency repairs or natural disaster</li>
-                    <li>Force majeure makes operation unsafe or impossible</li>
-                  </ul>
-                  <p style={bodyText}>In such cases, Retreat Organizer shall receive:</p>
-                  <ul style={ulStyle}>
-                    <li style={{ marginBottom: "4px" }}>100% refund of all payments made (minus bank transfer fees)</li>
-                    <li style={{ marginBottom: "4px" }}>Priority rebooking on alternative dates within 18 months</li>
-                    <li>Ubuntu Bali shall not charge administrative or rescheduling fees</li>
-                  </ul>
-                  <p style={{ ...bodyText, fontWeight: "700" }}>Short-Notice Ubuntu Cancellation (less than 60 days):</p>
-                  <p style={bodyText}>Full refund of all payments (including non-refundable deposit, minus bank fees) plus 5% compensation credit toward future booking.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">N) Ubuntu Bali Cancellation</div>
+    <p>Ubuntu Bali may cancel this booking with 60 days written notice if the property becomes unavailable due to emergency repairs, natural disaster, or force majeure.</p>
+    <p>In such cases, Retreat Organizer shall receive 100% refund of all payments made (minus bank transfer fees) and priority rebooking within 18 months.</p>
+    <p><strong>Short-Notice Ubuntu Cancellation (less than 60 days):</strong> Full refund of all payments plus 5% compensation credit toward future booking.</p>
+  </div>
 
-                {/* Section O */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("O", "TERMINATION")}
-                  <p style={bodyText}>Either party may terminate this Agreement for material breach with 14 days written notice. Immediate termination applies in cases of illegal or unsafe behaviour.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">O) Termination</div>
+    <p>Either party may terminate this Agreement for material breach with 14 days written notice. Immediate termination applies in cases of illegal or unsafe behaviour.</p>
+  </div>
 
-                {/* Section P */}
-                <div style={{ marginBottom: "24px" }}>
-                  {secHead("P", "GOVERNING LAW")}
-                  <p style={bodyText}>This Agreement shall be governed by and construed in accordance with the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">P) Governing Law</div>
+    <p>This Agreement shall be governed by and construed in accordance with the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p>
+  </div>
 
-                {/* Section Q */}
-                <div style={{ marginBottom: "32px" }}>
-                  {secHead("Q", "ENTIRE AGREEMENT")}
-                  <p style={bodyText}>This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.</p>
-                </div>
+  <div class="c-sec"><div class="c-sec-hd">Q) Entire Agreement</div>
+    <p>This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.</p>
+  </div>
 
-                {/* Signatures */}
-                <div style={{ borderTop: "2px solid #221208", paddingTop: "26px" }}>
-                  <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.14em", textAlign: "center", marginBottom: "26px", color: "#221208" }}>SIGNATURES</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "44px" }}>
-                    {[
-                      { title: "For Ubuntu Bali", name: "Andréa Drottholm", role: "Contract Representative", date: fmtDate(form.contractDate), sub: "Tari, as representative of Andréa Drottholm" },
-                      { title: "For Retreat Organizer", name: form.organizerContact||"___________", role: form.organizerTitle||"___________", date: "", sub: form.organizerContact||"___________" }
-                    ].map((sig, i) => (
-                      <div key={i}>
-                        <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", color: "#5C3D2E", marginBottom: "12px" }}>{sig.title}</div>
-                        <div style={{ ...bodyText, marginBottom: "4px" }}>Name: {sig.name}</div>
-                        <div style={{ ...bodyText, marginBottom: "4px" }}>Title: {sig.role}</div>
-                        <div style={{ ...bodyText, marginBottom: "22px" }}>Date: {sig.date||"___________"}</div>
-                        <div style={{ ...bodyText, marginBottom: "5px" }}>Signature:</div>
-                        <div style={{ borderBottom: "1px solid #1A1208", width: "80%", marginBottom: "7px", height: "20px" }}/>
-                        <div style={{ fontSize: "11px", color: "#8B7355", fontStyle: "italic", fontFamily: "'Lora', serif" }}>{sig.sub}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+  <div class="c-sigs">
+    <div class="c-sigs-title">Signatures</div>
+    <div class="c-sigs-grid">
+      <div>
+        <div class="c-sig-party">For Ubuntu Bali</div>
+        <p style="font-size:12px;margin-bottom:3px;">Name: Andréa Drottholm</p>
+        <p style="font-size:12px;margin-bottom:3px;">Title: Contract Representative</p>
+        <p style="font-size:12px;margin-bottom:18px;">Date: ${fmtDS(contractDate)}</p>
+        <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
+        <div class="c-sig-line"></div>
+        <div class="c-sig-note">Tari, as representative of Andréa Drottholm</div>
+      </div>
+      <div>
+        <div class="c-sig-party">For Retreat Organizer</div>
+        <p style="font-size:12px;margin-bottom:3px;">Name: ${name}</p>
+        <p style="font-size:12px;margin-bottom:3px;">Title: ${contactTitle}</p>
+        <p style="font-size:12px;margin-bottom:18px;">Date: ___________</p>
+        <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
+        <div class="c-sig-line"></div>
+        <div class="c-sig-note">${name}</div>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
 
-              </div>
-            )}
-          </div>
+// ─── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  const area = $('content-area');
+  if(activeTab==='offer'){
+    area.innerHTML=`<div class="sec-label">Offer Preview</div><div class="email-wrap"><div class="email">${offerHTML()}</div></div>`;
+  } else {
+    area.innerHTML=`<div class="sec-label">Contract Preview</div>${contractHTML()}`;
+  }
+}
 
-          {/* Save to Notion — shown in preview */}
-          {view === "preview" && offerLoaded && (
-            <div style={{ textAlign: "center", padding: "28px 0 48px" }}>
-              <button onClick={saveToNotion} disabled={saveStatus === 'saving'} style={{
-                padding: "14px 44px", border: "none", borderRadius: "4px",
-                background: saveStatus === 'saved' ? "#3D6636" : saveStatus === 'error' ? "#8B3A2E" : "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)",
-                color: "#F5ECD7",
-                fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
-                letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
-                cursor: saveStatus === 'saving' ? "not-allowed" : "pointer",
-                boxShadow: "0 4px 16px rgba(34,18,8,0.22)"
-              }}>
-                {saveStatus === 'saving' ? "Saving…" : saveStatus === 'saved' ? "✓ Saved to Notion" : saveStatus === 'error' ? "Error — try again" : "Save to Notion →"}
-              </button>
-            </div>
-          )}
-        </div>
-      );
-    }
+// ─── PRINT ─────────────────────────────────────────────────────────────────────
+const OFFER_STYLES = `body{font-family:Verdana,Geneva,sans-serif;font-size:10px;background:#e8e3dc;margin:0;padding:20px;color:#2a2520;}.email{background:#fff;width:580px;margin:0 auto;}.e-header{background:#3a3228;text-align:center;padding:24px 36px 20px;}.e-logo{max-width:60px;margin:0 auto 12px;display:block;filter:brightness(0) invert(1);}.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:5px;}.e-header-line{width:36px;height:1px;background:#c8b89a;margin:7px auto;opacity:.6;}.e-header-date,.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}.e-body{padding:18px 36px 0;line-height:1.9;color:#2a2520;}.e-body p{margin-bottom:9px;}.e-badge{margin:12px 36px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:8px 13px;text-align:center;font-size:10px;color:#3a3228;}.e-package{margin:14px 36px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}.e-pkg-hd{background:#3a3228;padding:11px 15px;}.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}.e-pkg-body{padding:0 15px;}table.ptable{width:100%;border-collapse:collapse;font-size:10px;}.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}.pt-item td{padding:5px 0;border-top:1px solid #eee;}.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}.pt-divider td{padding:0 0 5px;}.pt-divline{height:1px;background:#eee;font-size:1px;}.pt-grand td{padding:2px 0;font-weight:bold;}.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}.e-note{margin:10px 36px 0;border-left:3px solid #c8b89a;padding:6px 11px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}.e-note p{margin-bottom:5px;}.e-included{margin:15px 36px 0;border:1px solid #d8d0c4;border-radius:4px;padding:11px 15px 7px;}.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:8px;}.e-included table{width:100%;border-collapse:collapse;font-size:10px;}.e-included td{padding:2px 0;vertical-align:top;width:50%;}.e-also{margin:15px 36px 0;}.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:8px;}.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}.e-closing{padding:20px 36px 0;line-height:1.9;font-size:10px;}.e-closing p{margin-bottom:5px;}.e-footer-band{background:#3a3228;margin-top:26px;padding:16px 36px 20px;text-align:center;}.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:6px;letter-spacing:1px;}.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}@media print{body{background:#e8e3dc;padding:0;}}`;
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<ContractGenerator />);
-  </script>
+const CONTRACT_STYLES = `*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Lora',serif;background:#F0E9DF;padding:20px;color:#1A1208;}@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:52px 56px;font-family:'Lora',serif;color:#1A1208;font-size:13px;line-height:1.75;}.c-hd{text-align:center;margin-bottom:30px;border-bottom:2px solid #221208;padding-bottom:22px;}.c-hd-title{font-family:'Libre Baskerville',serif;font-size:16px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;}.c-hd-sub{font-family:'Lora',serif;font-size:12px;color:#8B7355;font-style:italic;}.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:26px;}.c-party{padding:15px 18px;background:#FDFAF5;}.c-party:first-child{border-right:1px solid #B8935A;}.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:9px;}.c-party p{font-size:12px;margin-bottom:3px;}.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:10px 0;margin-bottom:26px;color:#221208;}.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:10px 15px;margin-bottom:26px;font-size:12px;color:#3D2B1F;line-height:1.65;}.c-sec{margin-bottom:22px;}.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:5px;margin-bottom:12px;}.c-sec p{margin-bottom:8px;font-size:12.5px;}.c-sec ul{margin:0 0 10px 20px;font-size:12.5px;}.c-sec ul li{margin-bottom:3px;}.c-table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;}.c-table thead tr{background:#221208;}.c-table thead th{padding:8px 12px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.09em;text-align:left;font-weight:700;}.c-table tbody tr:nth-child(odd){background:#FDFAF5;}.c-table tbody tr:nth-child(even){background:#F5ECD7;}.c-table tbody td{padding:7px 12px;border-bottom:1px solid #EDE3D4;}.c-sigs{border-top:2px solid #221208;padding-top:24px;}.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:24px;}.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;}.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:11px;}.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:18px 0 6px;}.c-sig-note{font-size:11px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}.bank-table{border-collapse:collapse;font-size:12px;margin:8px 0 10px;}.bank-table td{padding:4px 20px 4px 0;font-family:'Lora',serif;}.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.05em;white-space:nowrap;}@media print{body{background:#F0E9DF;padding:0;}}`;
+
+function printOffer(){
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${offerHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+function printContract(){
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${contractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
+// ─── SAVE TO NOTION (calls /api/notion on Vercel) ──────────────────────────────
+async function saveToNotion(){
+  const btn = $('save-btn');
+  btn.textContent='Saving…'; btn.className='save-btn';
+  const P = pricing();
+  const payload = {
+    organizer: $('f-name').value,
+    retreatName: $('f-retreatname').value,
+    checkin: $('f-checkin').value,
+    checkout: $('f-checkout').value,
+    contractDate: $('f-contractdate').value||today(),
+    rooms: P.bales + (P.parvOn?1:0) + (P.buddOn?1:0),
+    nights: P.nights,
+    guests: parseInt($('f-guests').value)||0,
+    totalUSD: P.totalIn,
+    status: $('notion-status').value,
+  };
+  try {
+    const resp = await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!resp.ok) throw new Error('Failed');
+    btn.textContent='✓ Saved'; btn.className='save-btn saved';
+    setTimeout(()=>{btn.textContent='Save to Notion';btn.className='save-btn';},3000);
+  } catch(e){
+    btn.textContent='Error'; btn.className='save-btn error';
+    setTimeout(()=>{btn.textContent='Save to Notion';btn.className='save-btn';},3000);
+  }
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+$('f-contractdate').value = today();
+$('f-validuntil').value = addDays(today(),7);
+render();
+</script>
 </body>
 </html>
