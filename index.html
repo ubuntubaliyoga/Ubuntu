@@ -125,7 +125,7 @@
       const [aiMessage, setAiMessage] = useState("");
       const [view, setView] = useState("form");
       const [dragOver, setDragOver] = useState(false);
-      const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
+      const [saveStatus, setSaveStatus] = useState(null);
       const fileRef = useRef();
 
       const pricing = computePricing(form.rooms, form.nights, form.guests);
@@ -139,7 +139,6 @@
         validUntil: f.validUntil === defaultValidUntil(f.contractDate) ? defaultValidUntil(val) : f.validUntil
       }));
 
-      // FIX: single saveToNotion declaration
       const saveToNotion = async () => {
         setSaveStatus('saving');
         try {
@@ -157,7 +156,7 @@
         }
       };
 
-      // FIX: handleFile properly declared as a named useCallback
+      // ✅ FIX: calls /api/claude (Vercel serverless proxy) instead of Anthropic directly
       const handleFile = useCallback((file) => {
         if (!file) return;
         setAiStatus("loading");
@@ -170,7 +169,7 @@
               r.onerror = rej;
               r.readAsDataURL(file);
             });
-            const resp = await fetch("https://api.anthropic.com/v1/messages", {
+            const resp = await fetch("/api/claude", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
