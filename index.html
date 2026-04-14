@@ -120,7 +120,21 @@ function ContractGenerator() {
   const [aiMessage, setAiMessage] = useState("");
   const [view, setView] = useState("form");
   const [dragOver, setDragOver] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
   const fileRef = useRef();
+
+  const saveToNotion = async () => {
+    setSaveStatus("saving");
+    try {
+      const resp = await fetch('/api/notion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractData: { ...form, total: pricing.total } })
+      });
+      const data = await resp.json();
+      if (data.id) { setSaveStatus("saved"); } else { setSaveStatus("error"); }
+    } catch { setSaveStatus("error"); }
+  };
 
   const pricing = computePricing(form.rooms, form.nights, form.guests);
   const payments = computePayments(pricing.total, form.checkinDate);
@@ -133,7 +147,22 @@ function ContractGenerator() {
     validUntil: f.validUntil === defaultValidUntil(f.contractDate) ? defaultValidUntil(val) : f.validUntil
   }));
 
-  const handleFile = useCallback(async (file) => {
+  const saveToNotion = async () => {
+    setSaveStatus('saving');
+    try {
+      const resp = await fetch('/api/notion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractData: { ...form, total: pricing.total } })
+      });
+      if (!resp.ok) throw new Error('Failed');
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 3000);
+    }
+  };
     if (!file) return;
     setAiStatus("loading"); setAiMessage("Reading offer…");
     try {
@@ -406,7 +435,7 @@ function ContractGenerator() {
               </>
             )}
 
-            <div style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center", display: "flex", gap: "12px", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
               <button className="preview-btn" onClick={() => setView("preview")} disabled={!offerLoaded} style={{
                 padding: "14px 44px", border: "none", borderRadius: "4px",
                 background: offerLoaded ? "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)" : "#C8BAA8",
@@ -416,6 +445,18 @@ function ContractGenerator() {
                 cursor: offerLoaded ? "pointer" : "not-allowed",
                 boxShadow: offerLoaded ? "0 4px 16px rgba(34,18,8,0.22)" : "none"
               }}>{offerLoaded ? "Generate Contract Preview →" : "Upload an offer to continue"}</button>
+              {offerLoaded && (
+                <button onClick={saveToNotion} disabled={saveStatus === "saving" || saveStatus === "saved"} style={{
+                  padding: "14px 32px", border: "1.5px solid #B8935A", borderRadius: "4px",
+                  background: saveStatus === "saved" ? "#3D6636" : saveStatus === "error" ? "#8B3A2E" : "#FAF5ED",
+                  color: saveStatus === "saved" ? "#fff" : saveStatus === "error" ? "#fff" : "#B8935A",
+                  fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
+                  letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
+                  cursor: saveStatus ? "default" : "pointer"
+                }}>
+                  {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "✓ Saved to Notion" : saveStatus === "error" ? "Error — try again" : "Save to Notion"}
+                </button>
+              )}
             </div>
           </>
         )}
@@ -657,6 +698,23 @@ function ContractGenerator() {
           </div>
         )}
       </div>
+
+      {/* Save to Notion button — shown in preview when offer is loaded */}
+      {view === "preview" && offerLoaded && (
+        <div style={{ textAlign: "center", padding: "28px 0 48px" }}>
+          <button onClick={saveToNotion} disabled={saveStatus === 'saving'} style={{
+            padding: "14px 44px", border: "none", borderRadius: "4px",
+            background: saveStatus === 'saved' ? "#3D6636" : saveStatus === 'error' ? "#8B3A2E" : "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)",
+            color: "#F5ECD7",
+            fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
+            letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
+            cursor: saveStatus === 'saving' ? "not-allowed" : "pointer",
+            boxShadow: "0 4px 16px rgba(34,18,8,0.22)"
+          }}>
+            {saveStatus === 'saving' ? "Saving…" : saveStatus === 'saved' ? "✓ Saved to Notion" : saveStatus === 'error' ? "Error — try again" : "Save to Notion →"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
