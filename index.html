@@ -20,705 +20,736 @@
   <script type="text/babel">
     const { useState, useRef, useCallback } = React;
 
-const LOGO_URI = null;
+    const LOGO_URI = null;
 
-const FIXED_PRICING = {
-  accommodationRate: 60,
-  retreatPackageRate: 30.25,
-  taxRate: 0.10,
-  serviceRate: 0.05,
-  discountRate: 0.2277,
-  bankDetails: {
-    Currency: "IDR",
-    "Account Holder": "PT PURUSA YOGA BALI",
-    Bank: "PT Bank Permata, Tbk",
-    "Account Number": "4122048077",
-    "BIC / SWIFT": "BBBAIDJAXXX",
-    "Bank Address": "Jalan Subak Sari No. 1, Badung, Bali"
-  }
-};
+    const FIXED_PRICING = {
+      accommodationRate: 60,
+      retreatPackageRate: 30.25,
+      taxRate: 0.10,
+      serviceRate: 0.05,
+      discountRate: 0.2277,
+      bankDetails: {
+        Currency: "IDR",
+        "Account Holder": "PT PURUSA YOGA BALI",
+        Bank: "PT Bank Permata, Tbk",
+        "Account Number": "4122048077",
+        "BIC / SWIFT": "BBBAIDJAXXX",
+        "Bank Address": "Jalan Subak Sari No. 1, Badung, Bali"
+      }
+    };
 
-const CANCELLATION_POLICY = [
-  { period: "12+ months prior", refund: "100%" },
-  { period: "9–12 months prior", refund: "80%" },
-  { period: "6–9 months prior", refund: "60%" },
-  { period: "3–6 months prior", refund: "40%" },
-  { period: "1–3 months prior", refund: "20%" },
-  { period: "Less than 1 month prior", refund: "No refund (0%)" },
-];
+    const CANCELLATION_POLICY = [
+      { period: "12+ months prior", refund: "100%" },
+      { period: "9–12 months prior", refund: "80%" },
+      { period: "6–9 months prior", refund: "60%" },
+      { period: "3–6 months prior", refund: "40%" },
+      { period: "1–3 months prior", refund: "20%" },
+      { period: "Less than 1 month prior", refund: "No refund (0%)" },
+    ];
 
-function computePricing(rooms, nights, guests) {
-  const r = parseFloat(rooms) || 0;
-  const n = parseFloat(nights) || 0;
-  const g = parseFloat(guests) || 0;
-  const accommodation = r * n * FIXED_PRICING.accommodationRate;
-  const retreatPkg = g * n * FIXED_PRICING.retreatPackageRate;
-  const subtotal = accommodation + retreatPkg;
-  const tax = subtotal * FIXED_PRICING.taxRate;
-  const service = subtotal * FIXED_PRICING.serviceRate;
-  const grossTotal = subtotal + tax + service;
-  const discount = grossTotal * FIXED_PRICING.discountRate;
-  const total = grossTotal - discount;
-  return { accommodation, retreatPkg, subtotal, tax, service, grossTotal, discount, total };
-}
-
-function computePayments(total, checkinDate) {
-  const deposit = total * 0.5;
-  const second = total * 0.3;
-  const fin = total * 0.2;
-  const depositDue = new Date();
-  depositDue.setDate(depositDue.getDate() + 2);
-  let secondDue = "", finalDue = "";
-  if (checkinDate) {
-    const d = new Date(checkinDate + "T00:00:00");
-    const s = new Date(checkinDate + "T00:00:00"); s.setMonth(s.getMonth() - 3);
-    secondDue = s.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-    finalDue = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  }
-  return {
-    deposit: { pct: "50%", amount: deposit.toFixed(2), due: depositDue.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) },
-    second: { pct: "30%", amount: second.toFixed(2), due: secondDue || "___________" },
-    final:  { pct: "20%", amount: fin.toFixed(2),    due: finalDue  || "___________" }
-  };
-}
-
-const fmtDate = (d) => {
-  if (!d) return "___________";
-  const p = new Date(d + "T00:00:00"); if (isNaN(p)) return d;
-  return p.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-};
-const fmtDateShort = (d) => {
-  if (!d) return "___________";
-  const p = new Date(d + "T00:00:00"); if (isNaN(p)) return d;
-  return p.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-};
-const fmt$ = (n) => `$${Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const fmtIDR = (n) => `Rp ${Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-
-function defaultValidUntil(contractDate) {
-  if (!contractDate) return "";
-  const d = new Date(contractDate + "T00:00:00");
-  d.setDate(d.getDate() + 7);
-  return d.toISOString().split("T")[0];
-}
-
-const Bold = ({ children }) => <strong>{children}</strong>;
-
-function ContractGenerator() {
-  const today = new Date().toISOString().split("T")[0];
-  const [form, setForm] = useState({
-    contractDate: today,
-    validUntil: defaultValidUntil(today),
-    checkinDate: "", checkoutDate: "", retreatName: "",
-    organizerCompany: "", organizerContact: "", organizerAddress: "",
-    organizerPhone: "", organizerWebsite: "", organizerTitle: "",
-    rooms: "", nights: "", guests: "", ubuntuRooms: "", partnerRooms: "",
-    bookingType: "STANDARD"
-  });
-  const [idrRate, setIdrRate] = useState("17085");
-  const [aiStatus, setAiStatus] = useState(null);
-  const [aiMessage, setAiMessage] = useState("");
-  const [view, setView] = useState("form");
-  const [dragOver, setDragOver] = useState(false);
-  const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
-  const fileRef = useRef();
-
-  const saveToNotion = async () => {
-    setSaveStatus("saving");
-    try {
-      const resp = await fetch('/api/notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractData: { ...form, total: pricing.total } })
-      });
-      const data = await resp.json();
-      if (data.id) { setSaveStatus("saved"); } else { setSaveStatus("error"); }
-    } catch { setSaveStatus("error"); }
-  };
-
-  const pricing = computePricing(form.rooms, form.nights, form.guests);
-  const payments = computePayments(pricing.total, form.checkinDate);
-  const offerLoaded = !!(form.organizerCompany || form.retreatName || form.rooms);
-  const idrTotal = idrRate ? pricing.total * parseFloat(idrRate) : null;
-
-  const setContractDate = (val) => setForm(f => ({
-    ...f,
-    contractDate: val,
-    validUntil: f.validUntil === defaultValidUntil(f.contractDate) ? defaultValidUntil(val) : f.validUntil
-  }));
-
-  const saveToNotion = async () => {
-    setSaveStatus('saving');
-    try {
-      const resp = await fetch('/api/notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractData: { ...form, total: pricing.total } })
-      });
-      if (!resp.ok) throw new Error('Failed');
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus(null), 3000);
-    } catch {
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus(null), 3000);
+    function computePricing(rooms, nights, guests) {
+      const r = parseFloat(rooms) || 0;
+      const n = parseFloat(nights) || 0;
+      const g = parseFloat(guests) || 0;
+      const accommodation = r * n * FIXED_PRICING.accommodationRate;
+      const retreatPkg = g * n * FIXED_PRICING.retreatPackageRate;
+      const subtotal = accommodation + retreatPkg;
+      const tax = subtotal * FIXED_PRICING.taxRate;
+      const service = subtotal * FIXED_PRICING.serviceRate;
+      const grossTotal = subtotal + tax + service;
+      const discount = grossTotal * FIXED_PRICING.discountRate;
+      const total = grossTotal - discount;
+      return { accommodation, retreatPkg, subtotal, tax, service, grossTotal, discount, total };
     }
-  };
-    if (!file) return;
-    setAiStatus("loading"); setAiMessage("Reading offer…");
-    try {
-      const base64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result.split(",")[1]);
-        r.onerror = rej; r.readAsDataURL(file);
-      });
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 2000,
-          messages: [{ role: "user", content: [
-            { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
-            { type: "text", text: `Extract the following fields from this retreat booking offer. Return ONLY a raw JSON object — no markdown, no backticks, no explanation. Use "" for missing fields.\n\n{\n  "retreatName": "name/theme of the retreat",\n  "organizerCompany": "company or organisation name",\n  "organizerContact": "full name of contact person",\n  "organizerAddress": "full postal address",\n  "organizerPhone": "phone number",\n  "organizerWebsite": "website URL",\n  "organizerTitle": "title or role of contact person",\n  "checkinDate": "YYYY-MM-DD",\n  "checkoutDate": "YYYY-MM-DD",\n  "rooms": "total number of rooms as integer string",\n  "nights": "number of nights as integer string",\n  "guests": "number of guests as integer string",\n  "ubuntuRooms": "Ubuntu Bali rooms as integer string",\n  "partnerRooms": "partner resort rooms as integer string",\n  "bookingType": "STANDARD or SHORT-NOTICE"\n}` }
-          ]}]
-        })
-      });
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error.message || "API error");
-      const text = data.content?.map(b => b.text || "").join("") || "";
-      if (!text) throw new Error("Empty response from API");
-      // Extract JSON even if wrapped in markdown fences or surrounding text
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No JSON found in response");
-      const parsed = JSON.parse(jsonMatch[0]);
-      setForm(f => ({ ...f, ...Object.fromEntries(Object.entries(parsed).filter(([,v]) => v !== "")) }));
-      setAiStatus("done");
-      setAiMessage(`"${file.name}" processed — all fields extracted`);
-    } catch(err) {
-      setAiStatus("error");
-      setAiMessage("Error: " + (err.message || "Could not parse file. Please try a different PDF."));
+
+    function computePayments(total, checkinDate) {
+      const deposit = total * 0.5;
+      const second = total * 0.3;
+      const fin = total * 0.2;
+      const depositDue = new Date();
+      depositDue.setDate(depositDue.getDate() + 2);
+      let secondDue = "", finalDue = "";
+      if (checkinDate) {
+        const d = new Date(checkinDate + "T00:00:00");
+        const s = new Date(checkinDate + "T00:00:00");
+        s.setMonth(s.getMonth() - 3);
+        secondDue = s.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        finalDue = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+      }
+      return {
+        deposit: { pct: "50%", amount: deposit.toFixed(2), due: depositDue.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) },
+        second: { pct: "30%", amount: second.toFixed(2), due: secondDue || "___________" },
+        final:  { pct: "20%", amount: fin.toFixed(2),    due: finalDue  || "___________" }
+      };
     }
-  }, []);
 
-  const onDrop = (e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); };
+    const fmtDate = (d) => {
+      if (!d) return "___________";
+      const p = new Date(d + "T00:00:00");
+      if (isNaN(p)) return d;
+      return p.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    };
 
-  const bodyText = { fontSize: "12.5px", lineHeight: "1.75", fontFamily: "'Lora', serif" };
-  const ulStyle = { margin: "0 0 10px 20px", padding: 0, ...bodyText };
+    const fmtDateShort = (d) => {
+      if (!d) return "___________";
+      const p = new Date(d + "T00:00:00");
+      if (isNaN(p)) return d;
+      return p.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    };
 
-  const secHead = (letter, title, gold = false) => (
-    <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10.5px", fontWeight: "700", letterSpacing: "0.14em", textTransform: "uppercase", color: "#221208", borderBottom: `1.5px solid ${gold ? "#B8935A" : "#DDD0BA"}`, paddingBottom: "5px", marginBottom: "13px" }}>
-      {letter}) {title}
-    </div>
-  );
+    const fmt$ = (n) => `$${Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fmtIDR = (n) => `Rp ${Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
-  function PricingTable() {
-    return (
-      <div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", margin: "12px 0 0 0" }}>
-          <thead>
-            <tr style={{ background: "#221208" }}>
-              {["ITEM","RATE","SUBTOTAL"].map(h => (
-                <th key={h} style={{ padding: "8px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.09em", textAlign: "left", fontWeight: "700" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              [`Accommodation – ${form.rooms||"?"} Rooms (${form.nights||"?"} nights × $${FIXED_PRICING.accommodationRate}/night)`, `$${FIXED_PRICING.accommodationRate}/night`, fmt$(pricing.accommodation)],
-              [`Retreat Package (Meals, Shala, Staff – ${form.guests||"?"} guests × ${form.nights||"?"} nights × $${FIXED_PRICING.retreatPackageRate}/night)`, `$${FIXED_PRICING.retreatPackageRate}/night`, fmt$(pricing.retreatPkg)],
-              ["Tax (10%) Service (5%)", "", fmt$(pricing.tax + pricing.service)],
-              [<><Bold>Discount</Bold></>, <><Bold>22.77%</Bold></>, <><Bold>– {fmt$(pricing.discount)}</Bold></>],
-            ].map((row, i) => (
-              <tr key={i} style={{ background: i%2===0 ? "#FDFAF5" : "#F5ECD7" }}>
-                {row.map((cell, j) => <td key={j} style={{ padding: "7px 13px", borderBottom: "1px solid #EDE3D4" }}>{cell}</td>)}
-              </tr>
-            ))}
-            <tr style={{ background: "#F5ECD7" }}>
-              <td colSpan={2} style={{ padding: "9px 13px", color: "#2C2416", fontFamily: "'Lora', serif", fontSize: "12px", fontWeight: "400", borderBottom: "1px solid #EDE3D4" }}>
-                Total incl. tax &amp; service (reference only)
-              </td>
-              <td style={{ padding: "9px 13px", color: "#2C2416", fontFamily: "'Lora', serif", fontSize: "12px", fontWeight: "400", borderBottom: "1px solid #EDE3D4" }}>{fmt$(pricing.total)}</td>
-            </tr>
-            {idrTotal && (
-              <tr style={{ background: "#2E1A0A" }}>
-                <td colSpan={2} style={{ padding: "9px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", fontWeight: "700" }}>
-                  IDR for transaction (rate: 1 USD = {Number(idrRate).toLocaleString("id-ID")} · interbank rate on date of issue)
-                </td>
-                <td style={{ padding: "9px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "12.5px", fontWeight: "700" }}>{fmtIDR(idrTotal)}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {idrTotal && (
-          <p style={{ fontSize: "10.5px", color: "#7A6040", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "6px", marginBottom: "0" }}>
-            The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. This rate is valid for the duration of contract validity. All payments must be made in IDR at the interbank rate on the actual date of each transaction.
-          </p>
-        )}
-      </div>
-    );
-  }
+    function defaultValidUntil(contractDate) {
+      if (!contractDate) return "";
+      const d = new Date(contractDate + "T00:00:00");
+      d.setDate(d.getDate() + 7);
+      return d.toISOString().split("T")[0];
+    }
 
-  function GenericTable({ head, rows }) {
-    return (
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", margin: "12px 0" }}>
-        <thead>
-          <tr style={{ background: "#221208" }}>
-            {head.map(h => <th key={h} style={{ padding: "8px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.09em", textAlign: "left", fontWeight: "700" }}>{h}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} style={{ background: i%2===0 ? "#FDFAF5" : "#F5ECD7" }}>
-              {row.map((cell, j) => <td key={j} style={{ padding: "7px 13px", borderBottom: "1px solid #EDE3D4" }}>{cell}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  }
+    const Bold = ({ children }) => <strong>{children}</strong>;
 
-  return (
-    <div style={{ minHeight: "100vh", background: "#F0E9DF", fontFamily: "'Lora', serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .tab { cursor: pointer; transition: all 0.18s; border: none; }
-        .upload-zone { transition: border-color 0.2s, background 0.2s; cursor: pointer; }
-        .preview-btn { transition: all 0.2s; }
-        .preview-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(42,26,14,0.3) !important; }
-        p { margin-bottom: 8px; }
-      `}</style>
+    function ContractGenerator() {
+      const today = new Date().toISOString().split("T")[0];
+      const [form, setForm] = useState({
+        contractDate: today,
+        validUntil: defaultValidUntil(today),
+        checkinDate: "", checkoutDate: "", retreatName: "",
+        organizerCompany: "", organizerContact: "", organizerAddress: "",
+        organizerPhone: "", organizerWebsite: "", organizerTitle: "",
+        rooms: "", nights: "", guests: "", ubuntuRooms: "", partnerRooms: "",
+        bookingType: "STANDARD"
+      });
+      const [idrRate, setIdrRate] = useState("17085");
+      const [aiStatus, setAiStatus] = useState(null);
+      const [aiMessage, setAiMessage] = useState("");
+      const [view, setView] = useState("form");
+      const [dragOver, setDragOver] = useState(false);
+      const [saveStatus, setSaveStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
+      const fileRef = useRef();
 
-      <div style={{ background: "#221208", padding: "18px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #B8935A" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "60px", objectFit: "contain", filter: "brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.88)" }} />}
+      const pricing = computePricing(form.rooms, form.nights, form.guests);
+      const payments = computePayments(pricing.total, form.checkinDate);
+      const offerLoaded = !!(form.organizerCompany || form.retreatName || form.rooms);
+      const idrTotal = idrRate ? pricing.total * parseFloat(idrRate) : null;
+
+      const setContractDate = (val) => setForm(f => ({
+        ...f,
+        contractDate: val,
+        validUntil: f.validUntil === defaultValidUntil(f.contractDate) ? defaultValidUntil(val) : f.validUntil
+      }));
+
+      // FIX: single saveToNotion declaration
+      const saveToNotion = async () => {
+        setSaveStatus('saving');
+        try {
+          const resp = await fetch('/api/notion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contractData: { ...form, total: pricing.total } })
+          });
+          if (!resp.ok) throw new Error('Failed');
+          setSaveStatus('saved');
+          setTimeout(() => setSaveStatus(null), 3000);
+        } catch {
+          setSaveStatus('error');
+          setTimeout(() => setSaveStatus(null), 3000);
+        }
+      };
+
+      // FIX: handleFile properly declared as a named useCallback
+      const handleFile = useCallback((file) => {
+        if (!file) return;
+        setAiStatus("loading");
+        setAiMessage("Reading offer…");
+        (async () => {
+          try {
+            const base64 = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = () => res(r.result.split(",")[1]);
+              r.onerror = rej;
+              r.readAsDataURL(file);
+            });
+            const resp = await fetch("https://api.anthropic.com/v1/messages", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 2000,
+                messages: [{ role: "user", content: [
+                  { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
+                  { type: "text", text: `Extract the following fields from this retreat booking offer. Return ONLY a raw JSON object — no markdown, no backticks, no explanation. Use "" for missing fields.\n\n{\n  "retreatName": "name/theme of the retreat",\n  "organizerCompany": "company or organisation name",\n  "organizerContact": "full name of contact person",\n  "organizerAddress": "full postal address",\n  "organizerPhone": "phone number",\n  "organizerWebsite": "website URL",\n  "organizerTitle": "title or role of contact person",\n  "checkinDate": "YYYY-MM-DD",\n  "checkoutDate": "YYYY-MM-DD",\n  "rooms": "total number of rooms as integer string",\n  "nights": "number of nights as integer string",\n  "guests": "number of guests as integer string",\n  "ubuntuRooms": "Ubuntu Bali rooms as integer string",\n  "partnerRooms": "partner resort rooms as integer string",\n  "bookingType": "STANDARD or SHORT-NOTICE"\n}` }
+                ]}]
+              })
+            });
+            const data = await resp.json();
+            if (data.error) throw new Error(data.error.message || "API error");
+            const text = data.content?.map(b => b.text || "").join("") || "";
+            if (!text) throw new Error("Empty response from API");
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("No JSON found in response");
+            const parsed = JSON.parse(jsonMatch[0]);
+            setForm(f => ({ ...f, ...Object.fromEntries(Object.entries(parsed).filter(([,v]) => v !== "")) }));
+            setAiStatus("done");
+            setAiMessage(`"${file.name}" processed — all fields extracted`);
+          } catch(err) {
+            setAiStatus("error");
+            setAiMessage("Error: " + (err.message || "Could not parse file. Please try a different PDF."));
+          }
+        })();
+      }, []);
+
+      const onDrop = (e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); };
+
+      const bodyText = { fontSize: "12.5px", lineHeight: "1.75", fontFamily: "'Lora', serif" };
+      const ulStyle = { margin: "0 0 10px 20px", padding: 0, ...bodyText };
+
+      const secHead = (letter, title, gold = false) => (
+        <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10.5px", fontWeight: "700", letterSpacing: "0.14em", textTransform: "uppercase", color: "#221208", borderBottom: `1.5px solid ${gold ? "#B8935A" : "#DDD0BA"}`, paddingBottom: "5px", marginBottom: "13px" }}>
+          {letter}) {title}
+        </div>
+      );
+
+      function PricingTable() {
+        return (
           <div>
-            <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.24em", color: "#B8935A", textTransform: "uppercase", marginBottom: "5px" }}>PT Purusa Yoga Bali · Ubuntu Bali</div>
-            <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "19px", color: "#F5ECD7", fontWeight: "700" }}>Retreat Contract Generator</div>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          {[["form","Build"],["preview","Preview"]].map(([v, label]) => (
-            <button key={v} className="tab" onClick={() => setView(v)} style={{
-              padding: "8px 20px", borderRadius: "3px",
-              border: `1px solid ${view===v ? "#B8935A" : "rgba(184,147,90,0.35)"}`,
-              background: view===v ? "#B8935A" : "transparent",
-              color: view===v ? "#221208" : "#B8935A",
-              fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
-              letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: "700"
-            }}>{label}</button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ maxWidth: "780px", margin: "0 auto", padding: "36px 24px" }}>
-
-        {view === "form" && (
-          <>
-            <div
-              className="upload-zone"
-              onClick={() => fileRef.current?.click()}
-              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={onDrop}
-              style={{
-                border: `2px dashed ${dragOver ? "#7A5C3A" : offerLoaded ? "#9A7A4A" : "#C4A87A"}`,
-                borderRadius: "8px",
-                background: dragOver ? "#E8DCCF" : offerLoaded ? "#EDE3D4" : "#FAF5ED",
-                padding: "40px 28px", textAlign: "center", marginBottom: "28px"
-              }}
-            >
-              <input ref={fileRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
-              {aiStatus === "loading" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>⏳</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "14px", color: "#5C3D2E", fontWeight: "700" }}>{aiMessage}</div></>}
-              {aiStatus === "done" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>✓</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "14px", color: "#3D6636", fontWeight: "700", marginBottom: "4px" }}>{aiMessage}</div><div style={{ fontSize: "12px", color: "#8B7355", fontStyle: "italic", fontFamily: "'Lora', serif" }}>Drop another PDF to replace</div></>}
-              {aiStatus === "error" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>⚠️</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "13px", color: "#8B3A2E", fontWeight: "700", marginBottom: "4px" }}>{aiMessage}</div><div style={{ fontSize: "12px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic" }}>Click to try again</div></>}
-              {!aiStatus && <><div style={{ fontSize: "38px", marginBottom: "12px" }}>📄</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "15px", color: "#2A1A0E", fontWeight: "700", marginBottom: "7px" }}>Upload the Offer PDF</div><div style={{ fontSize: "12.5px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic", lineHeight: "1.7" }}>Drop or click — AI reads organizer details, dates, rooms & guests<br />Pricing is calculated automatically at fixed Ubuntu Bali rates</div></>}
-            </div>
-
-            <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "24px", overflow: "hidden" }}>
-              <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>01</span>
-                <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Contract & Retreat Dates</span>
-                <span style={{ fontFamily: "'Lora', serif", fontSize: "11px", color: "rgba(245,236,215,0.45)", fontStyle: "italic", marginLeft: "4px" }}>— override if not in offer</span>
-              </div>
-              <div style={{ padding: "18px 20px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", margin: "12px 0 0 0" }}>
+              <thead>
+                <tr style={{ background: "#221208" }}>
+                  {["ITEM","RATE","SUBTOTAL"].map(h => (
+                    <th key={h} style={{ padding: "8px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.09em", textAlign: "left", fontWeight: "700" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
                 {[
-                  { label: "Date of Agreement", key: "contractDate" },
-                  { label: "Valid Until", key: "validUntil", hint: "Default: 7 days after issue" },
-                  { label: "Check-in Date", key: "checkinDate", warn: true },
-                  { label: "Check-out Date", key: "checkoutDate", warn: true },
-                ].map(({ label, key, hint, warn }) => (
-                  <div key={key}>
-                    <label style={{ display: "block", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", marginBottom: "7px" }}>{label}</label>
-                    <input type="date" value={form[key]}
-                      onChange={e => key === "contractDate" ? setContractDate(e.target.value) : setForm(f => ({ ...f, [key]: e.target.value }))}
-                      style={{ width: "100%", padding: "9px 14px", border: `1px solid ${key === "validUntil" ? "#B8935A" : "#D4C4A8"}`, borderRadius: "3px", background: key === "validUntil" ? "#FDF8EF" : "#FDFAF5", fontFamily: "'Lora', serif", fontSize: "13px", color: "#2C2416", outline: "none" }}
-                      onFocus={e => e.target.style.borderColor="#8B7355"}
-                      onBlur={e => e.target.style.borderColor= key === "validUntil" ? "#B8935A" : "#D4C4A8"}
-                    />
-                    {hint && <div style={{ fontSize: "10px", color: "#B8935A", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "4px" }}>{hint}</div>}
-                    {warn && !form[key] && <div style={{ fontSize: "10px", color: "#B8935A", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "4px" }}>⚠ needed for payment schedule</div>}
-                  </div>
+                  [`Accommodation – ${form.rooms||"?"} Rooms (${form.nights||"?"} nights × $${FIXED_PRICING.accommodationRate}/night)`, `$${FIXED_PRICING.accommodationRate}/night`, fmt$(pricing.accommodation)],
+                  [`Retreat Package (Meals, Shala, Staff – ${form.guests||"?"} guests × ${form.nights||"?"} nights × $${FIXED_PRICING.retreatPackageRate}/night)`, `$${FIXED_PRICING.retreatPackageRate}/night`, fmt$(pricing.retreatPkg)],
+                  ["Tax (10%) Service (5%)", "", fmt$(pricing.tax + pricing.service)],
+                  [<><Bold>Discount</Bold></>, <><Bold>22.77%</Bold></>, <><Bold>– {fmt$(pricing.discount)}</Bold></>],
+                ].map((row, i) => (
+                  <tr key={i} style={{ background: i%2===0 ? "#FDFAF5" : "#F5ECD7" }}>
+                    {row.map((cell, j) => <td key={j} style={{ padding: "7px 13px", borderBottom: "1px solid #EDE3D4" }}>{cell}</td>)}
+                  </tr>
                 ))}
+                <tr style={{ background: "#F5ECD7" }}>
+                  <td colSpan={2} style={{ padding: "9px 13px", color: "#2C2416", fontFamily: "'Lora', serif", fontSize: "12px", fontWeight: "400", borderBottom: "1px solid #EDE3D4" }}>
+                    Total incl. tax &amp; service (reference only)
+                  </td>
+                  <td style={{ padding: "9px 13px", color: "#2C2416", fontFamily: "'Lora', serif", fontSize: "12px", fontWeight: "400", borderBottom: "1px solid #EDE3D4" }}>{fmt$(pricing.total)}</td>
+                </tr>
+                {idrTotal && (
+                  <tr style={{ background: "#2E1A0A" }}>
+                    <td colSpan={2} style={{ padding: "9px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", fontWeight: "700" }}>
+                      IDR for transaction (rate: 1 USD = {Number(idrRate).toLocaleString("id-ID")} · interbank rate on date of issue)
+                    </td>
+                    <td style={{ padding: "9px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "12.5px", fontWeight: "700" }}>{fmtIDR(idrTotal)}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            {idrTotal && (
+              <p style={{ fontSize: "10.5px", color: "#7A6040", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "6px", marginBottom: "0" }}>
+                The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. This rate is valid for the duration of contract validity. All payments must be made in IDR at the interbank rate on the actual date of each transaction.
+              </p>
+            )}
+          </div>
+        );
+      }
+
+      function GenericTable({ head, rows }) {
+        return (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", margin: "12px 0" }}>
+            <thead>
+              <tr style={{ background: "#221208" }}>
+                {head.map(h => <th key={h} style={{ padding: "8px 13px", color: "#F5ECD7", fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.09em", textAlign: "left", fontWeight: "700" }}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} style={{ background: i%2===0 ? "#FDFAF5" : "#F5ECD7" }}>
+                  {row.map((cell, j) => <td key={j} style={{ padding: "7px 13px", borderBottom: "1px solid #EDE3D4" }}>{cell}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      }
+
+      return (
+        <div style={{ minHeight: "100vh", background: "#F0E9DF", fontFamily: "'Lora', serif" }}>
+          <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            .tab { cursor: pointer; transition: all 0.18s; border: none; }
+            .upload-zone { transition: border-color 0.2s, background 0.2s; cursor: pointer; }
+            .preview-btn { transition: all 0.2s; }
+            .preview-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(42,26,14,0.3) !important; }
+            p { margin-bottom: 8px; }
+          `}</style>
+
+          {/* Header */}
+          <div style={{ background: "#221208", padding: "18px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #B8935A" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "60px", objectFit: "contain", filter: "brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.88)" }} />}
+              <div>
+                <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.24em", color: "#B8935A", textTransform: "uppercase", marginBottom: "5px" }}>PT Purusa Yoga Bali · Ubuntu Bali</div>
+                <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "19px", color: "#F5ECD7", fontWeight: "700" }}>Retreat Contract Generator</div>
               </div>
             </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              {[["form","Build"],["preview","Preview"]].map(([v, label]) => (
+                <button key={v} className="tab" onClick={() => setView(v)} style={{
+                  padding: "8px 20px", borderRadius: "3px",
+                  border: `1px solid ${view===v ? "#B8935A" : "rgba(184,147,90,0.35)"}`,
+                  background: view===v ? "#B8935A" : "transparent",
+                  color: view===v ? "#221208" : "#B8935A",
+                  fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
+                  letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: "700"
+                }}>{label}</button>
+              ))}
+            </div>
+          </div>
 
-            {offerLoaded && (
+          <div style={{ maxWidth: "780px", margin: "0 auto", padding: "36px 24px" }}>
+
+            {/* ── FORM VIEW ── */}
+            {view === "form" && (
               <>
-                <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "20px", overflow: "hidden" }}>
+                {/* Upload zone */}
+                <div
+                  className="upload-zone"
+                  onClick={() => fileRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={onDrop}
+                  style={{
+                    border: `2px dashed ${dragOver ? "#7A5C3A" : offerLoaded ? "#9A7A4A" : "#C4A87A"}`,
+                    borderRadius: "8px",
+                    background: dragOver ? "#E8DCCF" : offerLoaded ? "#EDE3D4" : "#FAF5ED",
+                    padding: "40px 28px", textAlign: "center", marginBottom: "28px"
+                  }}
+                >
+                  <input ref={fileRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
+                  {aiStatus === "loading" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>⏳</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "14px", color: "#5C3D2E", fontWeight: "700" }}>{aiMessage}</div></>}
+                  {aiStatus === "done" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>✓</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "14px", color: "#3D6636", fontWeight: "700", marginBottom: "4px" }}>{aiMessage}</div><div style={{ fontSize: "12px", color: "#8B7355", fontStyle: "italic", fontFamily: "'Lora', serif" }}>Drop another PDF to replace</div></>}
+                  {aiStatus === "error" && <><div style={{ fontSize: "30px", marginBottom: "10px" }}>⚠️</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "13px", color: "#8B3A2E", fontWeight: "700", marginBottom: "4px" }}>{aiMessage}</div><div style={{ fontSize: "12px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic" }}>Click to try again</div></>}
+                  {!aiStatus && <><div style={{ fontSize: "38px", marginBottom: "12px" }}>📄</div><div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "15px", color: "#2A1A0E", fontWeight: "700", marginBottom: "7px" }}>Upload the Offer PDF</div><div style={{ fontSize: "12.5px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic", lineHeight: "1.7" }}>Drop or click — AI reads organizer details, dates, rooms & guests<br />Pricing is calculated automatically at fixed Ubuntu Bali rates</div></>}
+                </div>
+
+                {/* Section 01: Dates */}
+                <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "24px", overflow: "hidden" }}>
                   <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>02</span>
-                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Extracted from Offer</span>
+                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>01</span>
+                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Contract & Retreat Dates</span>
+                    <span style={{ fontFamily: "'Lora', serif", fontSize: "11px", color: "rgba(245,236,215,0.45)", fontStyle: "italic", marginLeft: "4px" }}>— override if not in offer</span>
                   </div>
-                  <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                  <div style={{ padding: "18px 20px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px" }}>
                     {[
-                      ["Retreat", form.retreatName], ["Organizer", form.organizerCompany],
-                      ["Contact", form.organizerContact], ["Title", form.organizerTitle],
-                      ["Phone", form.organizerPhone], ["Website", form.organizerWebsite],
-                      ["Total Rooms", form.rooms], ["Nights", form.nights],
-                      ["Guests", form.guests], ["Ubuntu Rooms", form.ubuntuRooms],
-                      ["Partner Rooms", form.partnerRooms], ["Booking Type", form.bookingType],
-                    ].map(([label, value]) => (
-                      <div key={label} style={{ display: "flex", gap: "10px", padding: "6px 0", borderBottom: "1px solid #EDE3D4" }}>
-                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.07em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", minWidth: "96px", paddingTop: "2px" }}>{label}</span>
-                        <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: value ? "#1A1208" : "#BBA882", fontStyle: value ? "normal" : "italic" }}>{value || "not found"}</span>
+                      { label: "Date of Agreement", key: "contractDate" },
+                      { label: "Valid Until", key: "validUntil", hint: "Default: 7 days after issue" },
+                      { label: "Check-in Date", key: "checkinDate", warn: true },
+                      { label: "Check-out Date", key: "checkoutDate", warn: true },
+                    ].map(({ label, key, hint, warn }) => (
+                      <div key={key}>
+                        <label style={{ display: "block", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", marginBottom: "7px" }}>{label}</label>
+                        <input type="date" value={form[key]}
+                          onChange={e => key === "contractDate" ? setContractDate(e.target.value) : setForm(f => ({ ...f, [key]: e.target.value }))}
+                          style={{ width: "100%", padding: "9px 14px", border: `1px solid ${key === "validUntil" ? "#B8935A" : "#D4C4A8"}`, borderRadius: "3px", background: key === "validUntil" ? "#FDF8EF" : "#FDFAF5", fontFamily: "'Lora', serif", fontSize: "13px", color: "#2C2416", outline: "none" }}
+                          onFocus={e => e.target.style.borderColor="#8B7355"}
+                          onBlur={e => e.target.style.borderColor= key === "validUntil" ? "#B8935A" : "#D4C4A8"}
+                        />
+                        {hint && <div style={{ fontSize: "10px", color: "#B8935A", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "4px" }}>{hint}</div>}
+                        {warn && !form[key] && <div style={{ fontSize: "10px", color: "#B8935A", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "4px" }}>⚠ needed for payment schedule</div>}
                       </div>
                     ))}
-                    {form.organizerAddress && (
-                      <div style={{ display: "flex", gap: "10px", padding: "6px 0", borderBottom: "1px solid #EDE3D4", gridColumn: "1 / -1" }}>
-                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.07em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", minWidth: "96px", paddingTop: "2px" }}>Address</span>
-                        <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#1A1208" }}>{form.organizerAddress}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "32px", overflow: "hidden" }}>
-                  <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>03</span>
-                    <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Pricing (Auto-Calculated · Fixed Rates)</span>
-                  </div>
-                  <div style={{ padding: "18px 20px" }}>
-                    <div style={{ fontSize: "11px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic", marginBottom: "14px" }}>
-                      {form.rooms} rooms × {form.nights} nights · {form.guests} guests
-                    </div>
-                    <div style={{ fontSize: "10.5px", color: "#7A6040", fontFamily: "'Libre Baskerville', serif", background: "#F5ECD7", borderRadius: "3px", padding: "8px 12px", marginBottom: "14px", lineHeight: "1.6" }}>
-                      <strong>Payment schedule:</strong> Deposit due 2 days after contract date · 2nd payment 3 months before check-in · Final payment on check-in date
-                    </div>
-                    <div style={{ marginBottom: "16px" }}>
-                      <label style={{ display: "block", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", marginBottom: "7px" }}>IDR Exchange Rate (on issue date)</label>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#5C3D2E" }}>1 USD =</span>
-                        <input type="number" value={idrRate} onChange={e => setIdrRate(e.target.value)} placeholder="e.g. 16250"
-                          style={{ padding: "8px 12px", border: "1px solid #B8935A", borderRadius: "3px", background: "#FDF8EF", fontFamily: "'Lora', serif", fontSize: "13px", color: "#2C2416", outline: "none", width: "160px" }}
-                          onFocus={e => e.target.style.borderColor="#8B7355"}
-                          onBlur={e => e.target.style.borderColor="#B8935A"}
-                        />
-                        <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#5C3D2E" }}>IDR</span>
-                        {idrRate && <span style={{ fontFamily: "'Lora', serif", fontSize: "12px", color: "#3D6636", fontStyle: "italic" }}>→ Total: {fmtIDR(pricing.total * parseFloat(idrRate))}</span>}
+                {/* Sections 02 + 03: shown after offer is loaded */}
+                {offerLoaded && (
+                  <>
+                    {/* Section 02: Extracted fields */}
+                    <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "20px", overflow: "hidden" }}>
+                      <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>02</span>
+                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Extracted from Offer</span>
                       </div>
-                      <div style={{ fontSize: "10px", color: "#A08060", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "5px" }}>Auto-fetched: 1 USD = 17,085 IDR (XE.com, Apr 13 2026) · Edit if needed</div>
-                    </div>
-                    {[
-                      [`Accommodation — ${form.rooms} rooms × ${form.nights} nights × $${FIXED_PRICING.accommodationRate}/night`, fmt$(pricing.accommodation), false],
-                      [`Retreat Package — ${form.guests} guests × ${form.nights} nights × $${FIXED_PRICING.retreatPackageRate}/night`, fmt$(pricing.retreatPkg), false],
-                      ["Tax (10%) + Service (5%)", fmt$(pricing.tax + pricing.service), false],
-                      ["Discount (22.77%)", `– ${fmt$(pricing.discount)}`, false],
-                      ["TOTAL (incl. 10% tax & 5% service)", fmt$(pricing.total), true],
-                      ...(idrRate ? [["≈ IDR equivalent (reference only)", fmtIDR(pricing.total * parseFloat(idrRate)), false]] : []),
-                    ].map(([label, val, bold], i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #EDE3D4", fontFamily: bold ? "'Libre Baskerville', serif" : "'Lora', serif", fontSize: bold ? "13px" : "12.5px", fontWeight: bold ? "700" : "400", color: bold ? "#221208" : "#2C2416" }}>
-                        <span>{label}</span><span>{val}</span>
+                      <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                        {[
+                          ["Retreat", form.retreatName], ["Organizer", form.organizerCompany],
+                          ["Contact", form.organizerContact], ["Title", form.organizerTitle],
+                          ["Phone", form.organizerPhone], ["Website", form.organizerWebsite],
+                          ["Total Rooms", form.rooms], ["Nights", form.nights],
+                          ["Guests", form.guests], ["Ubuntu Rooms", form.ubuntuRooms],
+                          ["Partner Rooms", form.partnerRooms], ["Booking Type", form.bookingType],
+                        ].map(([label, value]) => (
+                          <div key={label} style={{ display: "flex", gap: "10px", padding: "6px 0", borderBottom: "1px solid #EDE3D4" }}>
+                            <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.07em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", minWidth: "96px", paddingTop: "2px" }}>{label}</span>
+                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: value ? "#1A1208" : "#BBA882", fontStyle: value ? "normal" : "italic" }}>{value || "not found"}</span>
+                          </div>
+                        ))}
+                        {form.organizerAddress && (
+                          <div style={{ display: "flex", gap: "10px", padding: "6px 0", borderBottom: "1px solid #EDE3D4", gridColumn: "1 / -1" }}>
+                            <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.07em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", minWidth: "96px", paddingTop: "2px" }}>Address</span>
+                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#1A1208" }}>{form.organizerAddress}</span>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+
+                    {/* Section 03: Pricing */}
+                    <div style={{ background: "#FAF5ED", border: "1px solid #DDD0BA", borderRadius: "6px", marginBottom: "32px", overflow: "hidden" }}>
+                      <div style={{ background: "#221208", padding: "11px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9px", color: "#B8935A", letterSpacing: "0.15em" }}>03</span>
+                        <span style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", color: "#F5ECD7", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "700" }}>Pricing (Auto-Calculated · Fixed Rates)</span>
+                      </div>
+                      <div style={{ padding: "18px 20px" }}>
+                        <div style={{ fontSize: "11px", color: "#8B7355", fontFamily: "'Lora', serif", fontStyle: "italic", marginBottom: "14px" }}>
+                          {form.rooms} rooms × {form.nights} nights · {form.guests} guests
+                        </div>
+                        <div style={{ fontSize: "10.5px", color: "#7A6040", fontFamily: "'Libre Baskerville', serif", background: "#F5ECD7", borderRadius: "3px", padding: "8px 12px", marginBottom: "14px", lineHeight: "1.6" }}>
+                          <strong>Payment schedule:</strong> Deposit due 2 days after contract date · 2nd payment 3 months before check-in · Final payment on check-in date
+                        </div>
+                        <div style={{ marginBottom: "16px" }}>
+                          <label style={{ display: "block", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#8B7355", fontWeight: "600", marginBottom: "7px" }}>IDR Exchange Rate (on issue date)</label>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#5C3D2E" }}>1 USD =</span>
+                            <input type="number" value={idrRate} onChange={e => setIdrRate(e.target.value)} placeholder="e.g. 16250"
+                              style={{ padding: "8px 12px", border: "1px solid #B8935A", borderRadius: "3px", background: "#FDF8EF", fontFamily: "'Lora', serif", fontSize: "13px", color: "#2C2416", outline: "none", width: "160px" }}
+                              onFocus={e => e.target.style.borderColor="#8B7355"}
+                              onBlur={e => e.target.style.borderColor="#B8935A"}
+                            />
+                            <span style={{ fontFamily: "'Lora', serif", fontSize: "12.5px", color: "#5C3D2E" }}>IDR</span>
+                            {idrRate && <span style={{ fontFamily: "'Lora', serif", fontSize: "12px", color: "#3D6636", fontStyle: "italic" }}>→ Total: {fmtIDR(pricing.total * parseFloat(idrRate))}</span>}
+                          </div>
+                          <div style={{ fontSize: "10px", color: "#A08060", fontFamily: "'Lora', serif", fontStyle: "italic", marginTop: "5px" }}>Auto-fetched: 1 USD = 17,085 IDR (XE.com, Apr 13 2026) · Edit if needed</div>
+                        </div>
+                        {[
+                          [`Accommodation — ${form.rooms} rooms × ${form.nights} nights × $${FIXED_PRICING.accommodationRate}/night`, fmt$(pricing.accommodation), false],
+                          [`Retreat Package — ${form.guests} guests × ${form.nights} nights × $${FIXED_PRICING.retreatPackageRate}/night`, fmt$(pricing.retreatPkg), false],
+                          ["Tax (10%) + Service (5%)", fmt$(pricing.tax + pricing.service), false],
+                          ["Discount (22.77%)", `– ${fmt$(pricing.discount)}`, false],
+                          ["TOTAL (incl. 10% tax & 5% service)", fmt$(pricing.total), true],
+                          ...(idrRate ? [["≈ IDR equivalent (reference only)", fmtIDR(pricing.total * parseFloat(idrRate)), false]] : []),
+                        ].map(([label, val, bold], i) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #EDE3D4", fontFamily: bold ? "'Libre Baskerville', serif" : "'Lora', serif", fontSize: bold ? "13px" : "12.5px", fontWeight: bold ? "700" : "400", color: bold ? "#221208" : "#2C2416" }}>
+                            <span>{label}</span><span>{val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Action buttons */}
+                <div style={{ textAlign: "center", display: "flex", gap: "12px", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
+                  <button className="preview-btn" onClick={() => setView("preview")} disabled={!offerLoaded} style={{
+                    padding: "14px 44px", border: "none", borderRadius: "4px",
+                    background: offerLoaded ? "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)" : "#C8BAA8",
+                    color: offerLoaded ? "#F5ECD7" : "#9A8A78",
+                    fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
+                    letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
+                    cursor: offerLoaded ? "pointer" : "not-allowed",
+                    boxShadow: offerLoaded ? "0 4px 16px rgba(34,18,8,0.22)" : "none"
+                  }}>{offerLoaded ? "Generate Contract Preview →" : "Upload an offer to continue"}</button>
+                  {offerLoaded && (
+                    <button onClick={saveToNotion} disabled={saveStatus === "saving" || saveStatus === "saved"} style={{
+                      padding: "14px 32px", border: "1.5px solid #B8935A", borderRadius: "4px",
+                      background: saveStatus === "saved" ? "#3D6636" : saveStatus === "error" ? "#8B3A2E" : "#FAF5ED",
+                      color: saveStatus === "saved" ? "#fff" : saveStatus === "error" ? "#fff" : "#B8935A",
+                      fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
+                      letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
+                      cursor: saveStatus ? "default" : "pointer"
+                    }}>
+                      {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "✓ Saved to Notion" : saveStatus === "error" ? "Error — try again" : "Save to Notion"}
+                    </button>
+                  )}
                 </div>
               </>
             )}
 
-            <div style={{ textAlign: "center", display: "flex", gap: "12px", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
-              <button className="preview-btn" onClick={() => setView("preview")} disabled={!offerLoaded} style={{
+            {/* ── PREVIEW VIEW ── */}
+            {view === "preview" && (
+              <div style={{ background: "#FFF", border: "1px solid #D4C4A8", borderRadius: "8px", padding: "56px 60px", fontFamily: "'Lora', serif", color: "#1A1208", fontSize: "13px", lineHeight: "1.75", boxShadow: "0 8px 40px rgba(34,18,8,0.1)" }}>
+
+                {/* Contract header */}
+                <div style={{ textAlign: "center", marginBottom: "34px", borderBottom: "2px solid #221208", paddingBottom: "24px" }}>
+                  {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "90px", objectFit: "contain", marginBottom: "18px", display: "block", marginLeft: "auto", marginRight: "auto", filter: "brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(0.35)" }} />}
+                  <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "16.5px", fontWeight: "700", letterSpacing: "0.07em", textTransform: "uppercase", color: "#1A1208", marginBottom: "7px" }}>RETREAT BOOKING CONFIRMATION & AGREEMENT</div>
+                  <div style={{ fontFamily: "'Lora', serif", fontSize: "12px", color: "#8B7355", fontStyle: "italic", letterSpacing: "0.06em" }}>PT Purusa Yoga Bali · Operating as Ubuntu Bali</div>
+                </div>
+
+                {/* Parties */}
+                <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10px", fontWeight: "700", letterSpacing: "0.12em", textTransform: "uppercase", textAlign: "center", marginBottom: "14px", color: "#5C3D2E" }}>BETWEEN</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", border: "1px solid #B8935A", marginBottom: "28px" }}>
+                  {[
+                    { title: "RETREAT ORGANIZER", lines: [`Company Name: ${form.organizerCompany||"___________"}`, `Contact Person: ${form.organizerContact||"___________"}`, `Address: ${form.organizerAddress||"___________"}`, `Phone: ${form.organizerPhone||"___________"}`, `Website: ${form.organizerWebsite||"___________"}`] },
+                    { title: "VENUE HOLDER", lines: ["Company: PT Purusa Yoga Bali (Ubuntu Bali)", "Director: Witri Utari", "Contract: Andréa Drottholm", "Phone: +62 812 3862 0082", "Email: namaste@ubuntubali.com"] }
+                  ].map((col, i) => (
+                    <div key={i} style={{ padding: "16px 20px", borderRight: i===0 ? "1px solid #B8935A" : "none", background: "#FDFAF5" }}>
+                      <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", color: "#5C3D2E", marginBottom: "10px" }}>{col.title}</div>
+                      {col.lines.map((l,j) => <div key={j} style={{ fontSize: "12px", marginBottom: "4px" }}>{l}</div>)}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Date bar */}
+                <div style={{ textAlign: "center", fontFamily: "'Libre Baskerville', serif", fontSize: "11px", fontWeight: "700", color: "#221208", borderTop: "1px solid #DDD0BA", borderBottom: "1px solid #DDD0BA", padding: "11px 0", marginBottom: "30px" }}>
+                  Date: {fmtDate(form.contractDate)} &nbsp;|&nbsp; Check-in: {fmtDate(form.checkinDate)} &nbsp;|&nbsp; Check-out: {fmtDate(form.checkoutDate)}
+                </div>
+
+                {/* Validity notice */}
+                <div style={{ background: "#F5ECD7", border: "1px solid #C8A96E", borderRadius: "4px", padding: "10px 16px", marginBottom: "28px", fontFamily: "'Lora', serif", fontSize: "12px", color: "#3D2B1F", lineHeight: "1.65" }}>
+                  <strong style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10.5px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Contract Validity: </strong>
+                  This contract offer is valid until <strong>{fmtDate(form.validUntil || defaultValidUntil(form.contractDate))}</strong>. If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.
+                </div>
+
+                {/* Section A */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("A", "PURPOSE OF AGREEMENT", true)}
+                  <p style={bodyText}>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
+                  <p style={bodyText}>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p>
+                </div>
+
+                {/* Section B */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("B", "PRICING & INCLUSIONS", true)}
+                  <p style={bodyText}>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
+                  <p style={{ ...bodyText, fontWeight: "700", marginTop: "10px" }}>Retreat Package: {form.retreatName||"___________"} · {form.nights||"?"} Nights, {form.nights?parseInt(form.nights)+1:"?"} Days · {form.guests||"?"} Guests</p>
+                  <p style={{ ...bodyText, marginBottom: "10px" }}>Check-in: {fmtDateShort(form.checkinDate)} · Check-out: {fmtDateShort(form.checkoutDate)}</p>
+                  <p style={{ ...bodyText, fontWeight: "700", marginBottom: "6px" }}>Room Allocation:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>Ubuntu Bali property: {form.ubuntuRooms||"?"} rooms (can accommodate single or shared occupancy; pricing per room, not per guest)</li>
+                    <li style={{ marginBottom: "4px" }}>Partner resort: {form.partnerRooms||"?"} rooms (single occupancy standard; shared occupancy available at +USD 15/night per additional guest)</li>
+                    <li style={{ marginBottom: "4px" }}>Total capacity: {form.rooms||"?"} rooms, up to {form.rooms && form.ubuntuRooms ? parseInt(form.rooms) + parseInt(form.ubuntuRooms) : "?"} guests if sharing is utilised (Ubuntu rooms only)</li>
+                    <li>Room assignment: Allocated by Retreat Organizer; changes require 30 days notice</li>
+                  </ul>
+                  <PricingTable />
+                  <p style={{ ...bodyText, fontWeight: "700", marginBottom: "5px", marginTop: "14px" }}>What's Included:</p>
+                  <ul style={ulStyle}>
+                    <li>2 organic plant-based meals per day</li>
+                    <li>Tea and afternoon snack</li>
+                    <li>Shala of your choice and cleaning</li>
+                    <li>Full staff support and dedicated contact person</li>
+                  </ul>
+                  <p style={bodyText}>The package price is fixed for {form.guests||"?"} guests. Should the group exceed {form.guests||"?"} people, the room rate remains the same (when rooms are shared) — only meals would be added for each additional guest.</p>
+                </div>
+
+                {/* Section C */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("C", "PAYMENTS & BANK DETAILS", true)}
+                  <p style={bodyText}>Payments must be made to the following account:</p>
+                  <table style={{ borderCollapse: "collapse", fontSize: "12px", marginTop: "10px", marginBottom: "10px" }}>
+                    {Object.entries(FIXED_PRICING.bankDetails).map(([k,v]) => (
+                      <tr key={k}>
+                        <td style={{ padding: "5px 24px 5px 0", fontWeight: "700", color: "#1A1208", whiteSpace: "nowrap", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.05em" }}>{k}</td>
+                        <td style={{ padding: "5px 0", fontFamily: "'Lora', serif" }}>{v}</td>
+                      </tr>
+                    ))}
+                  </table>
+                  <p style={bodyText}>All bank and transfer fees are the responsibility of the Retreat Organizer.</p>
+                </div>
+
+                {/* Section D */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("D", "PAYMENT SCHEDULE", true)}
+                  <p style={{ ...bodyText, fontWeight: "700", marginBottom: "12px" }}>This booking qualifies as a {form.bookingType} BOOKING {form.bookingType==="STANDARD" ? "(more than 120 days before retreat start)" : "(less than 120 days before retreat start)"}.</p>
+                  <GenericTable
+                    head={["Payment","Percentage","Amount (USD)","Due Date"]}
+                    rows={[
+                      ["Deposit", payments.deposit.pct, fmt$(payments.deposit.amount), payments.deposit.due],
+                      ["2nd Payment", payments.second.pct, fmt$(payments.second.amount), payments.second.due],
+                      ["Final Payment", payments.final.pct, fmt$(payments.final.amount), payments.final.due],
+                    ]}
+                  />
+                  <p style={bodyText}>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p>
+                </div>
+
+                {/* Section E */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("E", "CANCELLATION & REFUND POLICY", true)}
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Standard Bookings:</p>
+                  <p style={bodyText}>Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees. Any balance payments already received are non-refundable once the final payment deadline passes.</p>
+                  <GenericTable
+                    head={["Cancellation Period","Refund of Deposit (minus bank fees)"]}
+                    rows={CANCELLATION_POLICY.map(r => [r.period, r.refund])}
+                  />
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Short-Notice Bookings:</p>
+                  <p style={bodyText}>Deposits are non-refundable except in cases of force majeure as defined in Section L.</p>
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Rescheduling:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>One reschedule is permitted within 12 months of original dates, subject to availability and a 10% administrative fee</li>
+                    <li style={{ marginBottom: "4px" }}>Requests must be made at least 3 months prior to retreat start</li>
+                    <li>If Ubuntu Bali successfully rebooks cancelled dates, a partial refund or credit may be offered at its discretion</li>
+                  </ul>
+                </div>
+
+                {/* Section F */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("F", "LIABILITY, INSURANCE & INDEMNIFICATION")}
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Retreat Organizer Responsibility:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>All participants must carry adequate travel insurance and health insurance covering yoga, wellness activities, and medical evacuation</li>
+                    <li>Retreat Organizer is responsible for communicating health and medical restrictions to Ubuntu Bali in writing at least 30 days prior to the retreat</li>
+                  </ul>
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Ubuntu Bali Liability:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>Ubuntu Bali shall not be held liable for personal injury, loss, damage, or theft of personal property, except in cases of Ubuntu Bali's gross negligence or wilful misconduct</li>
+                    <li style={{ marginBottom: "4px" }}>Ubuntu Bali's maximum liability under this agreement is limited to 50% of the total contract value</li>
+                    <li>Ubuntu Bali is not responsible for losses arising from participant non-compliance with house rules or unsafe behaviour</li>
+                  </ul>
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Property Damage:</p>
+                  <p style={bodyText}>Participant-caused damage to property shall be charged to the Retreat Organizer at cost of repair or replacement. Pre-damage photos and videos are available upon request.</p>
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Partner Resort Responsibility:</p>
+                  <p style={bodyText}>Ubuntu Bali assumes full responsibility for partner resort facilities and services as if they were part of the Ubuntu Bali property. Retreat Organizer shall not be held liable for any issues arising at partner resort locations.</p>
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Indemnification:</p>
+                  <p style={bodyText}>Retreat Organizer agrees to indemnify and hold harmless Ubuntu Bali from claims, injuries, or damages arising from participant conduct or actions.</p>
+                </div>
+
+                {/* Section G */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("G", "PROPERTY USE & CONDUCT")}
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>Quiet hours are observed between 9:30pm and 7:00am</li>
+                    <li style={{ marginBottom: "4px" }}>No smoking, alcohol, drugs, or intoxicants are permitted on the premises</li>
+                    <li style={{ marginBottom: "4px" }}>The Yoga Shala must be left tidied, with all fans and lights switched off</li>
+                    <li>Any property damage caused by participants will be charged to the Retreat Organizer</li>
+                  </ul>
+                </div>
+
+                {/* Section H */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("H", "MEALS")}
+                  <p style={bodyText}>Two organic plant-based meals per day are included for registered overnight guests only.</p>
+                  <p style={bodyText}>Additional meals for facilitators, staff, or external participants must be arranged in advance and incur an additional fee.</p>
+                </div>
+
+                {/* Section I */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("I", "SWIMMING POOL")}
+                  <p style={bodyText}>The swimming pool is available to all registered retreat participants at all times.</p>
+                  <p style={bodyText}>All users must shower before entering the pool.</p>
+                </div>
+
+                {/* Section J */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("J", "WI-FI")}
+                  <p style={bodyText}>Wi-Fi is provided across the property in common areas, subject to local service availability.</p>
+                </div>
+
+                {/* Section K */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("K", "PHOTOGRAPHY & MEDIA")}
+                  <p style={bodyText}>Ubuntu Bali may take photographs or videos during the retreat for internal and promotional purposes, subject to retreat leader permission only.</p>
+                  <p style={bodyText}>Ubuntu Bali will not identify participants by name in any promotional material without separate written consent from the individual.</p>
+                </div>
+
+                {/* Section L */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("L", "FORCE MAJEURE & EXTRAORDINARY CIRCUMSTANCES")}
+                  <p style={bodyText}>In the event of circumstances beyond reasonable control—including but not limited to natural disasters (earthquake, tsunami, volcanic activity), government-imposed travel restrictions, pandemic or epidemic declarations, military action, or extreme weather rendering the property unsafe or inaccessible—Ubuntu Bali shall:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>Provide immediate notice to Retreat Organizer within 24 hours of determination</li>
+                    <li>Offer options (at Retreat Organiser's choice): (a) reschedule to alternative dates within 18 months with deposits applied in full, (b) issue 100% credit toward future bookings valid for 24 months, or (c) request pro-rata refund (Ubuntu Bali retains administrative fee of 5% of total contract value)</li>
+                  </ul>
+                  <p style={bodyText}>Non-refundable components remain non-refundable unless force majeure is officially declared by Indonesian government authority.</p>
+                  <p style={bodyText}>For short-notice bookings, deposits are non-refundable unless force majeure is officially declared.</p>
+                </div>
+
+                {/* Section M */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("M", "DISPUTE RESOLUTION & ESCALATION")}
+                  <p style={bodyText}>Before pursuing legal action, either party shall follow this escalation process:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>Informal Resolution (7 days): Written notice describing the issue, submitted to the other party</li>
+                    <li style={{ marginBottom: "4px" }}>Management Discussion (14 days): In-person or video meeting between Andréa (Ubuntu Bali) and Retreat Organizer to resolve</li>
+                    <li style={{ marginBottom: "4px" }}>Mediation (optional, 30 days): If unresolved, parties agree to seek mediation through a neutral third party agreed upon by both parties</li>
+                    <li>Legal Action: Only after the above steps have been attempted</li>
+                  </ul>
+                  <p style={bodyText}>Each party bears its own costs unless a court determines otherwise.</p>
+                </div>
+
+                {/* Section N */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("N", "UBUNTU BALI CANCELLATION")}
+                  <p style={bodyText}>Ubuntu Bali may cancel this booking with 60 days written notice if:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>Property becomes unavailable due to emergency repairs or natural disaster</li>
+                    <li>Force majeure makes operation unsafe or impossible</li>
+                  </ul>
+                  <p style={bodyText}>In such cases, Retreat Organizer shall receive:</p>
+                  <ul style={ulStyle}>
+                    <li style={{ marginBottom: "4px" }}>100% refund of all payments made (minus bank transfer fees)</li>
+                    <li style={{ marginBottom: "4px" }}>Priority rebooking on alternative dates within 18 months</li>
+                    <li>Ubuntu Bali shall not charge administrative or rescheduling fees</li>
+                  </ul>
+                  <p style={{ ...bodyText, fontWeight: "700" }}>Short-Notice Ubuntu Cancellation (less than 60 days):</p>
+                  <p style={bodyText}>Full refund of all payments (including non-refundable deposit, minus bank fees) plus 5% compensation credit toward future booking.</p>
+                </div>
+
+                {/* Section O */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("O", "TERMINATION")}
+                  <p style={bodyText}>Either party may terminate this Agreement for material breach with 14 days written notice. Immediate termination applies in cases of illegal or unsafe behaviour.</p>
+                </div>
+
+                {/* Section P */}
+                <div style={{ marginBottom: "24px" }}>
+                  {secHead("P", "GOVERNING LAW")}
+                  <p style={bodyText}>This Agreement shall be governed by and construed in accordance with the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p>
+                </div>
+
+                {/* Section Q */}
+                <div style={{ marginBottom: "32px" }}>
+                  {secHead("Q", "ENTIRE AGREEMENT")}
+                  <p style={bodyText}>This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.</p>
+                </div>
+
+                {/* Signatures */}
+                <div style={{ borderTop: "2px solid #221208", paddingTop: "26px" }}>
+                  <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.14em", textAlign: "center", marginBottom: "26px", color: "#221208" }}>SIGNATURES</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "44px" }}>
+                    {[
+                      { title: "For Ubuntu Bali", name: "Andréa Drottholm", role: "Contract Representative", date: fmtDate(form.contractDate), sub: "Tari, as representative of Andréa Drottholm" },
+                      { title: "For Retreat Organizer", name: form.organizerContact||"___________", role: form.organizerTitle||"___________", date: "", sub: form.organizerContact||"___________" }
+                    ].map((sig, i) => (
+                      <div key={i}>
+                        <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", color: "#5C3D2E", marginBottom: "12px" }}>{sig.title}</div>
+                        <div style={{ ...bodyText, marginBottom: "4px" }}>Name: {sig.name}</div>
+                        <div style={{ ...bodyText, marginBottom: "4px" }}>Title: {sig.role}</div>
+                        <div style={{ ...bodyText, marginBottom: "22px" }}>Date: {sig.date||"___________"}</div>
+                        <div style={{ ...bodyText, marginBottom: "5px" }}>Signature:</div>
+                        <div style={{ borderBottom: "1px solid #1A1208", width: "80%", marginBottom: "7px", height: "20px" }}/>
+                        <div style={{ fontSize: "11px", color: "#8B7355", fontStyle: "italic", fontFamily: "'Lora', serif" }}>{sig.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            )}
+          </div>
+
+          {/* Save to Notion — shown in preview */}
+          {view === "preview" && offerLoaded && (
+            <div style={{ textAlign: "center", padding: "28px 0 48px" }}>
+              <button onClick={saveToNotion} disabled={saveStatus === 'saving'} style={{
                 padding: "14px 44px", border: "none", borderRadius: "4px",
-                background: offerLoaded ? "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)" : "#C8BAA8",
-                color: offerLoaded ? "#F5ECD7" : "#9A8A78",
+                background: saveStatus === 'saved' ? "#3D6636" : saveStatus === 'error' ? "#8B3A2E" : "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)",
+                color: "#F5ECD7",
                 fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
                 letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
-                cursor: offerLoaded ? "pointer" : "not-allowed",
-                boxShadow: offerLoaded ? "0 4px 16px rgba(34,18,8,0.22)" : "none"
-              }}>{offerLoaded ? "Generate Contract Preview →" : "Upload an offer to continue"}</button>
-              {offerLoaded && (
-                <button onClick={saveToNotion} disabled={saveStatus === "saving" || saveStatus === "saved"} style={{
-                  padding: "14px 32px", border: "1.5px solid #B8935A", borderRadius: "4px",
-                  background: saveStatus === "saved" ? "#3D6636" : saveStatus === "error" ? "#8B3A2E" : "#FAF5ED",
-                  color: saveStatus === "saved" ? "#fff" : saveStatus === "error" ? "#fff" : "#B8935A",
-                  fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
-                  letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
-                  cursor: saveStatus ? "default" : "pointer"
-                }}>
-                  {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "✓ Saved to Notion" : saveStatus === "error" ? "Error — try again" : "Save to Notion"}
-                </button>
-              )}
+                cursor: saveStatus === 'saving' ? "not-allowed" : "pointer",
+                boxShadow: "0 4px 16px rgba(34,18,8,0.22)"
+              }}>
+                {saveStatus === 'saving' ? "Saving…" : saveStatus === 'saved' ? "✓ Saved to Notion" : saveStatus === 'error' ? "Error — try again" : "Save to Notion →"}
+              </button>
             </div>
-          </>
-        )}
-
-        {view === "preview" && (
-          <div style={{ background: "#FFF", border: "1px solid #D4C4A8", borderRadius: "8px", padding: "56px 60px", fontFamily: "'Lora', serif", color: "#1A1208", fontSize: "13px", lineHeight: "1.75", boxShadow: "0 8px 40px rgba(34,18,8,0.1)" }}>
-
-            <div style={{ textAlign: "center", marginBottom: "34px", borderBottom: "2px solid #221208", paddingBottom: "24px" }}>
-              {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "90px", objectFit: "contain", marginBottom: "18px", display: "block", marginLeft: "auto", marginRight: "auto", filter: "brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(0.35)" }} />}
-              <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "16.5px", fontWeight: "700", letterSpacing: "0.07em", textTransform: "uppercase", color: "#1A1208", marginBottom: "7px" }}>RETREAT BOOKING CONFIRMATION & AGREEMENT</div>
-              <div style={{ fontFamily: "'Lora', serif", fontSize: "12px", color: "#8B7355", fontStyle: "italic", letterSpacing: "0.06em" }}>PT Purusa Yoga Bali · Operating as Ubuntu Bali</div>
-            </div>
-
-            <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10px", fontWeight: "700", letterSpacing: "0.12em", textTransform: "uppercase", textAlign: "center", marginBottom: "14px", color: "#5C3D2E" }}>BETWEEN</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", border: "1px solid #B8935A", marginBottom: "28px" }}>
-              {[
-                { title: "RETREAT ORGANIZER", lines: [`Company Name: ${form.organizerCompany||"___________"}`, `Contact Person: ${form.organizerContact||"___________"}`, `Address: ${form.organizerAddress||"___________"}`, `Phone: ${form.organizerPhone||"___________"}`, `Website: ${form.organizerWebsite||"___________"}`] },
-                { title: "VENUE HOLDER", lines: ["Company: PT Purusa Yoga Bali (Ubuntu Bali)", "Director: Witri Utari", "Contract: Andréa Drottholm", "Phone: +62 812 3862 0082", "Email: namaste@ubuntubali.com"] }
-              ].map((col, i) => (
-                <div key={i} style={{ padding: "16px 20px", borderRight: i===0 ? "1px solid #B8935A" : "none", background: "#FDFAF5" }}>
-                  <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", color: "#5C3D2E", marginBottom: "10px" }}>{col.title}</div>
-                  {col.lines.map((l,j) => <div key={j} style={{ fontSize: "12px", marginBottom: "4px" }}>{l}</div>)}
-                </div>
-              ))}
-            </div>
-
-            <div style={{ textAlign: "center", fontFamily: "'Libre Baskerville', serif", fontSize: "11px", fontWeight: "700", color: "#221208", borderTop: "1px solid #DDD0BA", borderBottom: "1px solid #DDD0BA", padding: "11px 0", marginBottom: "30px" }}>
-              Date: {fmtDate(form.contractDate)} &nbsp;|&nbsp; Check-in: {fmtDate(form.checkinDate)} &nbsp;|&nbsp; Check-out: {fmtDate(form.checkoutDate)}
-            </div>
-            <div style={{ background: "#F5ECD7", border: "1px solid #C8A96E", borderRadius: "4px", padding: "10px 16px", marginBottom: "28px", fontFamily: "'Lora', serif", fontSize: "12px", color: "#3D2B1F", lineHeight: "1.65" }}>
-              <strong style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "10.5px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Contract Validity: </strong>
-              This contract offer is valid until <strong>{fmtDate(form.validUntil || defaultValidUntil(form.contractDate))}</strong>. If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("A", "PURPOSE OF AGREEMENT", true)}
-              <p style={bodyText}>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
-              <p style={bodyText}>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("B", "PRICING & INCLUSIONS", true)}
-              <p style={bodyText}>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
-              <p style={{ ...bodyText, fontWeight: "700", marginTop: "10px" }}>Retreat Package: {form.retreatName||"___________"} · {form.nights||"?"} Nights, {form.nights?parseInt(form.nights)+1:"?"} Days · {form.guests||"?"} Guests</p>
-              <p style={{ ...bodyText, marginBottom: "10px" }}>Check-in: {fmtDateShort(form.checkinDate)} · Check-out: {fmtDateShort(form.checkoutDate)}</p>
-              <p style={{ ...bodyText, fontWeight: "700", marginBottom: "6px" }}>Room Allocation:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>Ubuntu Bali property: {form.ubuntuRooms||"?"} rooms (can accommodate single or shared occupancy; pricing per room, not per guest)</li>
-                <li style={{ marginBottom: "4px" }}>Partner resort: {form.partnerRooms||"?"} rooms (single occupancy standard; shared occupancy available at +USD 15/night per additional guest)</li>
-                <li style={{ marginBottom: "4px" }}>Total capacity: {form.rooms||"?"} rooms, up to {form.rooms && form.ubuntuRooms ? parseInt(form.rooms) + parseInt(form.ubuntuRooms) : "?"} guests if sharing is utilised (Ubuntu rooms only)</li>
-                <li>Room assignment: Allocated by Retreat Organizer; changes require 30 days notice</li>
-              </ul>
-              <PricingTable />
-              <p style={{ ...bodyText, fontWeight: "700", marginBottom: "5px" }}>What's Included:</p>
-              <ul style={ulStyle}>
-                <li>2 organic plant-based meals per day</li>
-                <li>Tea and afternoon snack</li>
-                <li>Shala of your choice and cleaning</li>
-                <li>Full staff support and dedicated contact person</li>
-              </ul>
-              <p style={bodyText}>The package price is fixed for {form.guests||"?"} guests. Should the group exceed {form.guests||"?"} people, the room rate remains the same (when rooms are shared) — only meals would be added for each additional guest.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("C", "PAYMENTS & BANK DETAILS", true)}
-              <p style={bodyText}>Payments must be made to the following account:</p>
-              <table style={{ borderCollapse: "collapse", fontSize: "12px", marginTop: "10px", marginBottom: "10px" }}>
-                {Object.entries(FIXED_PRICING.bankDetails).map(([k,v]) => (
-                  <tr key={k}>
-                    <td style={{ padding: "5px 24px 5px 0", fontWeight: "700", color: "#1A1208", whiteSpace: "nowrap", fontFamily: "'Libre Baskerville', serif", fontSize: "10px", letterSpacing: "0.05em" }}>{k}</td>
-                    <td style={{ padding: "5px 0", fontFamily: "'Lora', serif" }}>{v}</td>
-                  </tr>
-                ))}
-              </table>
-              <p style={bodyText}>All bank and transfer fees are the responsibility of the Retreat Organizer.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("D", "PAYMENT SCHEDULE", true)}
-              <p style={{ ...bodyText, fontWeight: "700", marginBottom: "12px" }}>This booking qualifies as a {form.bookingType} BOOKING {form.bookingType==="STANDARD" ? "(more than 120 days before retreat start)" : "(less than 120 days before retreat start)"}.</p>
-              <GenericTable
-                head={["Payment","Percentage","Amount (USD)","Due Date"]}
-                rows={[
-                  ["Deposit", payments.deposit.pct, fmt$(payments.deposit.amount), payments.deposit.due],
-                  ["2nd Payment", payments.second.pct, fmt$(payments.second.amount), payments.second.due],
-                  ["Final Payment", payments.final.pct, fmt$(payments.final.amount), payments.final.due],
-                ]}
-              />
-              <p style={bodyText}>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("E", "CANCELLATION & REFUND POLICY", true)}
-              <p style={{ ...bodyText, fontWeight: "700" }}>Standard Bookings:</p>
-              <p style={bodyText}>Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees. Any balance payments already received are non-refundable once the final payment deadline passes.</p>
-              <GenericTable
-                head={["Cancellation Period","Refund of Deposit (minus bank fees)"]}
-                rows={CANCELLATION_POLICY.map(r => [r.period, r.refund])}
-              />
-              <p style={{ ...bodyText, fontWeight: "700" }}>Short-Notice Bookings:</p>
-              <p style={bodyText}>Deposits are non-refundable except in cases of force majeure as defined in Section L.</p>
-              <p style={{ ...bodyText, fontWeight: "700" }}>Rescheduling:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>One reschedule is permitted within 12 months of original dates, subject to availability and a 10% administrative fee</li>
-                <li style={{ marginBottom: "4px" }}>Requests must be made at least 3 months prior to retreat start</li>
-                <li>If Ubuntu Bali successfully rebooks cancelled dates, a partial refund or credit may be offered at its discretion</li>
-              </ul>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("F", "LIABILITY, INSURANCE & INDEMNIFICATION")}
-              <p style={{ ...bodyText, fontWeight: "700" }}>Retreat Organizer Responsibility:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>All participants must carry adequate travel insurance and health insurance covering yoga, wellness activities, and medical evacuation</li>
-                <li>Retreat Organizer is responsible for communicating health and medical restrictions to Ubuntu Bali in writing at least 30 days prior to the retreat</li>
-              </ul>
-              <p style={{ ...bodyText, fontWeight: "700" }}>Ubuntu Bali Liability:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>Ubuntu Bali shall not be held liable for personal injury, loss, damage, or theft of personal property, except in cases of Ubuntu Bali's gross negligence or wilful misconduct</li>
-                <li style={{ marginBottom: "4px" }}>Ubuntu Bali's maximum liability under this agreement is limited to 50% of the total contract value</li>
-                <li>Ubuntu Bali is not responsible for losses arising from participant non-compliance with house rules or unsafe behaviour</li>
-              </ul>
-              <p style={{ ...bodyText, fontWeight: "700" }}>Property Damage:</p>
-              <p style={bodyText}>Participant-caused damage to property shall be charged to the Retreat Organizer at cost of repair or replacement. Pre-damage photos and videos are available upon request.</p>
-              <p style={{ ...bodyText, fontWeight: "700" }}>Partner Resort Responsibility:</p>
-              <p style={bodyText}>Ubuntu Bali assumes full responsibility for partner resort facilities and services as if they were part of the Ubuntu Bali property. Retreat Organizer shall not be held liable for any issues arising at partner resort locations.</p>
-              <p style={{ ...bodyText, fontWeight: "700" }}>Indemnification:</p>
-              <p style={bodyText}>Retreat Organizer agrees to indemnify and hold harmless Ubuntu Bali from claims, injuries, or damages arising from participant conduct or actions.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("G", "PROPERTY USE & CONDUCT")}
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>Quiet hours are observed between 9:30pm and 7:00am</li>
-                <li style={{ marginBottom: "4px" }}>No smoking, alcohol, drugs, or intoxicants are permitted on the premises</li>
-                <li style={{ marginBottom: "4px" }}>The Yoga Shala must be left tidied, with all fans and lights switched off</li>
-                <li>Any property damage caused by participants will be charged to the Retreat Organizer</li>
-              </ul>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("H", "MEALS")}
-              <p style={bodyText}>Two organic plant-based meals per day are included for registered overnight guests only.</p>
-              <p style={bodyText}>Additional meals for facilitators, staff, or external participants must be arranged in advance and incur an additional fee.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("I", "SWIMMING POOL")}
-              <p style={bodyText}>The swimming pool is available to all registered retreat participants at all times.</p>
-              <p style={bodyText}>All users must shower before entering the pool.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("J", "WI-FI")}
-              <p style={bodyText}>Wi-Fi is provided across the property in common areas, subject to local service availability.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("K", "PHOTOGRAPHY & MEDIA")}
-              <p style={bodyText}>Ubuntu Bali may take photographs or videos during the retreat for internal and promotional purposes, subject to retreat leader permission only.</p>
-              <p style={bodyText}>Ubuntu Bali will not identify participants by name in any promotional material without separate written consent from the individual.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("L", "FORCE MAJEURE & EXTRAORDINARY CIRCUMSTANCES")}
-              <p style={bodyText}>In the event of circumstances beyond reasonable control—including but not limited to natural disasters (earthquake, tsunami, volcanic activity), government-imposed travel restrictions, pandemic or epidemic declarations, military action, or extreme weather rendering the property unsafe or inaccessible—Ubuntu Bali shall:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>Provide immediate notice to Retreat Organizer within 24 hours of determination</li>
-                <li>Offer options (at Retreat Organiser's choice): (a) reschedule to alternative dates within 18 months with deposits applied in full, (b) issue 100% credit toward future bookings valid for 24 months, or (c) request pro-rata refund (Ubuntu Bali retains administrative fee of 5% of total contract value)</li>
-              </ul>
-              <p style={bodyText}>Non-refundable components remain non-refundable unless force majeure is officially declared by Indonesian government authority.</p>
-              <p style={bodyText}>For short-notice bookings, deposits are non-refundable unless force majeure is officially declared.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("M", "DISPUTE RESOLUTION & ESCALATION")}
-              <p style={bodyText}>Before pursuing legal action, either party shall follow this escalation process:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>Informal Resolution (7 days): Written notice describing the issue, submitted to the other party</li>
-                <li style={{ marginBottom: "4px" }}>Management Discussion (14 days): In-person or video meeting between Andréa (Ubuntu Bali) and Retreat Organizer to resolve</li>
-                <li style={{ marginBottom: "4px" }}>Mediation (optional, 30 days): If unresolved, parties agree to seek mediation through a neutral third party agreed upon by both parties</li>
-                <li>Legal Action: Only after the above steps have been attempted</li>
-              </ul>
-              <p style={bodyText}>Each party bears its own costs unless a court determines otherwise.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("N", "UBUNTU BALI CANCELLATION")}
-              <p style={bodyText}>Ubuntu Bali may cancel this booking with 60 days written notice if:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>Property becomes unavailable due to emergency repairs or natural disaster</li>
-                <li>Force majeure makes operation unsafe or impossible</li>
-              </ul>
-              <p style={bodyText}>In such cases, Retreat Organizer shall receive:</p>
-              <ul style={ulStyle}>
-                <li style={{ marginBottom: "4px" }}>100% refund of all payments made (minus bank transfer fees)</li>
-                <li style={{ marginBottom: "4px" }}>Priority rebooking on alternative dates within 18 months</li>
-                <li>Ubuntu Bali shall not charge administrative or rescheduling fees</li>
-              </ul>
-              <p style={{ ...bodyText, fontWeight: "700" }}>Short-Notice Ubuntu Cancellation (less than 60 days):</p>
-              <p style={bodyText}>Full refund of all payments (including non-refundable deposit, minus bank fees) plus 5% compensation credit toward future booking.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("O", "TERMINATION")}
-              <p style={bodyText}>Either party may terminate this Agreement for material breach with 14 days written notice. Immediate termination applies in cases of illegal or unsafe behaviour.</p>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              {secHead("P", "GOVERNING LAW")}
-              <p style={bodyText}>This Agreement shall be governed by and construed in accordance with the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p>
-            </div>
-
-            <div style={{ marginBottom: "32px" }}>
-              {secHead("Q", "ENTIRE AGREEMENT")}
-              <p style={bodyText}>This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.</p>
-            </div>
-
-            <div style={{ borderTop: "2px solid #221208", paddingTop: "26px" }}>
-              <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.14em", textAlign: "center", marginBottom: "26px", color: "#221208" }}>SIGNATURES</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "44px" }}>
-                {[
-                  { title: "For Ubuntu Bali", name: "Andréa Drottholm", role: "Contract Representative", date: fmtDate(form.contractDate), sub: "Tari, as representative of Andréa Drottholm" },
-                  { title: "For Retreat Organizer", name: form.organizerContact||"___________", role: form.organizerTitle||"___________", date: "", sub: form.organizerContact||"___________" }
-                ].map((sig, i) => (
-                  <div key={i}>
-                    <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", color: "#5C3D2E", marginBottom: "12px" }}>{sig.title}</div>
-                    <div style={{ ...bodyText, marginBottom: "4px" }}>Name: {sig.name}</div>
-                    <div style={{ ...bodyText, marginBottom: "4px" }}>Title: {sig.role}</div>
-                    <div style={{ ...bodyText, marginBottom: "22px" }}>Date: {sig.date||"___________"}</div>
-                    <div style={{ ...bodyText, marginBottom: "5px" }}>Signature:</div>
-                    <div style={{ borderBottom: "1px solid #1A1208", width: "80%", marginBottom: "7px", height: "20px" }}/>
-                    <div style={{ fontSize: "11px", color: "#8B7355", fontStyle: "italic", fontFamily: "'Lora', serif" }}>{sig.sub}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        )}
-      </div>
-
-      {/* Save to Notion button — shown in preview when offer is loaded */}
-      {view === "preview" && offerLoaded && (
-        <div style={{ textAlign: "center", padding: "28px 0 48px" }}>
-          <button onClick={saveToNotion} disabled={saveStatus === 'saving'} style={{
-            padding: "14px 44px", border: "none", borderRadius: "4px",
-            background: saveStatus === 'saved' ? "#3D6636" : saveStatus === 'error' ? "#8B3A2E" : "linear-gradient(135deg, #221208 0%, #4A2E1A 100%)",
-            color: "#F5ECD7",
-            fontFamily: "'Libre Baskerville', serif", fontSize: "10px",
-            letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700",
-            cursor: saveStatus === 'saving' ? "not-allowed" : "pointer",
-            boxShadow: "0 4px 16px rgba(34,18,8,0.22)"
-          }}>
-            {saveStatus === 'saving' ? "Saving…" : saveStatus === 'saved' ? "✓ Saved to Notion" : saveStatus === 'error' ? "Error — try again" : "Save to Notion →"}
-          </button>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
-
+      );
+    }
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<ContractGenerator />);
