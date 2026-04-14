@@ -1,6 +1,26 @@
-import { useState, useRef, useCallback } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ubuntu Bali · Contract Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F0E9DF; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useCallback } = React;
 
-const LOGO_URI = 
+const LOGO_URI = null;
 
 const FIXED_PRICING = {
   accommodationRate: 60,
@@ -84,7 +104,7 @@ function defaultValidUntil(contractDate) {
 
 const Bold = ({ children }) => <strong>{children}</strong>;
 
-export default function ContractGenerator() {
+function ContractGenerator() {
   const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
     contractDate: today,
@@ -241,7 +261,7 @@ export default function ContractGenerator() {
 
       <div style={{ background: "#221208", padding: "18px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #B8935A" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "60px", objectFit: "contain", filter: "brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.88)" }} />
+          {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "60px", objectFit: "contain", filter: "brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.88)" }} />}
           <div>
             <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "9.5px", letterSpacing: "0.24em", color: "#B8935A", textTransform: "uppercase", marginBottom: "5px" }}>PT Purusa Yoga Bali · Ubuntu Bali</div>
             <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "19px", color: "#F5ECD7", fontWeight: "700" }}>Retreat Contract Generator</div>
@@ -404,7 +424,7 @@ export default function ContractGenerator() {
           <div style={{ background: "#FFF", border: "1px solid #D4C4A8", borderRadius: "8px", padding: "56px 60px", fontFamily: "'Lora', serif", color: "#1A1208", fontSize: "13px", lineHeight: "1.75", boxShadow: "0 8px 40px rgba(34,18,8,0.1)" }}>
 
             <div style={{ textAlign: "center", marginBottom: "34px", borderBottom: "2px solid #221208", paddingBottom: "24px" }}>
-              <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "90px", objectFit: "contain", marginBottom: "18px", display: "block", marginLeft: "auto", marginRight: "auto", filter: "brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(0.35)" }} />
+              {LOGO_URI && <img src={LOGO_URI} alt="Ubuntu Bali" style={{ height: "90px", objectFit: "contain", marginBottom: "18px", display: "block", marginLeft: "auto", marginRight: "auto", filter: "brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(0.35)" }} />}
               <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "16.5px", fontWeight: "700", letterSpacing: "0.07em", textTransform: "uppercase", color: "#1A1208", marginBottom: "7px" }}>RETREAT BOOKING CONFIRMATION & AGREEMENT</div>
               <div style={{ fontFamily: "'Lora', serif", fontSize: "12px", color: "#8B7355", fontStyle: "italic", letterSpacing: "0.06em" }}>PT Purusa Yoga Bali · Operating as Ubuntu Bali</div>
             </div>
@@ -640,3 +660,10 @@ export default function ContractGenerator() {
     </div>
   );
 }
+
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ContractGenerator />);
+  </script>
+</body>
+</html>
