@@ -1,22 +1,24 @@
 // sw.js
-// Minimal service worker — forces reload on new deploy.
+// Minimal service worker — shows update button when new version is deployed.
 
 const VERSION = 'BUILD_TIMESTAMP';
 
 self.addEventListener('install', () => {
-  self.skipWaiting();
+  // Don't skip waiting — let the app decide when to update
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(key => caches.delete(key)))
-    ).then(() => clients.claim()).then(() =>
-      clients.matchAll({ type: 'window' }).then(all =>
-        all.forEach(c => c.navigate(c.url))
-      )
-    )
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .then(() => clients.claim())
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', event => {
