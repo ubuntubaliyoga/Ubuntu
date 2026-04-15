@@ -708,24 +708,29 @@ async function loadDrafts(){
       list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">No drafts saved yet. Fill in the form and hit Save.</div>`;
       return;
     }
-    list.innerHTML=data.drafts.map((d,i)=>`
-      <div class="draft-card">
+    list.innerHTML=data.drafts.map((d,i)=>{
+      const hasState=d.formState&&d.formState!=='null';
+      const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set';
+      const total=d.totalUSD?'USD '+Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—';
+      const stateAttr=hasState?`data-state='${d.formState.replace(/'/g,"&#39;")}'`:'';
+      return `<div class="draft-card">
         <div class="draft-info">
-          <div class="draft-name">${d.organizer||'Unnamed'} ${d.retreatName?`· ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
-          <div class="draft-meta">${d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set'} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; USD ${d.totalUSD?Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—'}</div>
+          <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
+          <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
         </div>
         <div class="draft-actions">
-          <button class="draft-btn load" onclick='loadDraft(${JSON.stringify(d.formState)})'>Load</button>
+          ${hasState?`<button class="draft-btn load" onclick="loadDraftById(this);" ${stateAttr}>Load</button>`:`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state saved</span>`}
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch{
     list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load drafts. Check your /api/notion-load endpoint.</div>`;
   }
 }
 
-function loadDraft(formStateStr){
+function loadDraftById(btn){
   try{
-    const state=typeof formStateStr==='string'?JSON.parse(formStateStr):formStateStr;
+    const state=JSON.parse(btn.getAttribute('data-state'));
     setFormState(state);
     switchTab('edit');
   } catch(e){
