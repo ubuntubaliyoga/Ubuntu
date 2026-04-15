@@ -1,6 +1,6 @@
 // api/notion-load.js
-// Fetches recent entries from the Contracts Retreat Leaders Notion database
-// and returns them as JSON for the Drafts tab.
+// Fetches recent entries from the Contracts Retreat Leaders database.
+// Returns lastEdited timestamp for display in the Drafts tab.
 
 const DB_ID = '978a217d69ae41bf9ca7ba9f5737ca3c';
 
@@ -35,26 +35,27 @@ export default async function handler(req, res) {
       const getProp = (name, type) => {
         const prop = p[name];
         if (!prop) return null;
-        if (type === 'title') return prop.title?.[0]?.plain_text || null;
-        if (type === 'text')  return prop.rich_text?.[0]?.plain_text || null;
+        if (type === 'title')  return prop.title?.[0]?.plain_text || null;
+        if (type === 'text')   return prop.rich_text?.[0]?.plain_text || null;
         if (type === 'number') return prop.number ?? null;
-        if (type === 'date')  return prop.date?.start || null;
+        if (type === 'date')   return prop.date?.start || null;
         if (type === 'select') return prop.select?.name || null;
-        if (type === 'url')   return prop.url || null;
+        if (type === 'url')    return prop.url || null;
         return null;
       };
 
       return {
-        pageId:     page.id,
-        organizer:  getProp('Organizer',     'title'),
-        retreatName:getProp('Retreat Name',  'text'),
-        checkin:    getProp('Check-in',      'date'),
-        checkout:   getProp('Check-out',     'date'),
-        nights:     getProp('Nights',        'number'),
-        guests:     getProp('Guests',        'number'),
-        totalUSD:   getProp('Total USD',     'number'),
-        status:     getProp('Status',        'select'),
-        formState:  getProp('Form State',    'text'),
+        pageId:      page.id,
+        lastEdited:  page.last_edited_time,
+        organizer:   getProp('Organizer',    'title'),
+        retreatName: getProp('Retreat Name', 'text'),
+        checkin:     getProp('Check-in',     'date'),
+        checkout:    getProp('Check-out',    'date'),
+        nights:      getProp('Nights',       'number'),
+        guests:      getProp('Guests',       'number'),
+        totalUSD:    getProp('Total USD',    'number'),
+        status:      getProp('Status',       'select'),
+        formState:   getProp('Form State',   'text'),
       };
     });
 
