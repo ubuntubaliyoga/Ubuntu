@@ -31,7 +31,8 @@ body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;
 .autosave-btn.off{background:#5C1A1A;color:#F5A0A0;}
 .autosave-btn.on{background:#1A4D1A;color:#A0F0A0;}
 .autosave-status{font-family:'Lora',serif;font-size:8px;color:#27AE60;font-style:italic;white-space:nowrap;display:none;}
-.install-btn{padding:6px 10px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;white-space:nowrap;display:none;}
+.update-btn{padding:6px 12px;border-radius:3px;background:#B8935A;color:#221208;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;display:none;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 .view{display:none;padding:24px 20px;}
 .view.active{display:block;}
 .form-wrap{max-width:680px;margin:0 auto;}
@@ -197,6 +198,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
       <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Autosave Off</button>
       <span class="autosave-status" id="autosave-status"></span>
+      <button class="update-btn" id="update-btn" onclick="applyUpdate()">↑ Update Available</button>
       <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
     </div>
   </div>
@@ -807,16 +809,32 @@ function handleInstall(){
 function closeIosModal(e){if(e.target===document.getElementById('ios-modal'))document.getElementById('ios-modal').classList.remove('open');}
 
 // Service worker
+let pendingSW = null;
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js').then(reg=>{
     reg.addEventListener('updatefound',()=>{
       const sw=reg.installing;
-      sw.addEventListener('statechange',()=>{if(sw.state==='activated')window.location.reload();});
+      sw.addEventListener('statechange',()=>{
+        if(sw.state==='installed' && navigator.serviceWorker.controller){
+          // New version ready — show update button
+          pendingSW = sw;
+          $('update-btn').style.display='block';
+        }
+      });
     });
   });
   document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='visible') navigator.serviceWorker.getRegistration().then(reg=>{if(reg)reg.update();});
+    if(document.visibilityState==='visible')
+      navigator.serviceWorker.getRegistration().then(reg=>{if(reg)reg.update();});
   });
+}
+function applyUpdate(){
+  if(pendingSW){
+    pendingSW.postMessage({type:'SKIP_WAITING'});
+    navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
+  } else {
+    window.location.reload();
+  }
 }
 
 // Init
