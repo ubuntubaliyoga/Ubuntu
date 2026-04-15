@@ -182,11 +182,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <option value="Cancelled">Cancelled</option>
     </select>
     <div class="autosave-wrap">
-      <div class="autosave-bar off" id="autosave-bar" onclick="toggleAutosave()">
-        <div class="autosave-bar-off">No Autosave</div>
-        <div class="autosave-dot"></div>
-        <div class="autosave-bar-on">Autosave</div>
-      </div>
+      <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Autosave Off</button>
       <span class="autosave-status" id="autosave-status"></span>
     </div>
     <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
@@ -855,16 +851,19 @@ let autosaveInterval=null;
 let autosaveOn=false;
 function toggleAutosave(){
   autosaveOn=!autosaveOn;
-  const bar=$('autosave-bar');
+  const btn=$('autosave-btn');
   const status=$('autosave-status');
-  bar.className='autosave-bar '+(autosaveOn?'on':'off');
   if(autosaveOn){
+    btn.textContent='● Autosave On';
+    btn.className='autosave-btn on';
     autosaveInterval=setInterval(async()=>{
       await saveToNotion(true);
       const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
       status.textContent=`saved ${now}`;
     },60000);
   } else {
+    btn.textContent='● Autosave Off';
+    btn.className='autosave-btn off';
     clearInterval(autosaveInterval);
     autosaveInterval=null;
     status.textContent='';
