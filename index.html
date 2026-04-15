@@ -187,6 +187,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         <input type="checkbox" id="autosave-toggle" onchange="toggleAutosave()">
         <span class="toggle-slider"></span>
       </label>
+      <span class="toggle-state" id="autosave-state">Off</span>
       <span class="autosave-status" id="autosave-status"></span>
     </div>
     <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
@@ -855,6 +856,9 @@ let autosaveInterval=null;
 function toggleAutosave(){
   const on=$('autosave-toggle').checked;
   const status=$('autosave-status');
+  const state=$('autosave-state');
+  state.textContent=on?'On':'Off';
+  state.className='toggle-state'+(on?' on':'');
   if(on){
     status.textContent='';
     autosaveInterval=setInterval(async()=>{
