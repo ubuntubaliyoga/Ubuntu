@@ -1,5 +1,5 @@
 // api/notion.js
-// Saves a retreat offer/contract entry to the Contracts Retreat Leaders database.
+// Saves a NEW retreat offer/contract entry to the Contracts Retreat Leaders database.
 
 const DB_ID = '978a217d69ae41bf9ca7ba9f5737ca3c';
 
@@ -24,30 +24,17 @@ export default async function handler(req, res) {
     } = req.body;
 
     const properties = {
-      // Title (required)
-      'Organizer': {
-        title: [{ text: { content: organizer || '' } }]
-      },
-      // Text fields
-      'Retreat Name': {
-        rich_text: [{ text: { content: retreatName || '' } }]
-      },
-      'Form State': {
-        rich_text: [{ text: { content: formState || '' } }]
-      },
-      // Number fields
-      'Rooms':     { number: rooms     ? Number(rooms)     : null },
-      'Nights':    { number: nights    ? Number(nights)    : null },
-      'Guests':    { number: guests    ? Number(guests)    : null },
-      'Total USD': { number: totalUSD  ? Number(totalUSD)  : null },
-      // Date fields
+      'Organizer':    { title:     [{ text: { content: organizer    || '' } }] },
+      'Retreat Name': { rich_text: [{ text: { content: retreatName  || '' } }] },
+      'Form State':   { rich_text: [{ text: { content: formState    || '' } }] },
+      'Rooms':        { number: rooms     ? Number(rooms)    : null },
+      'Nights':       { number: nights    ? Number(nights)   : null },
+      'Guests':       { number: guests    ? Number(guests)   : null },
+      'Total USD':    { number: totalUSD  ? Number(totalUSD) : null },
+      'Status':       { select: { name: status || 'Draft' } },
       ...(checkin      && { 'Check-in':      { date: { start: checkin } } }),
       ...(checkout     && { 'Check-out':     { date: { start: checkout } } }),
       ...(contractDate && { 'Contract Date': { date: { start: contractDate } } }),
-      // Select
-      'Status': {
-        select: { name: status || 'Draft' }
-      },
     };
 
     const resp = await fetch('https://api.notion.com/v1/pages', {
