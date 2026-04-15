@@ -181,6 +181,14 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <option value="Signed">Signed</option>
       <option value="Cancelled">Cancelled</option>
     </select>
+    <div class="autosave-wrap">
+      <span class="autosave-label">Autosave</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="autosave-toggle" onchange="toggleAutosave()">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="autosave-status" id="autosave-status"></span>
+    </div>
     <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
     <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
   </div>
@@ -698,17 +706,25 @@ async function loadDrafts(){
       const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set';
       const total=d.totalUSD?'USD '+Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—';
       const edited=d.lastEdited?new Date(d.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-      return`<div class="draft-card">
-        <div class="draft-info">
-          <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
-          <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
-          ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:4px;font-style:italic;">Last edited: ${edited}</div>`:''}
+      return`<div class="draft-card" id="draft-card-${i}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%;">
+          <div class="draft-info">
+            <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
+            <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
+            ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:4px;font-style:italic;">Last edited: ${edited}</div>`:''}
+          </div>
+          <div class="draft-actions">
+            ${hasState?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`:`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
+            <button class="draft-btn" onclick="toggleRenameRow(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;" title="Rename">✎</button>
+            ${hasState?`<button class="draft-btn" onclick="duplicateDraft(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;" title="Duplicate">⧉</button>`:''}
+            <button class="draft-btn" onclick="deleteDraft(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;" title="Delete">🗑</button>
+          </div>
         </div>
-        <div class="draft-actions">
-          ${hasState
-            ?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`
-            :`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
-          <button class="draft-btn" onclick="deleteDraft(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;">🗑</button>
+        <div class="draft-edit-row" id="rename-row-${i}">
+          <input class="draft-edit-input" id="rename-input-${i}" placeholder="New name" value="${d.organizer||''}">
+          <input class="draft-edit-input" id="rename-retreat-${i}" placeholder="Retreat name" value="${d.retreatName||''}">
+          <button class="draft-edit-btn confirm" onclick="confirmRename(${i})">Save</button>
+          <button class="draft-edit-btn cancel" onclick="toggleRenameRow(${i})">Cancel</button>
         </div>
       </div>`;
     }).join('');
@@ -747,9 +763,9 @@ async function deleteDraft(i){
   }
 }
 
-async function saveToNotion(){
+async function saveToNotion(silent=false){
   const btn=$('save-btn');
-  btn.textContent='Saving…';btn.className='save-btn';
+  if(!silent){btn.textContent='Saving…';btn.className='save-btn';}
   const P=pricing();
   const payload={
     organizer:$('f-name').value,
@@ -778,11 +794,9 @@ async function saveToNotion(){
       }
     }
     if(!r.ok) throw new Error();
-    btn.textContent='✓ Saved';btn.className='save-btn saved';
-    setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);
+    if(!silent){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
   } catch{
-    btn.textContent='Error';btn.className='save-btn error';
-    setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);
+    if(!silent){btn.textContent='Error';btn.className='save-btn error';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
   }
 }
 
@@ -792,7 +806,68 @@ const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-fam
 function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 
-// ── PWA Install ──
+function toggleRenameRow(i){
+  const row=$(`rename-row-${i}`);
+  row.classList.toggle('open');
+  if(row.classList.contains('open')) $(`rename-input-${i}`).focus();
+}
+
+async function confirmRename(i){
+  const d=window._drafts[i];
+  if(!d) return;
+  const newOrganizer=$(`rename-input-${i}`).value.trim();
+  const newRetreat=$(`rename-retreat-${i}`).value.trim();
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      action:'update',pageId:d.pageId,
+      organizer:newOrganizer||d.organizer,
+      retreatName:newRetreat||d.retreatName,
+      checkin:d.checkin,checkout:d.checkout,
+      nights:d.nights,guests:d.guests,totalUSD:d.totalUSD,
+      status:d.status,formState:d.formState,
+    })});
+    if(!r.ok) throw new Error();
+    loadDrafts();
+  } catch{ alert('Could not rename. Try again.'); }
+}
+
+async function duplicateDraft(i){
+  const d=window._drafts[i];
+  if(!d||!d.formState) return;
+  try{
+    // Parse state and clear the pageId so it saves as new
+    const state=JSON.parse(d.formState);
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      action:'create',
+      organizer:(d.organizer||'')+ ' (copy)',
+      retreatName:d.retreatName,
+      checkin:d.checkin,checkout:d.checkout,
+      nights:d.nights,guests:d.guests,totalUSD:d.totalUSD,
+      status:'Draft',formState:d.formState,
+    })});
+    if(!r.ok) throw new Error();
+    loadDrafts();
+  } catch{ alert('Could not duplicate. Try again.'); }
+}
+
+// ── AUTOSAVE ──
+let autosaveInterval=null;
+function toggleAutosave(){
+  const on=$('autosave-toggle').checked;
+  const status=$('autosave-status');
+  if(on){
+    status.textContent='';
+    autosaveInterval=setInterval(async()=>{
+      await saveToNotion(true);
+      const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      status.textContent=`saved ${now}`;
+    },60000);
+  } else {
+    clearInterval(autosaveInterval);
+    autosaveInterval=null;
+    status.textContent='';
+  }
+}
 let deferredPrompt = null;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
