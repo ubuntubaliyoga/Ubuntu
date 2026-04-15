@@ -182,12 +182,11 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <option value="Cancelled">Cancelled</option>
     </select>
     <div class="autosave-wrap">
-      <span class="autosave-label">Autosave</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="autosave-toggle" onchange="toggleAutosave()">
-        <span class="toggle-slider"></span>
-      </label>
-      <span class="toggle-state" id="autosave-state">Off</span>
+      <div class="autosave-bar off" id="autosave-bar" onclick="toggleAutosave()">
+        <div class="autosave-bar-off">No Autosave</div>
+        <div class="autosave-dot"></div>
+        <div class="autosave-bar-on">Autosave</div>
+      </div>
       <span class="autosave-status" id="autosave-status"></span>
     </div>
     <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
@@ -853,14 +852,13 @@ async function duplicateDraft(i){
 
 // ── AUTOSAVE ──
 let autosaveInterval=null;
+let autosaveOn=false;
 function toggleAutosave(){
-  const on=$('autosave-toggle').checked;
+  autosaveOn=!autosaveOn;
+  const bar=$('autosave-bar');
   const status=$('autosave-status');
-  const state=$('autosave-state');
-  state.textContent=on?'On':'Off';
-  state.className='toggle-state'+(on?' on':'');
-  if(on){
-    status.textContent='';
+  bar.className='autosave-bar '+(autosaveOn?'on':'off');
+  if(autosaveOn){
     autosaveInterval=setInterval(async()=>{
       await saveToNotion(true);
       const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
