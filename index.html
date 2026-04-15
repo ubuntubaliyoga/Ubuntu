@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Ubuntu Bali · Offer & Contract Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Ubuntu%20Bali%20Hub%22,%22short_name%22:%22Ubuntu%20Bali%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23F0E9DF%22,%22theme_color%22:%22%23221208%22,%22icons%22:[{%22src%22:%22https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w%22,%22sizes%22:%22any%22,%22type%22:%22image/png%22}]}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ubuntu Bali">
+<meta name="theme-color" content="#221208">
+<link rel="apple-touch-icon" href="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;}
@@ -134,7 +141,15 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .draft-btn{padding:7px 14px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:all .18s;}
 .draft-btn.load{background:#3a3228;color:#fff;}
 .draft-btn.load:hover{background:#5a4e42;}
-@media(max-width:600px){
+.install-btn{padding:6px 12px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;display:none;}
+.install-btn:hover{background:#B8935A;color:#221208;}
+.ios-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-end;justify-content:center;}
+.ios-modal.open{display:flex;}
+.ios-modal-box{background:#fff;border-radius:12px 12px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;font-family:'Lora',serif;}
+.ios-modal-title{font-family:'Libre Baskerville',serif;font-size:13px;font-weight:700;color:#221208;margin-bottom:16px;text-align:center;}
+.ios-modal-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;font-size:13px;color:#2C2416;line-height:1.6;}
+.ios-modal-step .num{font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#B8935A;background:#F5ECD7;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ios-modal-close{width:100%;margin-top:20px;padding:12px;background:#221208;color:#F5ECD7;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;}
   .nav-tab{padding:5px 9px;font-size:7.5px;}
   .fg-row{grid-template-columns:1fr;}
   .c-parties{grid-template-columns:1fr;}
@@ -167,6 +182,18 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <option value="Cancelled">Cancelled</option>
     </select>
     <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
+    <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
+  </div>
+</div>
+
+<!-- iOS install modal -->
+<div class="ios-modal" id="ios-modal" onclick="closeIosModal(event)">
+  <div class="ios-modal-box">
+    <div class="ios-modal-title">Add to Home Screen</div>
+    <div class="ios-modal-step"><div class="num">1</div><div>Tap the <strong>Share</strong> button at the bottom of your browser (the box with an arrow pointing up ↑)</div></div>
+    <div class="ios-modal-step"><div class="num">2</div><div>Scroll down in the share menu and tap <strong>"Add to Home Screen"</strong></div></div>
+    <div class="ios-modal-step"><div class="num">3</div><div>Tap <strong>"Add"</strong> in the top right corner — done! The app will appear on your home screen like a native app.</div></div>
+    <button class="ios-modal-close" onclick="$('ios-modal').classList.remove('open')">Got it</button>
   </div>
 </div>
 
@@ -351,6 +378,8 @@ const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.
 const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
 
 let activeTab='edit';
+// Track current Notion page ID for update vs create
+let currentPageId = null;
 
 function switchTab(t){
   activeTab=t;
@@ -657,27 +686,29 @@ async function loadDrafts(){
   const list=$('drafts-list');
   list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading drafts…</div>`;
   try{
-    const r=await fetch('/api/notion-load');
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'load'})});
     if(!r.ok) throw new Error('Request failed');
     const data=await r.json();
     if(!data.drafts||data.drafts.length===0){
       list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">No drafts saved yet.</div>`;
       return;
     }
-    list.innerHTML=data.drafts.map(d=>{
+    list.innerHTML=data.drafts.map((d,i)=>{
       const hasState=d.formState&&d.formState!=='null';
       const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set';
       const total=d.totalUSD?'USD '+Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—';
-      const escaped=hasState?d.formState.replace(/\\/g,'\\\\').replace(/'/g,"\\'"):'';
+      const edited=d.lastEdited?new Date(d.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
       return`<div class="draft-card">
         <div class="draft-info">
           <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
           <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
+          ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:4px;font-style:italic;">Last edited: ${edited}</div>`:''}
         </div>
         <div class="draft-actions">
           ${hasState
-            ?`<button class="draft-btn load" onclick="loadDraftByIndex(${data.drafts.indexOf(d)})">Load</button>`
-            :`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state saved</span>`}
+            ?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`
+            :`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
+          <button class="draft-btn" onclick="deleteDraft(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;">🗑</button>
         </div>
       </div>`;
     }).join('');
@@ -694,9 +725,25 @@ function loadDraftByIndex(i){
     if(!d||!d.formState) return;
     const state=JSON.parse(d.formState);
     setFormState(state);
+    currentPageId=d.pageId; // track so next save updates this entry
     switchTab('edit');
   } catch(e){
     alert('Could not load this draft.');
+  }
+}
+
+async function deleteDraft(i){
+  const d=window._drafts[i];
+  if(!d) return;
+  if(!confirm(`Move "${d.organizer||'this draft'}" to trash?`)) return;
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',pageId:d.pageId})});
+    if(!r.ok) throw new Error();
+    // If we just deleted the currently loaded draft, clear the page ID
+    if(currentPageId===d.pageId) currentPageId=null;
+    loadDrafts(); // refresh list
+  } catch{
+    alert('Could not delete. Try again.');
   }
 }
 
@@ -718,7 +765,18 @@ async function saveToNotion(){
     formState:JSON.stringify(getFormState()),
   };
   try{
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    let r;
+    if(currentPageId){
+      // Update existing entry
+      r=await fetch('/api/notion-update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,pageId:currentPageId})});
+    } else {
+      // Create new entry
+      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(r.ok){
+        const d=await r.json();
+        currentPageId=d.pageId;
+      }
+    }
     if(!r.ok) throw new Error();
     btn.textContent='✓ Saved';btn.className='save-btn saved';
     setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);
@@ -734,8 +792,42 @@ const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-fam
 function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 
-// Init
-$('f-contractdate').value=todayStr();
+// ── PWA Install ──
+let deferredPrompt = null;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+if (!isStandalone) {
+  if (isIOS) {
+    // Show install button on iOS — tapping opens instructions
+    const btn = $('install-btn');
+    btn.style.display = 'block';
+    btn.textContent = '⊕ Add to Home Screen';
+  } else {
+    // Android / desktop: listen for beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      $('install-btn').style.display = 'block';
+    });
+  }
+}
+
+function handleInstall() {
+  if (isIOS) {
+    $('ios-modal').classList.add('open');
+  } else if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      $('install-btn').style.display = 'none';
+    });
+  }
+}
+
+function closeIosModal(e) {
+  if (e.target === $('ios-modal')) $('ios-modal').classList.remove('open');
+}
 $('f-validuntil').value=addDays(todayStr(),7);
 
 // Auto-fetch live IDR rate
