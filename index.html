@@ -180,16 +180,12 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div class="nav-logo">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
   </div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('edit')">Edit</button>
-    <button class="nav-tab" onclick="switchTab('offer')">Offer</button>
-    <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
-    <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
-  </div>
-  <div class="nav-actions">
+  <div class="nav-center">
     <div class="nav-actions-row">
-      <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Autosave Off</button>
-      <span class="autosave-status" id="autosave-status"></span>
+      <button class="nav-tab active" onclick="switchTab('edit')">Edit</button>
+      <button class="nav-tab" onclick="switchTab('offer')">Offer</button>
+      <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
+      <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
     </div>
     <div class="nav-actions-row">
       <select id="notion-status" class="nav-select">
@@ -199,6 +195,8 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         <option value="Cancelled">Cancelled</option>
       </select>
       <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
+      <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Autosave Off</button>
+      <span class="autosave-status" id="autosave-status"></span>
       <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
     </div>
   </div>
