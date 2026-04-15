@@ -1,16 +1,56 @@
-// api/notion-load.js
-// Fetches recent entries from the Contracts Retreat Leaders Notion database
-// and returns them as JSON for the Drafts tab.
+// api/notion.js
+// Saves a retreat offer/contract entry to the Contracts Retreat Leaders database.
 
 const DB_ID = '978a217d69ae41bf9ca7ba9f5737ca3c';
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
+  if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const resp = await fetch(`https://api.notion.com/v1/databases/${DB_ID}/query`, {
+    const {
+      organizer,
+      retreatName,
+      checkin,
+      checkout,
+      contractDate,
+      rooms,
+      nights,
+      guests,
+      totalUSD,
+      status,
+      formState,
+    } = req.body;
+
+    const properties = {
+      // Title (required)
+      'Organizer': {
+        title: [{ text: { content: organizer || '' } }]
+      },
+      // Text fields
+      'Retreat Name': {
+        rich_text: [{ text: { content: retreatName || '' } }]
+      },
+      'Form State': {
+        rich_text: [{ text: { content: formState || '' } }]
+      },
+      // Number fields
+      'Rooms':     { number: rooms     ? Number(rooms)     : null },
+      'Nights':    { number: nights    ? Number(nights)    : null },
+      'Guests':    { number: guests    ? Number(guests)    : null },
+      'Total USD': { number: totalUSD  ? Number(totalUSD)  : null },
+      // Date fields
+      ...(checkin      && { 'Check-in':      { date: { start: checkin } } }),
+      ...(checkout     && { 'Check-out':     { date: { start: checkout } } }),
+      ...(contractDate && { 'Contract Date': { date: { start: contractDate } } }),
+      // Select
+      'Status': {
+        select: { name: status || 'Draft' }
+      },
+    };
+
+    const resp = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
@@ -18,8 +58,8 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
-        page_size: 20,
+        parent: { database_id: DB_ID },
+        properties,
       }),
     });
 
@@ -29,36 +69,8 @@ export default async function handler(req, res) {
     }
 
     const data = await resp.json();
+    return res.status(200).json({ success: true, pageId: data.id });
 
-    const drafts = data.results.map(page => {
-      const p = page.properties;
-      const getProp = (name, type) => {
-        const prop = p[name];
-        if (!prop) return null;
-        if (type === 'title') return prop.title?.[0]?.plain_text || null;
-        if (type === 'text')  return prop.rich_text?.[0]?.plain_text || null;
-        if (type === 'number') return prop.number ?? null;
-        if (type === 'date')  return prop.date?.start || null;
-        if (type === 'select') return prop.select?.name || null;
-        if (type === 'url')   return prop.url || null;
-        return null;
-      };
-
-      return {
-        pageId:     page.id,
-        organizer:  getProp('Organizer',     'title'),
-        retreatName:getProp('Retreat Name',  'text'),
-        checkin:    getProp('Check-in',      'date'),
-        checkout:   getProp('Check-out',     'date'),
-        nights:     getProp('Nights',        'number'),
-        guests:     getProp('Guests',        'number'),
-        totalUSD:   getProp('Total USD',     'number'),
-        status:     getProp('Status',        'select'),
-        formState:  getProp('Form State',    'text'),
-      };
-    });
-
-    return res.status(200).json({ drafts });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
