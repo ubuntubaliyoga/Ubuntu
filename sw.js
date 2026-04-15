@@ -2,7 +2,7 @@
 // Minimal service worker — no offline caching.
 // Only purpose: detect when a new version is deployed and reload the app.
 
-const VERSION = '1.0.0';
+const VERSION = 'BUILD_TIMESTAMP';
 
 self.addEventListener('install', () => {
   // Skip waiting so the new SW activates immediately
