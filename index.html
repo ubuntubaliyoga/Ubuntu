@@ -131,7 +131,22 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}
 .bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}
 .bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}
-.view-label{font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#B8935A;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #EDE3D4;}
+/* ── DRAFTS ── */
+.draft-card{background:#fff;border:1px solid #D4C4A8;border-radius:4px;padding:16px 18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.draft-info{flex:1;min-width:0;}
+.draft-name{font-family:'Libre Baskerville',serif;font-size:13px;font-weight:700;color:#221208;margin-bottom:3px;}
+.draft-meta{font-family:'Lora',serif;font-size:11px;color:#8B7355;}
+.draft-status{display:inline-block;padding:2px 9px;border-radius:10px;font-size:9px;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-left:8px;}
+.s-Draft{background:#E8E4E0;color:#666;}
+.s-Sent{background:#D6E8F5;color:#1A5F8A;}
+.s-Signed{background:#D6F0D6;color:#1A6A1A;}
+.s-Cancelled{background:#F5D6D6;color:#8A1A1A;}
+.draft-actions{display:flex;gap:7px;flex-shrink:0;}
+.draft-btn{padding:7px 14px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:all .18s;}
+.draft-btn.load{background:#3a3228;color:#fff;}
+.draft-btn.load:hover{background:#5a4e42;}
+.draft-btn.del{background:transparent;border:1px solid #D4C4A8;color:#8B7355;}
+.draft-btn.del:hover{border-color:#8B3A2E;color:#8B3A2E;}
 
 /* ── RESPONSIVE ── */
 @media(max-width:600px){
@@ -157,6 +172,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <button class="nav-tab active" onclick="switchTab('edit')">Edit</button>
     <button class="nav-tab" onclick="switchTab('offer')">Offer</button>
     <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
+    <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
   </div>
   <div class="nav-actions">
     <select id="notion-status" class="nav-select">
@@ -295,8 +311,9 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;white-space:nowrap;">1 USD =</span>
       <input type="number" id="f-idrrate" value="17085" style="max-width:130px;" oninput="render()">
       <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;">IDR</span>
+      <span id="idr-status" style="font-size:9px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;"></span>
     </div>
-    <div class="hint">XE.com Apr 13 2026. Edit if needed.</div>
+    <div class="hint">Auto-fetched on load. Edit if needed.</div>
   </div>
 
   <div class="action-row">
@@ -343,14 +360,15 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 let activeTab='edit';
 function switchTab(t){
   activeTab=t;
-  ['edit','offer','contract'].forEach(v=>{
+  ['edit','offer','contract','drafts'].forEach(v=>{
     $(`view-${v}`).classList.toggle('active',v===t);
   });
   document.querySelectorAll('.nav-tab').forEach((b,i)=>{
-    b.classList.toggle('active',['edit','offer','contract'][i]===t);
+    b.classList.toggle('active',['edit','offer','contract','drafts'][i]===t);
   });
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
+  if(t==='drafts') loadDrafts();
 }
 
 function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);}
@@ -617,17 +635,125 @@ const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-fam
 function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 
+// ── collect all form field values into a plain object ──
+function getFormState(){
+  const fields=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro',
+    'f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname',
+    'f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype',
+    'f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc',
+    'f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct',
+    'f-offervalid','f-deposit','f-idrrate','f-note'];
+  const state={};
+  fields.forEach(id=>{ const el=$(id); if(el) state[id]=el.value; });
+  state['f-parvati-on']=$('f-parvati-on').checked;
+  state['f-buddha-on']=$('f-buddha-on').checked;
+  state['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  return state;
+}
+
+// ── restore form from saved state object ──
+function setFormState(state){
+  Object.entries(state).forEach(([id,val])=>{
+    const el=$(id);
+    if(!el) return;
+    if(el.type==='checkbox') el.checked=val;
+    else el.value=val;
+  });
+  if(state['price-display']){
+    const r=document.querySelector(`input[name="price-display"][value="${state['price-display']}"]`);
+    if(r) r.checked=true;
+  }
+  // sync villa disabled state
+  ['parvati','buddha'].forEach(n=>{
+    $(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);
+  });
+}
+
 async function saveToNotion(){
   const btn=$('save-btn');
   btn.textContent='Saving…';btn.className='save-btn';
   const P=pricing();
-  const payload={organizer:$('f-name').value,retreatName:$('f-retreatname').value,checkin:$('f-checkin').value,checkout:$('f-checkout').value,contractDate:$('f-contractdate').value||todayStr(),rooms:P.bales+(P.parvOn?1:0)+(P.buddOn?1:0),nights:P.nights,guests:parseInt($('f-guests').value)||0,totalUSD:P.totalIn,status:$('notion-status').value};
-  try{const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error();btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
-  catch{btn.textContent='Error';btn.className='save-btn error';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
+  const payload={
+    organizer:$('f-name').value,
+    retreatName:$('f-retreatname').value,
+    checkin:$('f-checkin').value,
+    checkout:$('f-checkout').value,
+    contractDate:$('f-contractdate').value||todayStr(),
+    rooms:P.bales+(P.parvOn?1:0)+(P.buddOn?1:0),
+    nights:P.nights,
+    guests:parseInt($('f-guests').value)||0,
+    totalUSD:P.totalIn,
+    status:$('notion-status').value,
+    formState:JSON.stringify(getFormState())
+  };
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error();
+    btn.textContent='✓ Saved';btn.className='save-btn saved';
+    setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);
+  } catch{
+    btn.textContent='Error';btn.className='save-btn error';
+    setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);
+  }
+}
+
+async function loadDrafts(){
+  const list=$('drafts-list');
+  list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading drafts…</div>`;
+  try{
+    const r=await fetch('/api/notion-load');
+    if(!r.ok) throw new Error();
+    const data=await r.json();
+    if(!data.drafts||data.drafts.length===0){
+      list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">No drafts saved yet. Fill in the form and hit Save.</div>`;
+      return;
+    }
+    list.innerHTML=data.drafts.map((d,i)=>`
+      <div class="draft-card">
+        <div class="draft-info">
+          <div class="draft-name">${d.organizer||'Unnamed'} ${d.retreatName?`· ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
+          <div class="draft-meta">${d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set'} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; USD ${d.totalUSD?Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—'}</div>
+        </div>
+        <div class="draft-actions">
+          <button class="draft-btn load" onclick='loadDraft(${JSON.stringify(d.formState)})'>Load</button>
+        </div>
+      </div>`).join('');
+  } catch{
+    list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load drafts. Check your /api/notion-load endpoint.</div>`;
+  }
+}
+
+function loadDraft(formStateStr){
+  try{
+    const state=typeof formStateStr==='string'?JSON.parse(formStateStr):formStateStr;
+    setFormState(state);
+    switchTab('edit');
+  } catch(e){
+    alert('Could not load this draft.');
+  }
 }
 
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
+
+// Auto-fetch live IDR rate
+(async()=>{
+  const status=$('idr-status');
+  status.style.color='#B8935A';
+  status.textContent='fetching…';
+  try{
+    const r=await fetch('/api/exchange-rate');
+    const d=await r.json();
+    $('f-idrrate').value=d.rate;
+    status.style.color=d.fallback?'#8B3A2E':'#3D6636';
+    status.textContent=d.fallback?'⚠ fallback rate':'✓ live rate';
+    setTimeout(()=>{status.textContent='';},4000);
+  } catch{
+    status.style.color='#8B3A2E';
+    status.textContent='⚠ could not fetch';
+    setTimeout(()=>{status.textContent='';},4000);
+  }
+})();
 </script>
 </body>
 </html>
