@@ -10,6 +10,23 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
+// Notion rich_text blocks have a 2000-char limit each.
+// Split a long string into multiple blocks so nothing gets truncated or rejected.
+function toRichTextBlocks(str) {
+  const s = str || '';
+  const chunks = [];
+  for (let i = 0; i < s.length; i += 2000) {
+    chunks.push({ text: { content: s.slice(i, i + 2000) } });
+  }
+  return chunks.length > 0 ? chunks : [{ text: { content: '' } }];
+}
+
+// Reassemble plain_text from all rich_text blocks
+function fromRichText(prop) {
+  if (!prop?.rich_text) return null;
+  return prop.rich_text.map(b => b.plain_text).join('') || null;
+}
+
 function buildProperties(body) {
   const {
     organizer, retreatName, checkin, checkout,
@@ -19,7 +36,7 @@ function buildProperties(body) {
   return {
     'Organizer':    { title:     [{ text: { content: organizer   || '' } }] },
     'Retreat Name': { rich_text: [{ text: { content: retreatName || '' } }] },
-    'Form State':   { rich_text: [{ text: { content: formState   || '' } }] },
+    'Form State':   { rich_text: toRichTextBlocks(formState) },
     'Rooms':        { number: rooms    ? Number(rooms)    : null },
     'Nights':       { number: nights   ? Number(nights)   : null },
     'Guests':       { number: guests   ? Number(guests)   : null },
@@ -57,7 +74,7 @@ export default async function handler(req, res) {
         const prop = p[name];
         if (!prop) return null;
         if (type === 'title')  return prop.title?.[0]?.plain_text  || null;
-        if (type === 'text')   return prop.rich_text?.[0]?.plain_text || null;
+        if (type === 'text')   return fromRichText(prop); // use multi-block reader
         if (type === 'number') return prop.number ?? null;
         if (type === 'date')   return prop.date?.start || null;
         if (type === 'select') return prop.select?.name || null;
