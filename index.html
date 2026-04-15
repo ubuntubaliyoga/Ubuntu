@@ -15,17 +15,22 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;}
-.nav{background:#221208;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:54px;border-bottom:2px solid #B8935A;position:sticky;top:0;z-index:200;gap:10px;}
-.nav-logo img{height:30px;filter:brightness(0) invert(1);display:block;}
+.nav{background:#221208;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:54px;border-bottom:2px solid #B8935A;position:sticky;top:0;z-index:200;gap:8px;flex-wrap:nowrap;}
+.nav-logo img{height:30px;filter:brightness(0) invert(1);display:block;flex-shrink:0;}
 .nav-tabs{display:flex;gap:3px;flex-shrink:0;}
-.nav-tab{padding:6px 14px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.nav-tab{padding:6px 12px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
-.nav-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
-.nav-select{padding:5px 8px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;outline:none;max-width:90px;}
-.save-btn{padding:6px 12px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.nav-actions{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.nav-select{padding:5px 7px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.06em;text-transform:uppercase;outline:none;max-width:80px;}
+.save-btn{padding:6px 11px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .save-btn:hover{background:#B8935A;color:#221208;}
 .save-btn.saved{background:#3D6636;color:#fff;border-color:#3D6636;}
 .save-btn.error{background:#8B3A2E;color:#fff;border-color:#8B3A2E;}
+.autosave-btn{padding:6px 10px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.autosave-btn.off{background:#5C1A1A;color:#F5A0A0;}
+.autosave-btn.on{background:#1A4D1A;color:#A0F0A0;}
+.autosave-status{font-family:'Lora',serif;font-size:8px;color:#27AE60;font-style:italic;white-space:nowrap;display:none;}
+.install-btn{padding:6px 10px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;white-space:nowrap;display:none;}
 .view{display:none;padding:24px 20px;}
 .view.active{display:block;}
 .form-wrap{max-width:680px;margin:0 auto;}
@@ -128,8 +133,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}
 .bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}
 .view-label{font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#B8935A;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #EDE3D4;}
-.draft-card{background:#fff;border:1px solid #D4C4A8;border-radius:4px;padding:16px 18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-.draft-info{flex:1;min-width:0;}
+.draft-card{background:#fff;border:1px solid #D4C4A8;border-radius:4px;padding:14px 16px;margin-bottom:12px;}
 .draft-name{font-family:'Libre Baskerville',serif;font-size:13px;font-weight:700;color:#221208;margin-bottom:3px;}
 .draft-meta{font-family:'Lora',serif;font-size:11px;color:#8B7355;}
 .draft-status{display:inline-block;padding:2px 9px;border-radius:10px;font-size:9px;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-left:8px;}
@@ -137,12 +141,19 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .s-Sent{background:#D6E8F5;color:#1A5F8A;}
 .s-Signed{background:#D6F0D6;color:#1A6A1A;}
 .s-Cancelled{background:#F5D6D6;color:#8A1A1A;}
-.draft-actions{display:flex;gap:7px;flex-shrink:0;}
-.draft-btn{padding:7px 14px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:all .18s;}
+.draft-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;}
+.draft-btn{padding:7px 12px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:all .18s;}
 .draft-btn.load{background:#3a3228;color:#fff;}
 .draft-btn.load:hover{background:#5a4e42;}
-.install-btn{padding:6px 12px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;display:none;}
-.install-btn:hover{background:#B8935A;color:#221208;}
+.draft-btn.ghost{background:transparent;border:1px solid #D4C4A8;color:#8B7355;}
+.draft-btn.ghost:hover{border-color:#8B3A2E;color:#8B3A2E;}
+.draft-edit-row{display:none;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.draft-edit-row.open{display:flex;}
+.draft-edit-input{flex:1;min-width:120px;padding:6px 9px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;color:#2C2416;background:#FDFAF5;outline:none;}
+.draft-edit-input:focus{border-color:#8B7355;}
+.draft-edit-btn{padding:6px 12px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;}
+.draft-edit-btn.confirm{background:#3a3228;color:#fff;}
+.draft-edit-btn.cancel{background:transparent;border:1px solid #D4C4A8;color:#8B7355;}
 .ios-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-end;justify-content:center;}
 .ios-modal.open{display:flex;}
 .ios-modal-box{background:#fff;border-radius:12px 12px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;font-family:'Lora',serif;}
@@ -150,7 +161,8 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .ios-modal-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;font-size:13px;color:#2C2416;line-height:1.6;}
 .ios-modal-step .num{font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#B8935A;background:#F5ECD7;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ios-modal-close{width:100%;margin-top:20px;padding:12px;background:#221208;color:#F5ECD7;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;}
-  .nav-tab{padding:5px 9px;font-size:7.5px;}
+@media(max-width:600px){
+  .nav-tab{padding:5px 8px;font-size:7.5px;}
   .fg-row{grid-template-columns:1fr;}
   .c-parties{grid-template-columns:1fr;}
   .c-party:first-child{border-right:none;border-bottom:1px solid #B8935A;}
@@ -158,7 +170,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .contract-doc{padding:20px 14px;}
   .action-row{flex-direction:column;}
   .radio-grp{flex-direction:column;gap:6px;}
-  .draft-card{flex-direction:column;align-items:flex-start;}
 }
 </style>
 </head>
@@ -175,29 +186,26 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
   </div>
   <div class="nav-actions">
+    <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Off</button>
+    <span class="autosave-status" id="autosave-status"></span>
     <select id="notion-status" class="nav-select">
       <option value="Draft">Draft</option>
       <option value="Sent">Sent</option>
       <option value="Signed">Signed</option>
       <option value="Cancelled">Cancelled</option>
     </select>
-    <div class="autosave-wrap">
-      <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Autosave Off</button>
-      <span class="autosave-status" id="autosave-status"></span>
-    </div>
     <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
     <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
   </div>
 </div>
 
-<!-- iOS install modal -->
 <div class="ios-modal" id="ios-modal" onclick="closeIosModal(event)">
   <div class="ios-modal-box">
     <div class="ios-modal-title">Add to Home Screen</div>
-    <div class="ios-modal-step"><div class="num">1</div><div>Tap the <strong>Share</strong> button at the bottom of your browser (the box with an arrow pointing up ↑)</div></div>
-    <div class="ios-modal-step"><div class="num">2</div><div>Scroll down in the share menu and tap <strong>"Add to Home Screen"</strong></div></div>
-    <div class="ios-modal-step"><div class="num">3</div><div>Tap <strong>"Add"</strong> in the top right corner — done! The app will appear on your home screen like a native app.</div></div>
-    <button class="ios-modal-close" onclick="$('ios-modal').classList.remove('open')">Got it</button>
+    <div class="ios-modal-step"><div class="num">1</div><div>Tap the <strong>Share</strong> button at the bottom of your browser (↑)</div></div>
+    <div class="ios-modal-step"><div class="num">2</div><div>Scroll down and tap <strong>"Add to Home Screen"</strong></div></div>
+    <div class="ios-modal-step"><div class="num">3</div><div>Tap <strong>"Add"</strong> in the top right — done!</div></div>
+    <button class="ios-modal-close" onclick="document.getElementById('ios-modal').classList.remove('open')">Got it</button>
   </div>
 </div>
 
@@ -206,43 +214,43 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 <div class="form-wrap">
   <div class="s-section">Contact</div>
   <div class="fg-row">
-    <div class="fg"><label>Organizer Name</label><input type="text" id="f-name" oninput="render()"></div>
-    <div class="fg"><label>Company</label><input type="text" id="f-company" oninput="render()"></div>
+    <div class="fg"><label>Organizer Name</label><input type="text" id="f-name"></div>
+    <div class="fg"><label>Company</label><input type="text" id="f-company"></div>
   </div>
-  <div class="fg"><label>Address</label><input type="text" id="f-address" oninput="render()"></div>
+  <div class="fg"><label>Address</label><input type="text" id="f-address"></div>
   <div class="fg-row">
-    <div class="fg"><label>Phone</label><input type="text" id="f-phone" oninput="render()"></div>
-    <div class="fg"><label>Website</label><input type="text" id="f-website" oninput="render()"></div>
+    <div class="fg"><label>Phone</label><input type="text" id="f-phone"></div>
+    <div class="fg"><label>Website</label><input type="text" id="f-website"></div>
   </div>
-  <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title" oninput="render()"></div>
+  <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title"></div>
 
   <div class="s-section">Intro Text</div>
   <div class="fg"><label>Opening paragraph</label>
-    <textarea id="f-intro" rows="4" oninput="render()">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
+    <textarea id="f-intro" rows="4">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
   </div>
 
   <div class="s-section">Booking Dates</div>
   <div class="fg-row">
-    <div class="fg"><label>Check-in</label><input type="date" id="f-checkin" oninput="render()"></div>
-    <div class="fg"><label>Check-out</label><input type="date" id="f-checkout" oninput="render()"></div>
+    <div class="fg"><label>Check-in</label><input type="date" id="f-checkin"></div>
+    <div class="fg"><label>Check-out</label><input type="date" id="f-checkout"></div>
   </div>
   <div class="fg-row">
-    <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate" oninput="render()"></div>
-    <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil" oninput="render()"><div class="hint">Default: 7 days after offer date</div></div>
+    <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate"></div>
+    <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil"><div class="hint">Default: 7 days after offer date</div></div>
   </div>
 
   <div class="s-section">Retreat Details</div>
-  <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname" oninput="render()"></div>
+  <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname"></div>
   <div class="fg-row">
-    <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50" oninput="render()"></div>
-    <div class="fg"><label>Facilitators</label><input type="number" id="f-facilitators" value="1" min="0" max="10" oninput="render()"></div>
+    <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50"></div>
+    <div class="fg"><label>Facilitators</label><input type="number" id="f-facilitators" value="1" min="0" max="10"></div>
   </div>
   <div class="fg-row">
-    <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30" oninput="render()"></div>
-    <div class="fg"><label>Gladaks (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15" oninput="render()"></div>
+    <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30"></div>
+    <div class="fg"><label>Gladaks (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15"></div>
   </div>
   <div class="fg"><label>Booking Type</label>
-    <select id="f-bookingtype" onchange="render()">
+    <select id="f-bookingtype">
       <option value="STANDARD">Standard (&gt;120 days)</option>
       <option value="SHORT-NOTICE">Short-Notice (&lt;120 days)</option>
     </select>
@@ -252,25 +260,25 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div class="villa-box">
     <div class="villa-box-hd"><input type="checkbox" id="f-parvati-on" onchange="toggleVilla('parvati')" checked> Parvati Villa</div>
     <div class="villa-fields" id="parvati-fields">
-      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-parvati-orig" value="80" min="0" oninput="render()"></div>
-      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-parvati-disc" value="60" min="0" oninput="render()"></div>
+      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-parvati-orig" value="80" min="0"></div>
+      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-parvati-disc" value="60" min="0"></div>
     </div>
   </div>
   <div class="villa-box">
     <div class="villa-box-hd"><input type="checkbox" id="f-buddha-on" onchange="toggleVilla('buddha')" checked> Buddha Villa</div>
     <div class="villa-fields" id="buddha-fields">
-      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-buddha-orig" value="80" min="0" oninput="render()"></div>
-      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-buddha-disc" value="60" min="0" oninput="render()"></div>
+      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-buddha-orig" value="80" min="0"></div>
+      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-buddha-disc" value="60" min="0"></div>
     </div>
   </div>
 
   <div class="s-section">Pricing</div>
   <div class="fg-row">
-    <div class="fg"><label>Gladak Rate / night</label><input type="number" id="f-roomrate" value="60" min="0" oninput="render()"></div>
-    <div class="fg"><label>Package Rate / night</label><input type="number" id="f-pkgrate" value="30.25" min="0" step=".01" oninput="render()"></div>
+    <div class="fg"><label>Gladak Rate / night</label><input type="number" id="f-roomrate" value="60" min="0"></div>
+    <div class="fg"><label>Package Rate / night</label><input type="number" id="f-pkgrate" value="30.25" min="0" step=".01"></div>
   </div>
   <div class="fg"><label>Retreat Packages (people)</label>
-    <select id="f-pkgcount" onchange="render()">
+    <select id="f-pkgcount">
       <option value="0">None</option>
       <option value="1">1</option><option value="2">2</option><option value="3">3</option>
       <option value="4">4</option><option value="5">5</option><option value="6">6</option>
@@ -281,19 +289,21 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   </div>
   <div class="fg-row">
     <div class="fg"><label>Early Bird Discount %</label>
-      <input type="number" id="f-discount" value="5" min="0" max="20" oninput="render()">
+      <input type="number" id="f-discount" value="5" min="0" max="20">
       <div class="hint">Max 20%.</div>
     </div>
     <div class="fg"><label>Individual Room Discount</label>
       <div class="fg-row" style="gap:6px;">
-        <div><label style="font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;font-family:'Libre Baskerville',serif;display:block;margin-bottom:4px;"># Rooms</label>
-          <select id="f-disc-room" onchange="render()">
+        <div>
+          <label style="font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;font-family:'Libre Baskerville',serif;display:block;margin-bottom:4px;"># Rooms</label>
+          <select id="f-disc-room">
             <option value="0">None</option><option value="1">1</option><option value="2">2</option>
             <option value="3">3</option><option value="4">4</option><option value="5">5</option>
           </select>
         </div>
-        <div><label style="font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;font-family:'Libre Baskerville',serif;display:block;margin-bottom:4px;">Discount %</label>
-          <input type="number" id="f-disc-pct" value="0" min="0" max="50" oninput="render()">
+        <div>
+          <label style="font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;font-family:'Libre Baskerville',serif;display:block;margin-bottom:4px;">Discount %</label>
+          <input type="number" id="f-disc-pct" value="0" min="0" max="50">
         </div>
       </div>
       <div class="hint">Max 50%.</div>
@@ -301,21 +311,21 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   </div>
   <div class="fg"><label>Show Price Totals</label>
     <div class="radio-grp">
-      <label><input type="radio" name="price-display" value="daily" onchange="render()"> Daily only</label>
-      <label><input type="radio" name="price-display" value="total" onchange="render()"> Total only</label>
-      <label><input type="radio" name="price-display" value="both" onchange="render()" checked> Both</label>
+      <label><input type="radio" name="price-display" value="daily"> Daily only</label>
+      <label><input type="radio" name="price-display" value="total"> Total only</label>
+      <label><input type="radio" name="price-display" value="both" checked> Both</label>
     </div>
   </div>
 
   <div class="s-section">Offer Note</div>
   <div class="fg"><label>Package note</label>
-    <textarea id="f-note" rows="4" oninput="render()">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest. You can also increase your own profitability by offering guests the option to share a Gladak or a Villa — keeping your accommodation costs fixed while freeing up margin on your retreat pricing.</textarea>
+    <textarea id="f-note" rows="4">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest. You can also increase your own profitability by offering guests the option to share a Gladak or a Villa — keeping your accommodation costs fixed while freeing up margin on your retreat pricing.</textarea>
   </div>
   <div class="hint" style="margin-top:-9px;margin-bottom:13px;">Use {guests} to auto-insert guest count.</div>
   <div class="fg-row">
-    <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid" oninput="render()"></div>
+    <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid"></div>
     <div class="fg"><label>Deposit % (0 = none)</label>
-      <input type="number" id="f-deposit" value="0" min="0" max="100" oninput="render()">
+      <input type="number" id="f-deposit" value="0" min="0" max="100">
       <div class="hint">Drives contract payment schedule.</div>
     </div>
   </div>
@@ -324,7 +334,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div class="fg"><label>IDR Exchange Rate</label>
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;white-space:nowrap;">1 USD =</span>
-      <input type="number" id="f-idrrate" value="17085" style="max-width:130px;" oninput="render()">
+      <input type="number" id="f-idrrate" value="17085" style="max-width:130px;">
       <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;">IDR</span>
       <span id="idr-status" style="font-size:9px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;"></span>
     </div>
@@ -381,18 +391,12 @@ const todayStr=()=>new Date().toISOString().split('T')[0];
 const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
 const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
 
-let activeTab='edit';
-// Track current Notion page ID for update vs create
-let currentPageId = null;
+let activeTab='edit', currentPageId=null, autosaveOn=false, autosaveInterval=null;
 
 function switchTab(t){
   activeTab=t;
-  ['edit','offer','contract','drafts'].forEach(v=>{
-    $('view-'+v).classList.toggle('active',v===t);
-  });
-  document.querySelectorAll('.nav-tab').forEach((b,i)=>{
-    b.classList.toggle('active',['edit','offer','contract','drafts'][i]===t);
-  });
+  ['edit','offer','contract','drafts'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['edit','offer','contract','drafts'][i]===t));
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
   if(t==='drafts') loadDrafts();
@@ -400,37 +404,41 @@ function switchTab(t){
 
 function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);}
 
+function toggleAutosave(){
+  autosaveOn=!autosaveOn;
+  const btn=$('autosave-btn'), status=$('autosave-status');
+  if(autosaveOn){
+    btn.textContent='● On'; btn.className='autosave-btn on';
+    status.style.display='inline';
+    autosaveInterval=setInterval(async()=>{
+      await saveToNotion(true);
+      status.textContent='saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    },60000);
+  } else {
+    btn.textContent='● Off'; btn.className='autosave-btn off';
+    status.style.display='none'; status.textContent='';
+    clearInterval(autosaveInterval); autosaveInterval=null;
+  }
+}
+
 function pricing(){
-  const bales=parseInt($('f-rooms').value)||0;
-  const roomRate=parseFloat($('f-roomrate').value)||60;
-  const pkgRate=parseFloat($('f-pkgrate').value)||30.25;
-  const pkgCount=parseInt($('f-pkgcount').value)||0;
+  const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
+  const pkgRate=parseFloat($('f-pkgrate').value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
   const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
-  const parvOn=$('f-parvati-on').checked;
-  const parvOrig=parseFloat($('f-parvati-orig').value)||80;
-  const parvDisc=parseFloat($('f-parvati-disc').value)||60;
-  const buddOn=$('f-buddha-on').checked;
-  const buddOrig=parseFloat($('f-buddha-orig').value)||80;
-  const buddDisc=parseFloat($('f-buddha-disc').value)||60;
-  const discRooms=parseInt($('f-disc-room').value)||0;
-  const discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
+  const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80, parvDisc=parseFloat($('f-parvati-disc').value)||60;
+  const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($('f-buddha-orig').value)||80, buddDisc=parseFloat($('f-buddha-disc').value)||60;
+  const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
   const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
-  const accomSub=bales*roomRate+villaTotal;
-  const pkgSub=pkgCount*pkgRate;
-  const stdSub=accomSub+pkgSub;
+  const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
   const earlyAmt=discPct>0?stdSub*(discPct/100):0;
   const roomDiscAmt=discRooms>0&&discRoomPct>0?roomRate*(discRoomPct/100)*discRooms:0;
-  const perNight=stdSub-earlyAmt-roomDiscAmt;
-  const perNightTax=perNight*1.15;
-  const nights=parseInt($('f-nights').value)||7;
-  const totalEx=perNight*nights;
-  const totalIn=perNightTax*nights;
+  const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight*1.15;
+  const nights=parseInt($('f-nights').value)||7, totalEx=perNight*nights, totalIn=perNightTax*nights;
   return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,buddOn,buddOrig,buddDisc,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
 }
 
 function payments(total,checkin,depositPct){
-  const d=depositPct>0?depositPct/100:0.5;
-  const rem=1-d;
+  const d=depositPct>0?depositPct/100:0.5, rem=1-d;
   return{
     dep:{pct:Math.round(d*100)+'%',amt:total*d,due:fmtDS(addDays(todayStr(),2))},
     p2:{pct:Math.round(rem*0.6*100)+'%',amt:total*rem*0.6,due:checkin?fmtDS(addMonths(checkin,-3)):'___________'},
@@ -439,80 +447,53 @@ function payments(total,checkin,depositPct){
 }
 
 function getFormState(){
-  const fields=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro',
-    'f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname',
-    'f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype',
-    'f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc',
-    'f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct',
-    'f-offervalid','f-deposit','f-idrrate','f-note'];
-  const state={};
-  fields.forEach(id=>{const el=$(id);if(el)state[id]=el.value;});
-  state['f-parvati-on']=$('f-parvati-on').checked;
-  state['f-buddha-on']=$('f-buddha-on').checked;
-  state['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
-  return state;
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note'];
+  const s={};
+  ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
+  s['f-parvati-on']=$('f-parvati-on').checked;
+  s['f-buddha-on']=$('f-buddha-on').checked;
+  s['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  return s;
 }
 
-function setFormState(state){
-  Object.entries(state).forEach(([id,val])=>{
-    const el=$(id);
-    if(!el)return;
-    if(el.type==='checkbox')el.checked=val;
-    else el.value=val;
-  });
-  if(state['price-display']){
-    const r=document.querySelector(`input[name="price-display"][value="${state['price-display']}"]`);
-    if(r)r.checked=true;
-  }
-  ['parvati','buddha'].forEach(n=>{
-    $(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);
-  });
+function setFormState(s){
+  Object.entries(s).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=val;else el.value=val;});
+  const r=document.querySelector(`input[name="price-display"][value="${s['price-display']||'both'}"]`);
+  if(r)r.checked=true;
+  ['parvati','buddha'].forEach(n=>$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked));
 }
 
 function buildOfferHTML(){
-  const name=$('f-name').value||'';
-  const company=$('f-company').value;
-  const address=$('f-address').value;
-  const intro=$('f-intro').value.trim();
-  const guests=parseInt($('f-guests').value)||10;
-  const facilitators=parseInt($('f-facilitators').value)||0;
-  const retreatName=$('f-retreatname').value||'Healing Retreat';
-  const noteText=$('f-note').value.trim();
-  const offerValid=$('f-offervalid').value;
-  const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
-  const checkin=$('f-checkin').value;
-  const checkout=$('f-checkout').value;
+  const name=$('f-name').value||'', company=$('f-company').value, address=$('f-address').value;
+  const intro=$('f-intro').value.trim(), guests=parseInt($('f-guests').value)||10, facilitators=parseInt($('f-facilitators').value)||0;
+  const retreatName=$('f-retreatname').value||'Healing Retreat', noteText=$('f-note').value.trim();
+  const offerValid=$('f-offervalid').value, depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
   const pd=document.querySelector('input[name="price-display"]:checked')?.value||'both';
-  const showDaily=pd==='daily'||pd==='both';
-  const showTotal=pd==='total'||pd==='both';
-  const P=pricing();
-  const totalPeople=guests+facilitators;
-  const days=P.nights+1;
+  const showDaily=pd==='daily'||pd==='both', showTotal=pd==='total'||pd==='both';
+  const P=pricing(), totalPeople=guests+facilitators, days=P.nights+1;
   const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-  const offerValidStr=fmtD(offerValid);
-  const hasEB=P.discPct>0;
+  const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
   const depositAmt=depositPct>0?P.totalEx*(depositPct/100):0;
-  const introParagraphs=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
-  const noteResolved=noteText.replace(/\{guests\}/g,totalPeople);
-  const noteParagraphs=noteResolved.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
-  const vRateLbl=(orig,disc)=>orig!==disc?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)}`:`USD ${fmtN(disc)}`;
-  const villaNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
-  const villaBodyLine=villaNames.length>0?` We are pleased to include ${villaNames.join(' and ')} in this package.`:'';
+  const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+  const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
+  const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+  const vLbl=(orig,disc)=>orig!==disc?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)}`:`USD ${fmtN(disc)}`;
+  const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
+  const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
   const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
-  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vRateLbl(P.parvOrig,P.parvDisc)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
-  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vRateLbl(P.buddOrig,P.buddDisc)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
+  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.parvOrig,P.parvDisc)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.buddOrig,P.buddDisc)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
   const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
   const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
   const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
   const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Total Investment</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl. tax &amp; service</td></tr>`:'';
-  const divBlock=(showDaily&&showTotal)?`<tr class="pt-divider"><td colspan="3"><div class="pt-divline">&nbsp;</div></td></tr>`:'';
+  const divBlock=showDaily&&showTotal?`<tr class="pt-divider"><td colspan="3"><div class="pt-divline">&nbsp;</div></td></tr>`:'';
   const totalBlock=showTotal?`<tr class="pt-grand"><td class="col-item">Total for ${P.nights} Nights</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
   const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
   const validLine=hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
   const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (USD ${fmtN(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
   const datesLine=fmtD(checkin)&&fmtD(checkout)?`<div class="e-header-dates">Check-in: ${fmtD(checkin)} &nbsp;·&nbsp; Check-out: ${fmtD(checkout)}</div>`:'';
-  const addrLine=address?`<br>${address}`:'';
-  const dearLine=name?`<p>Dear ${name},</p>`:'';
   return`<div class="e-header">
     <img class="e-logo" src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
     <div class="e-header-label">Retreat Hosting Offer</div>
@@ -520,10 +501,10 @@ function buildOfferHTML(){
     <div class="e-header-date">${monthStr}</div>${datesLine}
   </div>
   <div class="e-body">
-    ${company||address?`<p>${company||''}${addrLine}</p>`:''}
-    ${dearLine}
-    ${introParagraphs}
-    <p>${villaBodyLine}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} Kindly open the attached brochure for pictures of the full property.${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
+    ${company||address?`<p>${company||''}${address?'<br>'+address:''}</p>`:''}
+    ${name?`<p>Dear ${name},</p>`:''}
+    ${introPara}
+    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} Kindly open the attached brochure for pictures of the full property.${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
   </div>
   ${ebBadge}
   <div class="e-package">
@@ -536,7 +517,7 @@ function buildOfferHTML(){
       ${ebRow}${rdRow}${dailyBlock}${divBlock}${totalBlock}
     </table></div>
   </div>
-  <div class="e-note">${noteParagraphs}${validLine}${depositLine}</div>
+  <div class="e-note">${notePara}${validLine}${depositLine}</div>
   <div class="e-included"><div class="e-included-label">What's Included</div>
     <table><tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>2 organic meals per day</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Tea &amp; afternoon snack</td></tr>
     <tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Shala of your choice + cleaning</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Full staff support</td></tr>
@@ -554,39 +535,28 @@ function buildOfferHTML(){
 }
 
 function buildContractHTML(){
-  const name=$('f-name').value||'___________';
-  const company=$('f-company').value||'___________';
-  const address=$('f-address').value||'___________';
-  const phone=$('f-phone').value||'___________';
-  const website=$('f-website').value||'___________';
-  const contactTitle=$('f-title').value||'___________';
+  const name=$('f-name').value||'___________', company=$('f-company').value||'___________';
+  const address=$('f-address').value||'___________', phone=$('f-phone').value||'___________';
+  const website=$('f-website').value||'___________', contactTitle=$('f-title').value||'___________';
   const retreatName=$('f-retreatname').value||'___________';
-  const guests=parseInt($('f-guests').value)||10;
-  const facilitators=parseInt($('f-facilitators').value)||0;
-  const totalPeople=guests+facilitators;
-  const checkin=$('f-checkin').value;
-  const checkout=$('f-checkout').value;
-  const contractDate=$('f-contractdate').value||todayStr();
-  const validUntil=$('f-validuntil').value||addDays(contractDate,7);
+  const guests=parseInt($('f-guests').value)||10, facilitators=parseInt($('f-facilitators').value)||0;
+  const totalPeople=guests+facilitators, checkin=$('f-checkin').value, checkout=$('f-checkout').value;
+  const contractDate=$('f-contractdate').value||todayStr(), validUntil=$('f-validuntil').value||addDays(contractDate,7);
   const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
-  const idrRate=parseFloat($('f-idrrate').value)||17085;
-  const bookingType=$('f-bookingtype').value;
-  const P=pricing();
-  const nights=P.nights;
-  const days=nights+1;
-  const idrTotal=P.totalIn*idrRate;
+  const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
+  const P=pricing(), nights=P.nights, days=nights+1, idrTotal=P.totalIn*idrRate;
   const PMT=payments(P.totalIn,checkin,depositPct);
   const BANK={Currency:'IDR','Account Holder':'PT PURUSA YOGA BALI',Bank:'PT Bank Permata, Tbk','Account Number':'4122048077','BIC / SWIFT':'BBBAIDJAXXX','Bank Address':'Jalan Subak Sari No. 1, Badung, Bali'};
   const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
-  const baleRows=P.bales>0?`<tr><td>Accommodation — ${P.bales} Gladak${P.bales>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.bales*P.roomRate*nights,2)}</td></tr>`:'';
-  const parvRow=P.parvOn?`<tr><td>Parvati Villa × ${nights} nights × USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc*nights,2)}</td></tr>`:'';
-  const buddRow=P.buddOn?`<tr><td>Buddha Villa × ${nights} nights × USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc*nights,2)}</td></tr>`:'';
-  const pkgRow=P.pkgCount>0?`<tr><td>Retreat Package — ${P.pkgCount} people × ${nights} nights × USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgSub*nights,2)}</td></tr>`:'';
-  const taxRow=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(P.totalIn-P.totalEx,2)}</td></tr>`;
-  const ebRow=P.discPct>0?`<tr><td><strong>${P.discPct}% Early Bird Discount</strong></td><td></td><td><strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong></td></tr>`:'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr><td><strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong></td><td></td><td><strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong></td></tr>`:'';
-  const totalRow=`<tr style="background:#F5ECD7;"><td colspan="2">Total incl. tax &amp; service</td><td>USD ${fmtN(P.totalIn,2)}</td></tr>`;
-  const idrRow=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td colspan="2" style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;">IDR for transaction (rate: 1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue)</td><td style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
+  const bR=P.bales>0?`<tr><td>Accommodation — ${P.bales} Gladak${P.bales>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.bales*P.roomRate*nights,2)}</td></tr>`:'';
+  const pR=P.parvOn?`<tr><td>Parvati Villa × ${nights} nights × USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc*nights,2)}</td></tr>`:'';
+  const buR=P.buddOn?`<tr><td>Buddha Villa × ${nights} nights × USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc*nights,2)}</td></tr>`:'';
+  const pkR=P.pkgCount>0?`<tr><td>Retreat Package — ${P.pkgCount} people × ${nights} nights × USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgSub*nights,2)}</td></tr>`:'';
+  const txR=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(P.totalIn-P.totalEx,2)}</td></tr>`;
+  const ebR=P.discPct>0?`<tr><td><strong>${P.discPct}% Early Bird Discount</strong></td><td></td><td><strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong></td></tr>`:'';
+  const rdR=P.discRooms>0&&P.discRoomPct>0?`<tr><td><strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong></td><td></td><td><strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong></td></tr>`:'';
+  const totR=`<tr style="background:#F5ECD7;"><td colspan="2">Total incl. tax &amp; service</td><td>USD ${fmtN(P.totalIn,2)}</td></tr>`;
+  const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td colspan="2" style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;">IDR for transaction (rate: 1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue)</td><td style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
   return`<div class="contract-doc">
   <div class="c-hd">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
@@ -610,7 +580,7 @@ function buildContractHTML(){
     <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
     <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
     <table class="c-table"><thead><tr><th>ITEM</th><th>RATE</th><th>SUBTOTAL</th></tr></thead>
-    <tbody>${baleRows}${parvRow}${buddRow}${pkgRow}${taxRow}${ebRow}${rdRow}${totalRow}${idrRow}</tbody></table>
+    <tbody>${bR}${pR}${buR}${pkR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
     <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
     <p><strong>What's Included:</strong></p>
     <ul><li>2 organic plant-based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
@@ -630,33 +600,29 @@ function buildContractHTML(){
     <p><strong>Standard Bookings:</strong> Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees.</p>
     <table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead>
     <tbody>${CANCEL.map(([p,r])=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table>
-    <p><strong>Short-Notice Bookings:</strong> Deposits are non-refundable except in cases of force majeure as defined in Section L.</p>
+    <p><strong>Short-Notice Bookings:</strong> Deposits are non-refundable except in cases of force majeure.</p>
     <p><strong>Rescheduling:</strong></p>
-    <ul><li>One reschedule permitted within 12 months, subject to availability and a 10% administrative fee</li><li>Requests must be made at least 3 months prior to retreat start</li><li>If Ubuntu Bali successfully rebooks cancelled dates, a partial refund or credit may be offered at its discretion</li></ul></div>
+    <ul><li>One reschedule permitted within 12 months, subject to availability and a 10% administrative fee</li><li>Requests must be made at least 3 months prior to retreat start</li></ul></div>
   <div class="c-sec"><div class="c-sec-hd">F) Liability, Insurance & Indemnification</div>
-    <p><strong>Retreat Organizer Responsibility:</strong></p>
-    <ul><li>All participants must carry adequate travel and health insurance covering yoga, wellness activities, and medical evacuation</li><li>Retreat Organizer must communicate health and medical restrictions to Ubuntu Bali in writing at least 30 days prior</li></ul>
-    <p><strong>Ubuntu Bali Liability:</strong></p>
-    <ul><li>Ubuntu Bali shall not be held liable for personal injury, loss, damage, or theft, except in cases of gross negligence or wilful misconduct</li><li>Ubuntu Bali's maximum liability is limited to 50% of the total contract value</li></ul>
-    <p><strong>Indemnification:</strong> Retreat Organizer agrees to indemnify and hold harmless Ubuntu Bali from claims arising from participant conduct.</p></div>
+    <ul><li>All participants must carry adequate travel and health insurance covering yoga, wellness activities, and medical evacuation</li><li>Retreat Organizer must communicate health restrictions to Ubuntu Bali in writing at least 30 days prior</li><li>Ubuntu Bali shall not be held liable for personal injury, loss, or theft except in cases of gross negligence</li><li>Ubuntu Bali's maximum liability is limited to 50% of the total contract value</li></ul></div>
   <div class="c-sec"><div class="c-sec-hd">G) Property Use & Conduct</div>
     <ul><li>Quiet hours: 9:30pm – 7:00am</li><li>No smoking, alcohol, drugs, or intoxicants on the premises</li><li>Yoga Shala must be left tidied, fans and lights switched off</li><li>Participant-caused property damage will be charged to the Retreat Organizer</li></ul></div>
   <div class="c-sec"><div class="c-sec-hd">H) Meals</div>
-    <p>Two organic plant-based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance and incur an additional fee.</p></div>
+    <p>Two organic plant-based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance.</p></div>
   <div class="c-sec"><div class="c-sec-hd">I) Swimming Pool</div>
-    <p>Available to all registered retreat participants at all times. All users must shower before entering.</p></div>
+    <p>Available to all registered retreat participants. All users must shower before entering.</p></div>
   <div class="c-sec"><div class="c-sec-hd">J) Wi-Fi</div>
     <p>Provided across the property in common areas, subject to local service availability.</p></div>
   <div class="c-sec"><div class="c-sec-hd">K) Photography & Media</div>
-    <p>Ubuntu Bali may photograph or film during the retreat for internal and promotional use, subject to retreat leader permission. Participants will not be identified by name without written consent.</p></div>
+    <p>Ubuntu Bali may photograph or film during the retreat for promotional use, subject to retreat leader permission. Participants will not be identified by name without written consent.</p></div>
   <div class="c-sec"><div class="c-sec-hd">L) Force Majeure</div>
     <p>In the event of circumstances beyond reasonable control, Ubuntu Bali shall provide immediate notice and offer: (a) reschedule within 18 months, (b) 100% credit valid 24 months, or (c) pro-rata refund minus 5% admin fee.</p></div>
   <div class="c-sec"><div class="c-sec-hd">M) Dispute Resolution</div>
     <ul><li>Informal Resolution (7 days): Written notice</li><li>Management Discussion (14 days): In-person or video meeting</li><li>Mediation (30 days, optional): Neutral third party</li><li>Legal Action: Only after above steps attempted</li></ul></div>
   <div class="c-sec"><div class="c-sec-hd">N) Ubuntu Bali Cancellation</div>
-    <p>Ubuntu Bali may cancel with 60 days written notice if the property becomes unavailable. Retreat Organizer receives 100% refund and priority rebooking within 18 months. Short-notice cancellation (&lt;60 days): full refund plus 5% credit.</p></div>
+    <p>Ubuntu Bali may cancel with 60 days written notice. Retreat Organizer receives 100% refund and priority rebooking within 18 months. Short-notice cancellation (&lt;60 days): full refund plus 5% credit.</p></div>
   <div class="c-sec"><div class="c-sec-hd">O) Termination</div>
-    <p>Either party may terminate for material breach with 14 days written notice. Immediate termination applies for illegal or unsafe behaviour.</p></div>
+    <p>Either party may terminate for material breach with 14 days written notice.</p></div>
   <div class="c-sec"><div class="c-sec-hd">P) Governing Law</div>
     <p>Governed by the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p></div>
   <div class="c-sec"><div class="c-sec-hd">Q) Entire Agreement</div>
@@ -691,43 +657,38 @@ async function loadDrafts(){
   list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading drafts…</div>`;
   try{
     const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'load'})});
-    if(!r.ok) throw new Error('Request failed');
+    if(!r.ok) throw new Error();
     const data=await r.json();
     if(!data.drafts||data.drafts.length===0){
       list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">No drafts saved yet.</div>`;
       return;
     }
+    window._drafts=data.drafts;
     list.innerHTML=data.drafts.map((d,i)=>{
       const hasState=d.formState&&d.formState!=='null';
       const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set';
       const total=d.totalUSD?'USD '+Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—';
-      const edited=d.lastEdited?new Date(d.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+      const edited=d.lastEdited?new Date(d.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
       return`<div class="draft-card" id="draft-card-${i}">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%;">
-          <div class="draft-info">
-            <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
-            <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
-            ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:4px;font-style:italic;">Last edited: ${edited}</div>`:''}
-          </div>
-          <div class="draft-actions">
-            ${hasState?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`:`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
-            <button class="draft-btn" onclick="toggleRenameRow(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;" title="Rename">✎</button>
-            ${hasState?`<button class="draft-btn" onclick="duplicateDraft(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;" title="Duplicate">⧉</button>`:''}
-            <button class="draft-btn" onclick="deleteDraft(${i})" style="background:transparent;border:1px solid #D4C4A8;color:#8B7355;padding:7px 10px;" title="Delete">🗑</button>
-          </div>
+        <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
+        <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
+        ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:4px;font-style:italic;">Last edited: ${edited}</div>`:''}
+        <div class="draft-actions">
+          ${hasState?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`:`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
+          <button class="draft-btn ghost" onclick="toggleRenameRow(${i})" title="Rename">✎ Rename</button>
+          ${hasState?`<button class="draft-btn ghost" onclick="duplicateDraft(${i})" title="Duplicate">⧉ Duplicate</button>`:''}
+          <button class="draft-btn ghost" onclick="deleteDraft(${i})" title="Delete">🗑 Delete</button>
         </div>
         <div class="draft-edit-row" id="rename-row-${i}">
-          <input class="draft-edit-input" id="rename-input-${i}" placeholder="New name" value="${d.organizer||''}">
+          <input class="draft-edit-input" id="rename-input-${i}" placeholder="Organizer name" value="${d.organizer||''}">
           <input class="draft-edit-input" id="rename-retreat-${i}" placeholder="Retreat name" value="${d.retreatName||''}">
           <button class="draft-edit-btn confirm" onclick="confirmRename(${i})">Save</button>
           <button class="draft-edit-btn cancel" onclick="toggleRenameRow(${i})">Cancel</button>
         </div>
       </div>`;
     }).join('');
-    // Store drafts globally for loadDraftByIndex
-    window._drafts=data.drafts;
   } catch(e){
-    list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load drafts. Check /api/notion-load.</div>`;
+    list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load drafts.</div>`;
   }
 }
 
@@ -735,28 +696,57 @@ function loadDraftByIndex(i){
   try{
     const d=window._drafts[i];
     if(!d||!d.formState) return;
-    const state=JSON.parse(d.formState);
-    setFormState(state);
-    currentPageId=d.pageId; // track so next save updates this entry
+    setFormState(JSON.parse(d.formState));
+    currentPageId=d.pageId;
     switchTab('edit');
-  } catch(e){
-    alert('Could not load this draft.');
-  }
+  } catch(e){alert('Could not load this draft.');}
+}
+
+function toggleRenameRow(i){
+  const row=$(`rename-row-${i}`);
+  row.classList.toggle('open');
+  if(row.classList.contains('open')) $(`rename-input-${i}`).focus();
+}
+
+async function confirmRename(i){
+  const d=window._drafts[i];
+  if(!d) return;
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      action:'update',pageId:d.pageId,
+      organizer:$(`rename-input-${i}`).value.trim()||d.organizer,
+      retreatName:$(`rename-retreat-${i}`).value.trim()||d.retreatName,
+      checkin:d.checkin,checkout:d.checkout,nights:d.nights,
+      guests:d.guests,totalUSD:d.totalUSD,status:d.status,formState:d.formState,
+    })});
+    if(!r.ok) throw new Error();
+    loadDrafts();
+  } catch{alert('Could not rename.');}
+}
+
+async function duplicateDraft(i){
+  const d=window._drafts[i];
+  if(!d||!d.formState) return;
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      action:'create',organizer:(d.organizer||'')+' (copy)',retreatName:d.retreatName,
+      checkin:d.checkin,checkout:d.checkout,nights:d.nights,
+      guests:d.guests,totalUSD:d.totalUSD,status:'Draft',formState:d.formState,
+    })});
+    if(!r.ok) throw new Error();
+    loadDrafts();
+  } catch{alert('Could not duplicate.');}
 }
 
 async function deleteDraft(i){
   const d=window._drafts[i];
-  if(!d) return;
-  if(!confirm(`Move "${d.organizer||'this draft'}" to trash?`)) return;
+  if(!d||!confirm(`Move "${d.organizer||'this draft'}" to trash?`)) return;
   try{
     const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',pageId:d.pageId})});
     if(!r.ok) throw new Error();
-    // If we just deleted the currently loaded draft, clear the page ID
     if(currentPageId===d.pageId) currentPageId=null;
-    loadDrafts(); // refresh list
-  } catch{
-    alert('Could not delete. Try again.');
-  }
+    loadDrafts();
+  } catch{alert('Could not delete.');}
 }
 
 async function saveToNotion(silent=false){
@@ -764,30 +754,21 @@ async function saveToNotion(silent=false){
   if(!silent){btn.textContent='Saving…';btn.className='save-btn';}
   const P=pricing();
   const payload={
-    organizer:$('f-name').value,
-    retreatName:$('f-retreatname').value,
-    checkin:$('f-checkin').value,
-    checkout:$('f-checkout').value,
+    organizer:$('f-name').value,retreatName:$('f-retreatname').value,
+    checkin:$('f-checkin').value,checkout:$('f-checkout').value,
     contractDate:$('f-contractdate').value||todayStr(),
     rooms:P.bales+(P.parvOn?1:0)+(P.buddOn?1:0),
-    nights:P.nights,
-    guests:parseInt($('f-guests').value)||0,
-    totalUSD:P.totalIn,
-    status:$('notion-status').value,
+    nights:P.nights,guests:parseInt($('f-guests').value)||0,
+    totalUSD:P.totalIn,status:$('notion-status').value,
     formState:JSON.stringify(getFormState()),
   };
   try{
     let r;
     if(currentPageId){
-      // Update existing entry
-      r=await fetch('/api/notion-update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,pageId:currentPageId})});
+      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',...payload,pageId:currentPageId})});
     } else {
-      // Create new entry
-      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      if(r.ok){
-        const d=await r.json();
-        currentPageId=d.pageId;
-      }
+      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...payload})});
+      if(r.ok){const d=await r.json();currentPageId=d.pageId;}
     }
     if(!r.ok) throw new Error();
     if(!silent){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
@@ -802,127 +783,49 @@ const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-fam
 function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
 
-function toggleRenameRow(i){
-  const row=$(`rename-row-${i}`);
-  row.classList.toggle('open');
-  if(row.classList.contains('open')) $(`rename-input-${i}`).focus();
+// PWA Install
+let deferredPrompt=null;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+if(!isStandalone){
+  if(isIOS){$('install-btn').style.display='block';$('install-btn').textContent='⊕ Add to Home Screen';}
+  else window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('install-btn').style.display='block';});
 }
-
-async function confirmRename(i){
-  const d=window._drafts[i];
-  if(!d) return;
-  const newOrganizer=$(`rename-input-${i}`).value.trim();
-  const newRetreat=$(`rename-retreat-${i}`).value.trim();
-  try{
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      action:'update',pageId:d.pageId,
-      organizer:newOrganizer||d.organizer,
-      retreatName:newRetreat||d.retreatName,
-      checkin:d.checkin,checkout:d.checkout,
-      nights:d.nights,guests:d.guests,totalUSD:d.totalUSD,
-      status:d.status,formState:d.formState,
-    })});
-    if(!r.ok) throw new Error();
-    loadDrafts();
-  } catch{ alert('Could not rename. Try again.'); }
+function handleInstall(){
+  if(isIOS) document.getElementById('ios-modal').classList.add('open');
+  else if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;$('install-btn').style.display='none';});}
 }
+function closeIosModal(e){if(e.target===document.getElementById('ios-modal'))document.getElementById('ios-modal').classList.remove('open');}
 
-async function duplicateDraft(i){
-  const d=window._drafts[i];
-  if(!d||!d.formState) return;
-  try{
-    // Parse state and clear the pageId so it saves as new
-    const state=JSON.parse(d.formState);
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      action:'create',
-      organizer:(d.organizer||'')+ ' (copy)',
-      retreatName:d.retreatName,
-      checkin:d.checkin,checkout:d.checkout,
-      nights:d.nights,guests:d.guests,totalUSD:d.totalUSD,
-      status:'Draft',formState:d.formState,
-    })});
-    if(!r.ok) throw new Error();
-    loadDrafts();
-  } catch{ alert('Could not duplicate. Try again.'); }
-}
-
-// ── AUTOSAVE ──
-let autosaveInterval=null;
-let autosaveOn=false;
-function toggleAutosave(){
-  autosaveOn=!autosaveOn;
-  const btn=$('autosave-btn');
-  const status=$('autosave-status');
-  if(autosaveOn){
-    btn.textContent='● Autosave On';
-    btn.className='autosave-btn on';
-    autosaveInterval=setInterval(async()=>{
-      await saveToNotion(true);
-      const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      status.textContent=`saved ${now}`;
-    },60000);
-  } else {
-    btn.textContent='● Autosave Off';
-    btn.className='autosave-btn off';
-    clearInterval(autosaveInterval);
-    autosaveInterval=null;
-    status.textContent='';
-  }
-}
-let deferredPrompt = null;
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
-if (!isStandalone) {
-  if (isIOS) {
-    // Show install button on iOS — tapping opens instructions
-    const btn = $('install-btn');
-    btn.style.display = 'block';
-    btn.textContent = '⊕ Add to Home Screen';
-  } else {
-    // Android / desktop: listen for beforeinstallprompt
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      $('install-btn').style.display = 'block';
+// Service worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').then(reg=>{
+    reg.addEventListener('updatefound',()=>{
+      const sw=reg.installing;
+      sw.addEventListener('statechange',()=>{if(sw.state==='activated')window.location.reload();});
     });
-  }
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') navigator.serviceWorker.getRegistration().then(reg=>{if(reg)reg.update();});
+  });
 }
 
-function handleInstall() {
-  if (isIOS) {
-    $('ios-modal').classList.add('open');
-  } else if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => {
-      deferredPrompt = null;
-      $('install-btn').style.display = 'none';
-    });
-  }
-}
-
-function closeIosModal(e) {
-  if (e.target === $('ios-modal')) $('ios-modal').classList.remove('open');
-}
+// Init
+$('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
 
-// Auto-fetch live IDR rate
+// Live IDR rate
 (async()=>{
-  const status=$('idr-status');
-  status.style.color='#B8935A';
-  status.textContent='fetching…';
+  const s=$('idr-status');
+  s.style.color='#B8935A'; s.textContent='fetching…';
   try{
     const r=await fetch('/api/exchange-rate');
     const d=await r.json();
     $('f-idrrate').value=d.rate;
-    status.style.color=d.fallback?'#8B3A2E':'#3D6636';
-    status.textContent=d.fallback?'⚠ fallback':'✓ live';
-    setTimeout(()=>{status.textContent='';},4000);
-  } catch{
-    status.style.color='#8B3A2E';
-    status.textContent='⚠ could not fetch';
-    setTimeout(()=>{status.textContent='';},4000);
-  }
+    s.style.color=d.fallback?'#8B3A2E':'#3D6636';
+    s.textContent=d.fallback?'⚠ fallback':'✓ live';
+    setTimeout(()=>{s.textContent='';},4000);
+  } catch{s.style.color='#8B3A2E';s.textContent='⚠ error';setTimeout(()=>{s.textContent='';},4000);}
 })();
 </script>
 </body>
