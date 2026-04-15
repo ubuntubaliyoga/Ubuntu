@@ -20,7 +20,8 @@ body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;
 .nav-tabs{display:flex;gap:3px;flex-shrink:0;}
 .nav-tab{padding:6px 12px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
-.nav-actions{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.nav-actions{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;flex-shrink:0;padding:4px 0;}
+.nav-actions-row{display:flex;gap:5px;align-items:center;}
 .nav-select{padding:5px 7px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.06em;text-transform:uppercase;outline:none;max-width:80px;}
 .save-btn{padding:6px 11px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .save-btn:hover{background:#B8935A;color:#221208;}
@@ -186,16 +187,20 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
   </div>
   <div class="nav-actions">
-    <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Off</button>
-    <span class="autosave-status" id="autosave-status"></span>
-    <select id="notion-status" class="nav-select">
-      <option value="Draft">Draft</option>
-      <option value="Sent">Sent</option>
-      <option value="Signed">Signed</option>
-      <option value="Cancelled">Cancelled</option>
-    </select>
-    <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
-    <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
+    <div class="nav-actions-row">
+      <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Autosave Off</button>
+      <span class="autosave-status" id="autosave-status"></span>
+    </div>
+    <div class="nav-actions-row">
+      <select id="notion-status" class="nav-select">
+        <option value="Draft">Draft</option>
+        <option value="Sent">Sent</option>
+        <option value="Signed">Signed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
+      <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
+    </div>
   </div>
 </div>
 
@@ -247,7 +252,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   </div>
   <div class="fg-row">
     <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30"></div>
-    <div class="fg"><label>Gladaks (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15"></div>
   </div>
   <div class="fg"><label>Booking Type</label>
     <select id="f-bookingtype">
@@ -256,26 +260,29 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </select>
   </div>
 
-  <div class="s-section">Villas</div>
-  <div class="villa-box">
-    <div class="villa-box-hd"><input type="checkbox" id="f-parvati-on" onchange="toggleVilla('parvati')" checked> Parvati Villa</div>
-    <div class="villa-fields" id="parvati-fields">
-      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-parvati-orig" value="80" min="0"></div>
-      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-parvati-disc" value="60" min="0"></div>
+  <div class="s-section">Accommodation</div>
+  <div class="accom-block">
+    <div class="accom-block-title">Gladaks</div>
+    <div class="fg-row" style="margin-bottom:0;">
+      <div class="fg" style="margin-bottom:0;"><label>Number (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15"></div>
+      <div class="fg" style="margin-bottom:0;"><label>Rate / night</label><input type="number" id="f-roomrate" value="60" min="0"></div>
     </div>
-  </div>
-  <div class="villa-box">
-    <div class="villa-box-hd"><input type="checkbox" id="f-buddha-on" onchange="toggleVilla('buddha')" checked> Buddha Villa</div>
-    <div class="villa-fields" id="buddha-fields">
-      <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-buddha-orig" value="80" min="0"></div>
-      <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-buddha-disc" value="60" min="0"></div>
+    <div class="accom-divider"></div>
+    <div class="accom-block-title">Villas</div>
+    <div class="villa-box" style="background:#fff;margin-bottom:8px;">
+      <div class="villa-box-hd"><input type="checkbox" id="f-parvati-on" onchange="toggleVilla('parvati')" checked> Parvati Villa</div>
+      <div class="villa-fields" id="parvati-fields">
+        <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-parvati-orig" value="80" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-parvati-disc" placeholder="Optional" min="0"></div>
+      </div>
     </div>
-  </div>
-
-  <div class="s-section">Pricing</div>
-  <div class="fg-row">
-    <div class="fg"><label>Gladak Rate / night</label><input type="number" id="f-roomrate" value="60" min="0"></div>
-    <div class="fg"><label>Package Rate / night</label><input type="number" id="f-pkgrate" value="30.25" min="0" step=".01"></div>
+    <div class="villa-box" style="background:#fff;margin-bottom:0;">
+      <div class="villa-box-hd"><input type="checkbox" id="f-buddha-on" onchange="toggleVilla('buddha')" checked> Buddha Villa</div>
+      <div class="villa-fields" id="buddha-fields">
+        <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-buddha-orig" value="80" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-buddha-disc" placeholder="Optional" min="0"></div>
+      </div>
+    </div>
   </div>
   <div class="fg"><label>Retreat Packages (people)</label>
     <select id="f-pkgcount">
@@ -336,9 +343,11 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;white-space:nowrap;">1 USD =</span>
       <input type="number" id="f-idrrate" value="17085" style="max-width:130px;">
       <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;">IDR</span>
-      <span id="idr-status" style="font-size:9px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;"></span>
     </div>
-    <div class="hint">Auto-fetched on load. Edit if needed.</div>
+    <div class="idr-status-row">
+      <div class="idr-dot" id="idr-dot"></div>
+      <span class="idr-info" id="idr-info">Fetching live rate…</span>
+    </div>
   </div>
 
   <div class="action-row">
@@ -425,8 +434,10 @@ function pricing(){
   const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
   const pkgRate=parseFloat($('f-pkgrate').value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
   const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
-  const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80, parvDisc=parseFloat($('f-parvati-disc').value)||60;
-  const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($('f-buddha-orig').value)||80, buddDisc=parseFloat($('f-buddha-disc').value)||60;
+  const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80;
+  const parvDiscVal=$('f-parvati-disc').value; const parvDisc=parvDiscVal?parseFloat(parvDiscVal):parvOrig;
+  const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($('f-buddha-orig').value)||80;
+  const buddDiscVal=$('f-buddha-disc').value; const buddDisc=buddDiscVal?parseFloat(buddDiscVal):buddOrig;
   const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
   const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
   const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
@@ -816,16 +827,23 @@ $('f-validuntil').value=addDays(todayStr(),7);
 
 // Live IDR rate
 (async()=>{
-  const s=$('idr-status');
-  s.style.color='#B8935A'; s.textContent='fetching…';
+  const dot=$('idr-dot'), info=$('idr-info');
   try{
     const r=await fetch('/api/exchange-rate');
     const d=await r.json();
     $('f-idrrate').value=d.rate;
-    s.style.color=d.fallback?'#8B3A2E':'#3D6636';
-    s.textContent=d.fallback?'⚠ fallback':'✓ live';
-    setTimeout(()=>{s.textContent='';},4000);
-  } catch{s.style.color='#8B3A2E';s.textContent='⚠ error';setTimeout(()=>{s.textContent='';},4000);}
+    const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    if(d.fallback){
+      dot.className='idr-dot fallback';
+      info.textContent=`⚠ Fallback rate · ${now}`;
+    } else {
+      dot.className='idr-dot live';
+      info.textContent=`Live · ExchangeRate-API · ${now}`;
+    }
+  } catch{
+    dot.className='idr-dot error';
+    info.textContent='Could not fetch — using default rate';
+  }
 })();
 </script>
 </body>
