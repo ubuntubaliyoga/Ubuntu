@@ -1,0 +1,4 @@
+{
+  "buildCommand": "node -e \"const fs=require('fs');let sw=fs.readFileSync('sw.js','utf8');sw=sw.replace('BUILD_TIMESTAMP',new Date().toISOString());fs.writeFileSync('sw.js',sw);\"",
+  "outputDirectory": "."
+}
