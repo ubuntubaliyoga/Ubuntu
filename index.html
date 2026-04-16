@@ -832,11 +832,19 @@ function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTY
 <div class="view" id="view-crm">
   <div style="max-width:800px;margin:0 auto;">
     <div class="view-label">CRM</div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
       <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
       <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="date">↓ Date</option>
+        <option value="name">A–Z Name</option>
+        <option value="location">A–Z Location</option>
+      </select>
     </div>
     <div id="crm-list"></div>
   </div>
@@ -869,11 +877,19 @@ function printContract(){const w=window.open('','_blank');w.document.write(`<!DO
 <div class="view" id="view-crm">
   <div style="max-width:800px;margin:0 auto;">
     <div class="view-label">CRM</div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
       <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
       <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="date">↓ Date</option>
+        <option value="name">A–Z Name</option>
+        <option value="location">A–Z Location</option>
+      </select>
     </div>
     <div id="crm-list"></div>
   </div>
@@ -1045,46 +1061,99 @@ function crmSwitchTab(tab) {
   crmRender();
 }
 
+function crmSort(items) {
+  const s = $('crm-sort')?.value || 'date';
+  return [...items].sort((a, b) => {
+    if (s === 'name')     return (a.name||'').localeCompare(b.name||'');
+    if (s === 'location') return (a.location||'').localeCompare(b.location||'');
+    // date: sort by lastEdited descending
+    return new Date(b.lastEdited||0) - new Date(a.lastEdited||0);
+  });
+}
+
 function crmRender() {
   const list = $('crm-list');
   const q = ($('crm-search')?.value || '').toLowerCase();
-  const items = crmData[crmTab].filter(c =>
+  let items = crmData[crmTab].filter(c =>
     !q || (c.name||'').toLowerCase().includes(q) ||
           (c.company||'').toLowerCase().includes(q) ||
           (c.location||'').toLowerCase().includes(q)
   );
+  items = crmSort(items);
 
   if (items.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">${crmLoaded ? 'No results.' : 'Loading…'}</div>`;
     return;
   }
 
-  list.innerHTML = items.map(c => {
-    const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-    const badges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join('');
-    const suit = c.suitability ? `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>` : '';
-    const meta = [c.company, c.location].filter(Boolean).join(' · ');
-    const next = c.engageNext ? `<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">Next: ${fmtD(c.engageNext)}</span>` : '';
-    return `<div class="crm-card" onclick="openCrmModal('${c.id}')">
-      <div class="crm-card-name">${c.name || 'Unnamed'}</div>
-      ${meta ? `<div class="crm-card-meta">${meta}</div>` : ''}
-      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${badges}${suit}${next}</div>
-    </div>`;
-  }).join('');
+  if (crmTab === 'leads') {
+    // Minimalist list view for leads
+    list.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid #EDE3D4;border-radius:4px;overflow:hidden;">
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Name</div>
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Location</div>
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Status</div>
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Added</div>
+        ${items.map((c, i) => {
+          const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
+          const border = 'border-bottom:1px solid #EDE3D4;';
+          const status = c.status || '—';
+          const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
+          return `
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};${border}cursor:pointer;">${c.name||'Unnamed'}</div>
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};${border}cursor:pointer;">${c.location||'—'}</div>
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;background:${bg};${border}cursor:pointer;"><span class="crm-badge ${statusClass(status)}" style="font-size:7.5px;">${status}</span></div>
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};${border}cursor:pointer;">${date}</div>
+          `;
+        }).join('')}
+      </div>`;
+  } else {
+    // Card view for converted leads
+    list.innerHTML = items.map(c => {
+      const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+      const badges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join('');
+      const suit = c.suitability ? `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>` : '';
+      const meta = [c.company, c.location].filter(Boolean).join(' · ');
+      const next = c.engageNext ? `<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">Next: ${fmtD(c.engageNext)}</span>` : '';
+      return `<div class="crm-card" onclick="openCrmModal('${c.id}')">
+        <div class="crm-card-name">${c.name || 'Unnamed'}</div>
+        ${meta ? `<div class="crm-card-meta">${meta}</div>` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${badges}${suit}${next}</div>
+      </div>`;
+    }).join('');
+  }
 }
 
-async function loadCRM() {
-  $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
-  try {
-    const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load' }) });
-    const data = await r.json();
-    if (!data.leads) throw new Error(JSON.stringify(data));
-    crmData = data;
-    crmLoaded = true;
+async function fetchCRM(force=false) {
+  const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load', forceRefresh: !!force }) });
+  const data = await r.json();
+  if (!data.leads) throw new Error(JSON.stringify(data));
+  return data;
+}
+
+async function loadCRM(force=false) {
+  if (!crmLoaded) {
+    // First ever load — show spinner, wait for data
+    $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
+    try {
+      crmData = await fetchCRM(false);
+      crmLoaded = true;
+      crmRender();
+    } catch(e) {
+      $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load CRM: ${e.message}</div>`;
+      return;
+    }
+  } else {
+    // Already have data — show it immediately, refresh in background
     crmRender();
-  } catch(e) {
-    $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load CRM: ${e.message}</div>`;
   }
+
+  // Always refresh in background (bypasses cache if force=true)
+  fetchCRM(force).then(data => {
+    crmData = data;
+    crmRender();
+    dbg('CRM refreshed: ' + data.leads.length + ' leads, ' + data.converted.length + ' converted');
+  }).catch(e => dbg('CRM background refresh failed: ' + e.message));
 }
 
 function openCrmModal(id) {
@@ -1213,11 +1282,19 @@ async function saveNewLead() {
 <div class="view" id="view-crm">
   <div style="max-width:800px;margin:0 auto;">
     <div class="view-label">CRM</div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
       <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
       <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="date">↓ Date</option>
+        <option value="name">A–Z Name</option>
+        <option value="location">A–Z Location</option>
+      </select>
     </div>
     <div id="crm-list"></div>
   </div>
