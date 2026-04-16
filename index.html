@@ -182,6 +182,30 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .accom-block-title{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;font-weight:600;margin-bottom:8px;}
 .accom-divider{height:1px;background:#EDE3D4;margin:10px 0;}
 .debug-toggle{position:fixed;bottom:16px;right:16px;width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:2px solid #0f0;color:#0f0;font-size:14px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;}
+
+.crm-card{background:#fff;border:1px solid #D4C4A8;border-radius:4px;padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.crm-card:hover{border-color:#B8935A;}
+.crm-card-name{font-family:'Libre Baskerville',serif;font-size:13px;font-weight:700;color:#221208;margin-bottom:3px;}
+.crm-card-meta{font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-bottom:6px;}
+.crm-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:8.5px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-right:4px;}
+.crm-status-ghosted,.crm-status-terminated,.crm-status-not-good{background:#E8E4E0;color:#666;}
+.crm-status-followed{background:#FFF3CD;color:#856404;}
+.crm-status-reached{background:#D6F0D6;color:#1A6A1A;}
+.crm-status-warm{background:#D6E8F5;color:#1A5F8A;}
+.crm-status-hot,.crm-status-qualified{background:#F5D6D6;color:#8A1A1A;}
+.crm-status-closed,.crm-status-booked{background:#221208;color:#F5ECD7;}
+.crm-status-responded{background:#D6F0D6;color:#1A6A1A;}
+.crm-status-face2face{background:#E8D6F5;color:#5A1A8A;}
+.crm-status-phone{background:#F5E6D6;color:#8A4A1A;}
+.crm-suit-1{background:#D6F0D6;color:#1A6A1A;}
+.crm-suit-2{background:#D6E8F5;color:#1A5F8A;}
+.crm-suit-3{background:#F5ECD7;color:#8B7355;}
+.crm-suit-4{background:#F5D6D6;color:#8A1A1A;}
+.crm-section-hd{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B8935A;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid #EDE3D4;}
+.crm-field{display:flex;gap:8px;margin-bottom:6px;font-size:12px;font-family:'Lora',serif;}
+.crm-field-label{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;min-width:80px;padding-top:2px;}
+.crm-select{width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;margin-bottom:8px;}
+.crm-textarea{width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;resize:vertical;min-height:70px;}
 </style>
 </head>
 <body>
@@ -199,6 +223,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')">Edit</button>
     <button class="nav-tab" data-tab="offer" onclick="switchTab('offer')">Offer</button>
     <button class="nav-tab" data-tab="contract" onclick="switchTab('contract')">Contract</button>
+    <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')">CRM</button>
   </div>
   <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
     <select id="notion-status" class="nav-select">
@@ -400,15 +425,16 @@ const todayStr=()=>new Date().toISOString().split('T')[0];
 const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
 const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
 
-let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false;
+let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 
 function switchTab(t){
   activeTab=t;
-  ['edit','offer','contract','drafts'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
+  ['edit','offer','contract','drafts','crm'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
   document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
-  if(t==='drafts') loadDrafts();
+  if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;}
+  if(t==='crm') loadCRM();
 }
 
 function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);}
@@ -697,6 +723,7 @@ function loadDraftByIndex(i){
     setFormState(JSON.parse(d.formState));
     currentPageId=d.pageId;
     draftActive=true;
+    intentionalDraft=true;
     startAutosave();
     switchTab('edit');
   } catch(e){alert('Could not load this draft.');}
@@ -799,8 +826,80 @@ async function saveToNotion(silent=false){
 const OFFER_STYLES=`body{font-family:Verdana,Geneva,sans-serif;font-size:10px;background:#e8e3dc;margin:0;padding:16px;color:#2a2520;}.email{background:#fff;width:560px;margin:0 auto;}.e-header{background:#3a3228;text-align:center;padding:22px 32px 18px;}.e-logo{max-width:56px;margin:0 auto 11px;display:block;filter:brightness(0) invert(1);}.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:4px;}.e-header-line{width:34px;height:1px;background:#c8b89a;margin:6px auto;opacity:.6;}.e-header-date,.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}.e-body{padding:16px 32px 0;line-height:1.9;color:#2a2520;}.e-body p{margin-bottom:9px;}.e-badge{margin:11px 32px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:7px 12px;text-align:center;font-size:10px;color:#3a3228;}.e-package{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}.e-pkg-hd{background:#3a3228;padding:10px 14px;}.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}.e-pkg-body{padding:0 14px;}table.ptable{width:100%;border-collapse:collapse;font-size:10px;}.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}.pt-item td{padding:5px 0;border-top:1px solid #eee;}.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}.pt-divider td{padding:0 0 5px;}.pt-divline{height:1px;background:#eee;font-size:1px;}.pt-grand td{padding:2px 0;font-weight:bold;}.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}.e-note{margin:9px 32px 0;border-left:3px solid #c8b89a;padding:5px 10px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}.e-note p{margin-bottom:5px;}.e-included{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;padding:10px 14px 6px;}.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-included table{width:100%;border-collapse:collapse;font-size:10px;}.e-included td{padding:2px 0;vertical-align:top;width:50%;}.e-also{margin:13px 32px 0;}.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}.e-closing{padding:18px 32px 0;line-height:1.9;font-size:10px;}.e-closing p{margin-bottom:5px;}.e-footer-band{background:#3a3228;margin-top:24px;padding:14px 32px 18px;text-align:center;}.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:5px;letter-spacing:1px;}.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}@media print{body{padding:0;}}`;
 const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Lora',serif;background:#F0E9DF;padding:20px;color:#1A1208;}@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:40px 36px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;}.c-hd{text-align:center;margin-bottom:26px;border-bottom:2px solid #221208;padding-bottom:20px;}.c-hd-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}.c-hd-sub{font-family:'Lora',serif;font-size:11px;color:#8B7355;font-style:italic;}.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:22px;}.c-party{padding:13px 16px;background:#FDFAF5;}.c-party:first-child{border-right:1px solid #B8935A;}.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;}.c-party p{font-size:11.5px;margin-bottom:3px;}.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:9px 0;margin-bottom:22px;color:#221208;}.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:9px 14px;margin-bottom:22px;font-size:11.5px;color:#3D2B1F;line-height:1.65;}.c-sec{margin-bottom:20px;}.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:4px;margin-bottom:11px;}.c-sec p{margin-bottom:7px;font-size:12px;}.c-sec ul{margin:0 0 9px 18px;font-size:12px;}.c-sec ul li{margin-bottom:3px;}.c-table{width:100%;border-collapse:collapse;font-size:11.5px;margin:9px 0;}.c-table thead tr{background:#221208;}.c-table thead th{padding:7px 11px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.08em;text-align:left;font-weight:700;}.c-table tbody tr:nth-child(odd){background:#FDFAF5;}.c-table tbody tr:nth-child(even){background:#F5ECD7;}.c-table tbody td{padding:6px 11px;border-bottom:1px solid #EDE3D4;}.c-sigs{border-top:2px solid #221208;padding-top:22px;}.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:22px;}.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;}.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:10px;}.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:16px 0 5px;}.c-sig-note{font-size:10.5px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}.bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}.bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}@media print{body{padding:0;}}`;
 
-function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
-function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script></body></html>`);w.document.close();}
+function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script>
+<!-- CRM -->
+<div class="view" id="view-crm">
+  <div style="max-width:800px;margin:0 auto;">
+    <div class="view-label">CRM</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
+      <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+    </div>
+    <div id="crm-list"></div>
+  </div>
+</div>
+
+<!-- CRM Detail Modal -->
+<div class="ios-modal" id="crm-modal" onclick="closeCrmModal(event)">
+  <div class="ios-modal-box" style="max-height:85vh;overflow-y:auto;">
+    <div id="crm-modal-content"></div>
+  </div>
+</div>
+
+<!-- New Lead Modal -->
+<div class="ios-modal" id="new-lead-modal" onclick="closeNewLeadModal(event)">
+  <div class="ios-modal-box">
+    <div class="ios-modal-title">New Lead</div>
+    <div class="fg"><label>Name</label><input type="text" id="nl-name"></div>
+    <div class="fg"><label>Company</label><input type="text" id="nl-company"></div>
+    <div class="fg"><label>Email</label><input type="email" id="nl-email"></div>
+    <div class="fg"><label>Instagram</label><input type="text" id="nl-insta"></div>
+    <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
+    <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
+    <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
+    <button onclick="closeNewLeadModal()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
+  </div>
+</div>
+</body></html>`);w.document.close();}
+function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script>
+<!-- CRM -->
+<div class="view" id="view-crm">
+  <div style="max-width:800px;margin:0 auto;">
+    <div class="view-label">CRM</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
+      <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+    </div>
+    <div id="crm-list"></div>
+  </div>
+</div>
+
+<!-- CRM Detail Modal -->
+<div class="ios-modal" id="crm-modal" onclick="closeCrmModal(event)">
+  <div class="ios-modal-box" style="max-height:85vh;overflow-y:auto;">
+    <div id="crm-modal-content"></div>
+  </div>
+</div>
+
+<!-- New Lead Modal -->
+<div class="ios-modal" id="new-lead-modal" onclick="closeNewLeadModal(event)">
+  <div class="ios-modal-box">
+    <div class="ios-modal-title">New Lead</div>
+    <div class="fg"><label>Name</label><input type="text" id="nl-name"></div>
+    <div class="fg"><label>Company</label><input type="text" id="nl-company"></div>
+    <div class="fg"><label>Email</label><input type="email" id="nl-email"></div>
+    <div class="fg"><label>Instagram</label><input type="text" id="nl-insta"></div>
+    <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
+    <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
+    <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
+    <button onclick="closeNewLeadModal()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
+  </div>
+</div>
+</body></html>`);w.document.close();}
 
 // PWA Install
 let deferredPrompt=null;
@@ -858,6 +957,7 @@ function startAutosave(){
 }
 
 function markDraftActive(){
+  if(!intentionalDraft) return;
   if(!draftActive){
     draftActive=true;
     startAutosave();
@@ -874,6 +974,7 @@ function newDraft(){
   $('f-offervalid').value='';
   $('notion-status').value='Draft';
   draftActive=false;
+  intentionalDraft=true;
   switchTab('edit');
   // reset autosave for new draft
   autosaveOn=false;
@@ -902,6 +1003,238 @@ function newDraft(){
     info.textContent='Could not fetch — using default rate';
   }
 })();
+
+// ── CRM ──────────────────────────────────────────────────────────────────────
+let crmData = { leads: [], converted: [] };
+let crmTab = 'leads';
+let crmLoaded = false;
+
+function statusClass(s) {
+  if (!s) return '';
+  const m = {
+    'NOT GOOD FIT':'not-good','TERMINATED':'terminated','GHOSTED':'ghosted',
+    'Followed + Engaged':'followed','Reached out':'reached',
+    'WARM: Booked a call OR asked for help':'warm',
+    'HOT: Past client/strong conversation':'hot',
+    'QUALIFIED TO BUY':'qualified','SALE CLOSED':'closed',
+    'Face2Face conversation':'face2face','Rejected Ubuntu':'not-good',
+    'Responded':'responded','Phone call':'phone','Booked Venue':'booked',
+  };
+  return 'crm-status-' + (m[s] || 'reached');
+}
+
+function suitClass(s) {
+  if (!s) return '';
+  if (s.startsWith('1')) return 'crm-suit-1';
+  if (s.startsWith('2')) return 'crm-suit-2';
+  if (s.startsWith('3')) return 'crm-suit-3';
+  return 'crm-suit-4';
+}
+
+function crmSwitchTab(tab) {
+  crmTab = tab;
+  $('crm-tab-leads').classList.toggle('active', tab === 'leads');
+  $('crm-tab-converted').classList.toggle('active', tab === 'converted');
+  crmRender();
+}
+
+function crmRender() {
+  const list = $('crm-list');
+  const q = ($('crm-search')?.value || '').toLowerCase();
+  const items = crmData[crmTab].filter(c =>
+    !q || (c.name||'').toLowerCase().includes(q) ||
+          (c.company||'').toLowerCase().includes(q) ||
+          (c.location||'').toLowerCase().includes(q)
+  );
+
+  if (items.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">${crmLoaded ? 'No results.' : 'Loading…'}</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(c => {
+    const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+    const badges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join('');
+    const suit = c.suitability ? `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>` : '';
+    const meta = [c.company, c.location].filter(Boolean).join(' · ');
+    const next = c.engageNext ? `<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">Next: ${fmtD(c.engageNext)}</span>` : '';
+    return `<div class="crm-card" onclick="openCrmModal('${c.id}')">
+      <div class="crm-card-name">${c.name || 'Unnamed'}</div>
+      ${meta ? `<div class="crm-card-meta">${meta}</div>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${badges}${suit}${next}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadCRM() {
+  if (!crmLoaded) $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
+  try {
+    const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load' }) });
+    const data = await r.json();
+    crmData = data;
+    crmLoaded = true;
+    crmRender();
+  } catch(e) {
+    $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load CRM.</div>`;
+  }
+}
+
+function openCrmModal(id) {
+  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
+  if (!c) return;
+  const isLead = c.db === 'leads';
+  const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+
+  const leadStatuses = ['Followed + Engaged','Reached out','WARM: Booked a call OR asked for help','HOT: Past client/strong conversation','QUALIFIED TO BUY','SALE CLOSED','GHOSTED','TERMINATED','NOT GOOD FIT'];
+  const convStatuses = ['Face2Face conversation','Responded','Phone call','Booked Venue','Rejected Ubuntu'];
+
+  const statusOptions = isLead
+    ? leadStatuses.map(s => `<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')
+    : convStatuses.map(s => `<option value="${s}" ${statusArr.includes(s)?'selected':''}>${s}</option>`).join('');
+
+  const fields = [
+    c.company    && ['Company', c.company],
+    c.email      && ['Email', `<a href="mailto:${c.email}" style="color:#B8935A;">${c.email}</a>`],
+    c.whatsapp   && ['WhatsApp', c.whatsapp],
+    c.insta      && ['Instagram', c.insta],
+    c.linkedin   && ['LinkedIn', c.linkedin],
+    c.website    && ['Website', `<a href="${c.website.startsWith('http')?c.website:'https://'+c.website}" target="_blank" style="color:#B8935A;">${c.website}</a>`],
+    c.location   && ['Location', c.location],
+    c.contact    && ['Contact', c.contact],
+    c.engagedFirst && ['First contact', fmtD(c.engagedFirst)],
+    c.engagedLast  && ['Last engaged', fmtD(c.engagedLast)],
+    c.salesCall    && ['Sales call', fmtD(c.salesCall)],
+  ].filter(Boolean).map(([l,v]) => `<div class="crm-field"><span class="crm-field-label">${l}</span><span>${v}</span></div>`).join('');
+
+  $('crm-modal-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+      <div>
+        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">${c.name||'Unnamed'}</div>
+        <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-top:2px;">${isLead ? 'Lead Pipeline' : 'Converted Lead'}</div>
+      </div>
+      <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+    </div>
+    ${fields}
+    <div class="crm-section-hd">Status</div>
+    ${isLead
+      ? `<select class="crm-select" id="crm-status-sel">${statusOptions}</select>`
+      : `<select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`
+    }
+    <div class="crm-section-hd">Engage Next</div>
+    <input type="date" id="crm-engage-next" value="${c.engageNext||''}" style="width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;margin-bottom:8px;">
+    <div class="crm-section-hd">Notes</div>
+    <textarea class="crm-textarea" id="crm-notes-input">${c.notes||''}</textarea>
+    <button class="ios-modal-close" style="margin-top:14px;" onclick="saveCrmContact('${c.id}','${c.db}')">Save Changes</button>
+    <button onclick="prefillOfferFromCRM('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3a3228;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Create Offer</button>
+  `;
+  $('crm-modal').classList.add('open');
+}
+
+function closeCrmModal(e) {
+  if (e.target === $('crm-modal')) $('crm-modal').classList.remove('open');
+}
+
+async function saveCrmContact(id, db) {
+  const sel = $('crm-status-sel');
+  const status = db === 'leads'
+    ? sel.value
+    : Array.from(sel.selectedOptions).map(o => o.value);
+  const notes = $('crm-notes-input').value;
+  const engageNext = $('crm-engage-next').value || null;
+
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'update', pageId:id, db, status, notes, engageNext }) });
+    // Update local data
+    const arr = db === 'leads' ? crmData.leads : crmData.converted;
+    const item = arr.find(x => x.id === id);
+    if (item) { item.status = status; item.notes = notes; item.engageNext = engageNext; }
+    $('crm-modal').classList.remove('open');
+    crmRender();
+  } catch(e) { alert('Could not save.'); }
+}
+
+function prefillOfferFromCRM(id) {
+  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
+  if (!c) return;
+  $('crm-modal').classList.remove('open');
+  intentionalDraft = true;
+  currentPageId = null;
+  draftActive = false;
+  $('f-name').value = c.name || '';
+  $('f-company').value = c.company || '';
+  $('f-contractdate').value = todayStr();
+  $('f-validuntil').value = addDays(todayStr(), 7);
+  $('notion-status').value = 'Draft';
+  switchTab('edit');
+}
+
+function openNewLeadModal() {
+  ['nl-name','nl-company','nl-email','nl-insta','nl-location','nl-notes'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  $('new-lead-modal').classList.add('open');
+}
+
+function closeNewLeadModal(e) {
+  if (!e || e.target === $('new-lead-modal')) $('new-lead-modal').classList.remove('open');
+}
+
+async function saveNewLead() {
+  const name = $('nl-name').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'create',
+        name, company: $('nl-company').value,
+        email: $('nl-email').value,
+        insta: $('nl-insta').value,
+        location: $('nl-location').value,
+        notes: $('nl-notes').value,
+        status: 'Followed + Engaged',
+      })
+    });
+    $('new-lead-modal').classList.remove('open');
+    crmLoaded = false;
+    loadCRM();
+  } catch(e) { alert('Could not save lead.'); }
+}
+
 </script>
+
+<!-- CRM -->
+<div class="view" id="view-crm">
+  <div style="max-width:800px;margin:0 auto;">
+    <div class="view-label">CRM</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
+      <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+    </div>
+    <div id="crm-list"></div>
+  </div>
+</div>
+
+<!-- CRM Detail Modal -->
+<div class="ios-modal" id="crm-modal" onclick="closeCrmModal(event)">
+  <div class="ios-modal-box" style="max-height:85vh;overflow-y:auto;">
+    <div id="crm-modal-content"></div>
+  </div>
+</div>
+
+<!-- New Lead Modal -->
+<div class="ios-modal" id="new-lead-modal" onclick="closeNewLeadModal(event)">
+  <div class="ios-modal-box">
+    <div class="ios-modal-title">New Lead</div>
+    <div class="fg"><label>Name</label><input type="text" id="nl-name"></div>
+    <div class="fg"><label>Company</label><input type="text" id="nl-company"></div>
+    <div class="fg"><label>Email</label><input type="email" id="nl-email"></div>
+    <div class="fg"><label>Instagram</label><input type="text" id="nl-insta"></div>
+    <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
+    <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
+    <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
+    <button onclick="closeNewLeadModal()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
+  </div>
+</div>
 </body>
 </html>
