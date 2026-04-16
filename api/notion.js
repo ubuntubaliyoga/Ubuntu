@@ -1,7 +1,4 @@
 // api/notion.js
-// Single endpoint handling all Notion operations.
-// Body must include: { action: 'create' | 'update' | 'delete' | 'load', ...fields }
-
 const DB_ID = '978a217d69ae41bf9ca7ba9f5737ca3c';
 
 const headers = {
@@ -10,8 +7,7 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-// Notion rich_text blocks have a 2000-char limit each.
-// Split a long string into multiple blocks so nothing gets truncated or rejected.
+// Notion rich_text blocks have a 2000-char limit each — chunk it
 function toRichTextBlocks(str) {
   const s = str || '';
   const chunks = [];
@@ -21,7 +17,6 @@ function toRichTextBlocks(str) {
   return chunks.length > 0 ? chunks : [{ text: { content: '' } }];
 }
 
-// Reassemble plain_text from all rich_text blocks
 function fromRichText(prop) {
   if (!prop?.rich_text) return null;
   return prop.rich_text.map(b => b.plain_text).join('') || null;
@@ -54,6 +49,7 @@ export default async function handler(req, res) {
   }
 
   const { action, pageId } = req.body;
+  console.log('[notion] action:', action, '| pageId:', pageId || 'none');
 
   try {
 
@@ -67,14 +63,18 @@ export default async function handler(req, res) {
           page_size: 20,
         }),
       });
-      if (!resp.ok) return res.status(resp.status).json({ error: await resp.text() });
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.error('[notion] load failed:', resp.status, text);
+        return res.status(resp.status).json({ error: text });
+      }
       const data = await resp.json();
 
       const getProp = (p, name, type) => {
         const prop = p[name];
         if (!prop) return null;
         if (type === 'title')  return prop.title?.[0]?.plain_text  || null;
-        if (type === 'text')   return fromRichText(prop); // use multi-block reader
+        if (type === 'text')   return fromRichText(prop);
         if (type === 'number') return prop.number ?? null;
         if (type === 'date')   return prop.date?.start || null;
         if (type === 'select') return prop.select?.name || null;
@@ -95,33 +95,48 @@ export default async function handler(req, res) {
         formState:   getProp(page.properties, 'Form State',   'text'),
       }));
 
+      console.log('[notion] loaded', drafts.length, 'drafts');
       return res.status(200).json({ drafts });
     }
 
     // ── CREATE ─────────────────────────────────────────────────────────────────
     if (action === 'create') {
+      const props = buildProperties(req.body);
+      console.log('[notion] creating page, formState blocks:', props['Form State'].rich_text.length);
       const resp = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST',
         headers,
         body: JSON.stringify({
           parent: { database_id: DB_ID },
-          properties: buildProperties(req.body),
+          properties: props,
         }),
       });
-      if (!resp.ok) return res.status(resp.status).json({ error: await resp.text() });
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.error('[notion] create failed:', resp.status, text);
+        return res.status(resp.status).json({ error: text });
+      }
       const data = await resp.json();
+      console.log('[notion] created page:', data.id);
       return res.status(200).json({ success: true, pageId: data.id });
     }
 
     // ── UPDATE ─────────────────────────────────────────────────────────────────
     if (action === 'update') {
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
+      const props = buildProperties(req.body);
+      console.log('[notion] updating page:', pageId, '| formState blocks:', props['Form State'].rich_text.length);
       const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ properties: buildProperties(req.body) }),
+        body: JSON.stringify({ properties: props }),
       });
-      if (!resp.ok) return res.status(resp.status).json({ error: await resp.text() });
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.error('[notion] update failed:', resp.status, text);
+        return res.status(resp.status).json({ error: text });
+      }
+      console.log('[notion] updated page:', pageId);
       return res.status(200).json({ success: true, pageId });
     }
 
@@ -133,13 +148,19 @@ export default async function handler(req, res) {
         headers,
         body: JSON.stringify({ in_trash: true }),
       });
-      if (!resp.ok) return res.status(resp.status).json({ error: await resp.text() });
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.error('[notion] delete failed:', resp.status, text);
+        return res.status(resp.status).json({ error: text });
+      }
+      console.log('[notion] deleted page:', pageId);
       return res.status(200).json({ success: true });
     }
 
     return res.status(400).json({ error: `Unknown action: ${action}` });
 
   } catch (err) {
+    console.error('[notion] caught error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 }
