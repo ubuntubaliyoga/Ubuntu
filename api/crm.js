@@ -1,8 +1,8 @@
 // api/crm.js
-const LEAD_DB = '8e5622d3e57482ba950081ac7695672e';
-const CONV_DB = '325622d3e57481bbbaaedeb47e377f2c';
-// api/crm.js
 // Handles read/update for Lead Pipeline and Converted Leads databases
+
+const LEAD_DB    = '8e5622d3e57482ba950081ac7695672e';
+const CONV_DB    = '325622d3e57481bbbaaedeb47e377f2c';
 
 const headers = {
   'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
@@ -159,6 +159,14 @@ export default async function handler(req, res) {
       const page = await createLead(req.body);
       return res.status(200).json({ success: true, pageId: page.id });
     }
+
+    return res.status(400).json({ error: `Unknown action: ${action}` });
+
+  } catch (err) {
+    console.error('[crm]', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+}
 
     return res.status(400).json({ error: `Unknown action: ${action}` });
 
