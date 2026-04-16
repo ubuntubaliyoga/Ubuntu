@@ -15,10 +15,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;}
-/* nav replaced */
+
 .nav-logo img{height:30px;filter:brightness(0) invert(1);display:block;flex-shrink:0;}
 .nav-tabs{display:flex;gap:3px;flex-shrink:0;}
-.nav-tab{display:none;}
+
 
 .nav-actions{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;flex-shrink:0;padding:4px 0;}
 .nav-actions-row{display:flex;gap:5px;align-items:center;}
@@ -207,23 +207,18 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .crm-select{width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;margin-bottom:8px;}
 .crm-textarea{width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;resize:vertical;min-height:70px;}
 
-/* ── Top nav ── */
-.nav{background:#221208;padding:0 16px;height:48px;border-bottom:1px solid rgba(184,147,90,.3);position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo-img{height:30px;filter:brightness(0) invert(1);flex-shrink:0;}
-.nav-top{display:flex;align-items:center;justify-content:space-between;width:100%;}
-.nav-actions{display:flex;gap:8px;align-items:center;}
 
-/* ── Bottom tab bar ── */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#221208;border-top:1px solid rgba(184,147,90,.3);display:flex;align-items:stretch;z-index:300;padding-bottom:env(safe-area-inset-bottom);}
-.bottom-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:transparent;border:none;cursor:pointer;gap:3px;transition:all .18s;min-height:56px;}
-.bottom-tab-icon{font-size:18px;color:#8B7355;line-height:1;transition:all .18s;}
-.bottom-tab-label{font-family:'Libre Baskerville',serif;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;line-height:1;transition:all .18s;}
-.bottom-tab.active .bottom-tab-icon{color:#B8935A;}
-.bottom-tab.active .bottom-tab-label{color:#B8935A;font-weight:700;}
-.bottom-tab:active .bottom-tab-icon{color:#F5ECD7;}
 
-/* ── Adjust content padding for bottom nav ── */
-.view{padding-bottom:80px !important;}
+
+/* ── Navigation ── */
+.nav{background:#221208;border-bottom:1px solid rgba(184,147,90,.4);position:sticky;top:0;z-index:200;padding:0 16px;}
+.nav-row-1{display:flex;align-items:center;gap:12px;height:52px;overflow-x:auto;}
+.nav-logo-img{height:30px;filter:brightness(0) invert(1);flex-shrink:0;margin-right:4px;}
+.nav-tabs-row{display:flex;gap:4px;flex:1;align-items:center;}
+.nav-tab{padding:6px 14px;border:1px solid rgba(184,147,90,.3);border-radius:20px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
+.nav-tab:hover{border-color:#B8935A;}
+.nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
+.nav-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
 
 </style>
 </head>
@@ -235,8 +230,16 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div id="debug-log"><div>DEBUG READY — click Save to test</div></div>
 </div>
 <div class="nav">
-  <div class="nav-top">
+  <div class="nav-row-1">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" class="nav-logo-img">
+    <div class="nav-tabs-row">
+      <button class="nav-tab" onclick="newDraft()" title="New Draft">+ New</button>
+      <button class="nav-tab" data-tab="drafts" onclick="switchTab('drafts')">Drafts</button>
+      <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')">Edit</button>
+      <button class="nav-tab" data-tab="offer" onclick="switchTab('offer')">Offer</button>
+      <button class="nav-tab" data-tab="contract" onclick="switchTab('contract')">Contract</button>
+      <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')">CRM</button>
+    </div>
     <div class="nav-actions">
       <select id="notion-status" class="nav-select">
         <option value="Draft">Draft</option>
@@ -252,45 +255,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
   </div>
 </div>
-
-<!-- Bottom Tab Bar -->
-<div class="bottom-nav">
-  <button class="bottom-tab" onclick="newDraft()">
-    <span class="bottom-tab-icon">✦</span>
-    <span class="bottom-tab-label">New</span>
-  </button>
-  <button class="bottom-tab" data-tab="drafts" onclick="switchTab('drafts')">
-    <span class="bottom-tab-icon">◫</span>
-    <span class="bottom-tab-label">Drafts</span>
-  </button>
-  <button class="bottom-tab" data-tab="edit" onclick="switchTab('edit')">
-    <span class="bottom-tab-icon">✎</span>
-    <span class="bottom-tab-label">Edit</span>
-  </button>
-  <button class="bottom-tab" data-tab="offer" onclick="switchTab('offer')">
-    <span class="bottom-tab-icon">◈</span>
-    <span class="bottom-tab-label">Offer</span>
-  </button>
-  <button class="bottom-tab" data-tab="contract" onclick="switchTab('contract')">
-    <span class="bottom-tab-icon">❧</span>
-    <span class="bottom-tab-label">Contract</span>
-  </button>
-  <button class="bottom-tab" data-tab="crm" onclick="switchTab('crm')">
-    <span class="bottom-tab-icon">⬡</span>
-    <span class="bottom-tab-label">CRM</span>
-  </button>
-</div>
-
-<div class="ios-modal" id="ios-modal" onclick="closeIosModal(event)">
-  <div class="ios-modal-box">
-    <div class="ios-modal-title">Add to Home Screen</div>
-    <div class="ios-modal-step"><div class="num">1</div><div>Tap the <strong>Share</strong> button at the bottom of your browser (↑)</div></div>
-    <div class="ios-modal-step"><div class="num">2</div><div>Scroll down and tap <strong>"Add to Home Screen"</strong></div></div>
-    <div class="ios-modal-step"><div class="num">3</div><div>Tap <strong>"Add"</strong> in the top right — done!</div></div>
-    <button class="ios-modal-close" onclick="document.getElementById('ios-modal').classList.remove('open')">Got it</button>
-  </div>
-</div>
-<button class="debug-toggle" onclick="const p=$('debug-panel');p.style.display=p.style.display==='none'?'block':'none'">🐛</button>
 
 <!-- EDIT -->
 <div class="view active" id="view-edit">
@@ -472,7 +436,7 @@ let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
 function switchTab(t){
   activeTab=t;
   ['edit','offer','contract','drafts','crm'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
-  document.querySelectorAll('.bottom-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
   if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;}
