@@ -15,11 +15,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;}
-.nav{background:#221208;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 16px;min-height:72px;border-bottom:2px solid #B8935A;position:sticky;top:0;z-index:200;gap:6px;flex-wrap:nowrap;}
+/* nav replaced */
 .nav-logo img{height:30px;filter:brightness(0) invert(1);display:block;flex-shrink:0;}
 .nav-tabs{display:flex;gap:3px;flex-shrink:0;}
-.nav-tab{padding:7px 16px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
-.nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
+.nav-tab{display:none;}
+
 .nav-actions{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;flex-shrink:0;padding:4px 0;}
 .nav-actions-row{display:flex;gap:5px;align-items:center;}
 .nav-select{padding:5px 7px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.06em;text-transform:uppercase;outline:none;max-width:80px;}
@@ -206,6 +206,25 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .crm-field-label{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;min-width:80px;padding-top:2px;}
 .crm-select{width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;margin-bottom:8px;}
 .crm-textarea{width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;resize:vertical;min-height:70px;}
+
+/* ── Top nav ── */
+.nav{background:#221208;padding:0 16px;height:48px;border-bottom:1px solid rgba(184,147,90,.3);position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo-img{height:30px;filter:brightness(0) invert(1);flex-shrink:0;}
+.nav-top{display:flex;align-items:center;justify-content:space-between;width:100%;}
+.nav-actions{display:flex;gap:8px;align-items:center;}
+
+/* ── Bottom tab bar ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#221208;border-top:1px solid rgba(184,147,90,.3);display:flex;align-items:stretch;z-index:300;padding-bottom:env(safe-area-inset-bottom);}
+.bottom-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:transparent;border:none;cursor:pointer;gap:3px;transition:all .18s;min-height:56px;}
+.bottom-tab-icon{font-size:18px;color:#8B7355;line-height:1;transition:all .18s;}
+.bottom-tab-label{font-family:'Libre Baskerville',serif;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;line-height:1;transition:all .18s;}
+.bottom-tab.active .bottom-tab-icon{color:#B8935A;}
+.bottom-tab.active .bottom-tab-label{color:#B8935A;font-weight:700;}
+.bottom-tab:active .bottom-tab-icon{color:#F5ECD7;}
+
+/* ── Adjust content padding for bottom nav ── */
+.view{padding-bottom:80px !important;}
+
 </style>
 </head>
 <body>
@@ -216,28 +235,50 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div id="debug-log"><div>DEBUG READY — click Save to test</div></div>
 </div>
 <div class="nav">
-  <div style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;">
-    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" style="height:33px;filter:brightness(0) invert(1);flex-shrink:0;">
-    <button class="nav-tab" onclick="newDraft()">+ New Draft</button>
-    <button class="nav-tab" data-tab="drafts" onclick="switchTab('drafts')">Drafts</button>
-    <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')">Edit</button>
-    <button class="nav-tab" data-tab="offer" onclick="switchTab('offer')">Offer</button>
-    <button class="nav-tab" data-tab="contract" onclick="switchTab('contract')">Contract</button>
-    <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')">CRM</button>
+  <div class="nav-top">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" class="nav-logo-img">
+    <div class="nav-actions">
+      <select id="notion-status" class="nav-select">
+        <option value="Draft">Draft</option>
+        <option value="Sent">Sent</option>
+        <option value="Signed">Signed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
+      <span class="autosave-status" id="autosave-status"></span>
+      <button class="autosave-btn" id="autosave-btn" onclick="toggleAutosave()" style="display:none;"></button>
+      <button class="update-btn" id="update-btn" onclick="applyUpdate()">↑ Update</button>
+      <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
+    </div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
-    <select id="notion-status" class="nav-select">
-      <option value="Draft">Draft</option>
-      <option value="Sent">Sent</option>
-      <option value="Signed">Signed</option>
-      <option value="Cancelled">Cancelled</option>
-    </select>
-    <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
-    <span class="autosave-status" id="autosave-status" style="display:inline;font-family:'Lora',serif;font-size:8px;color:#B8935A;font-style:italic;"></span>
-    <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()" style="display:none;">Autosave</button>
-    <button class="update-btn" id="update-btn" onclick="applyUpdate()">↑ Update Available</button>
-    <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
-  </div>
+</div>
+
+<!-- Bottom Tab Bar -->
+<div class="bottom-nav">
+  <button class="bottom-tab" onclick="newDraft()">
+    <span class="bottom-tab-icon">✦</span>
+    <span class="bottom-tab-label">New</span>
+  </button>
+  <button class="bottom-tab" data-tab="drafts" onclick="switchTab('drafts')">
+    <span class="bottom-tab-icon">◫</span>
+    <span class="bottom-tab-label">Drafts</span>
+  </button>
+  <button class="bottom-tab" data-tab="edit" onclick="switchTab('edit')">
+    <span class="bottom-tab-icon">✎</span>
+    <span class="bottom-tab-label">Edit</span>
+  </button>
+  <button class="bottom-tab" data-tab="offer" onclick="switchTab('offer')">
+    <span class="bottom-tab-icon">◈</span>
+    <span class="bottom-tab-label">Offer</span>
+  </button>
+  <button class="bottom-tab" data-tab="contract" onclick="switchTab('contract')">
+    <span class="bottom-tab-icon">❧</span>
+    <span class="bottom-tab-label">Contract</span>
+  </button>
+  <button class="bottom-tab" data-tab="crm" onclick="switchTab('crm')">
+    <span class="bottom-tab-icon">⬡</span>
+    <span class="bottom-tab-label">CRM</span>
+  </button>
 </div>
 
 <div class="ios-modal" id="ios-modal" onclick="closeIosModal(event)">
@@ -431,7 +472,7 @@ let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
 function switchTab(t){
   activeTab=t;
   ['edit','offer','contract','drafts','crm'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
-  document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.bottom-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
   if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;}
@@ -1108,19 +1149,27 @@ function crmRender() {
         }).join('')}
       </div>`;
   } else {
-    // Card view for converted leads
-    list.innerHTML = items.map(c => {
-      const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-      const badges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join('');
-      const suit = c.suitability ? `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>` : '';
-      const meta = [c.company, c.location].filter(Boolean).join(' · ');
-      const next = c.engageNext ? `<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">Next: ${fmtD(c.engageNext)}</span>` : '';
-      return `<div class="crm-card" onclick="openCrmModal('${c.id}')">
-        <div class="crm-card-name">${c.name || 'Unnamed'}</div>
-        ${meta ? `<div class="crm-card-meta">${meta}</div>` : ''}
-        <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${badges}${suit}${next}</div>
+    // Minimalist list for converted leads too
+    list.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid #EDE3D4;border-radius:4px;overflow:hidden;">
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Name</div>
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Location</div>
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Status</div>
+        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Updated</div>
+        ${items.map((c, i) => {
+          const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
+          const border = 'border-bottom:1px solid #EDE3D4;';
+          const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+          const statusBadges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}" style="font-size:7.5px;">${s}</span>`).join(' ');
+          const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
+          return `
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};${border}cursor:pointer;">${c.name||'Unnamed'}</div>
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};${border}cursor:pointer;">${c.location||'—'}</div>
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;background:${bg};${border}cursor:pointer;">${statusBadges||'—'}</div>
+            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};${border}cursor:pointer;">${date}</div>
+          `;
+        }).join('')}
       </div>`;
-    }).join('');
   }
 }
 
@@ -1156,18 +1205,34 @@ async function loadCRM(force=false) {
   }).catch(e => dbg('CRM background refresh failed: ' + e.message));
 }
 
-function openCrmModal(id) {
-  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
-  if (!c) return;
+function crmDetailHTML(c, editMode=false) {
   const isLead = c.db === 'leads';
   const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-
   const leadStatuses = ['Followed + Engaged','Reached out','WARM: Booked a call OR asked for help','HOT: Past client/strong conversation','QUALIFIED TO BUY','SALE CLOSED','GHOSTED','TERMINATED','NOT GOOD FIT'];
   const convStatuses = ['Face2Face conversation','Responded','Phone call','Booked Venue','Rejected Ubuntu'];
-
   const statusOptions = isLead
     ? leadStatuses.map(s => `<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')
     : convStatuses.map(s => `<option value="${s}" ${statusArr.includes(s)?'selected':''}>${s}</option>`).join('');
+  const statusBadges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join(' ');
+
+  const showPromote = isLead && (c.status === 'Reached out' || c.status === 'WARM: Booked a call OR asked for help' || c.status === 'HOT: Past client/strong conversation' || c.status === 'QUALIFIED TO BUY' || c.status === 'SALE CLOSED');
+
+  if (editMode) {
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Edit Contact</div>
+        <button onclick="openCrmModal('${c.id}')" style="background:none;border:none;font-size:13px;cursor:pointer;color:#8B7355;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;">✕ Cancel</button>
+      </div>
+      <div class="fg"><label>Name</label><input type="text" id="edit-name" value="${c.name||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Company</label><input type="text" id="edit-company" value="${c.company||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Email</label><input type="text" id="edit-email" value="${c.email||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Instagram</label><input type="text" id="edit-insta" value="${c.insta||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>WhatsApp</label><input type="text" id="edit-whatsapp" value="${c.whatsapp||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Website</label><input type="text" id="edit-website" value="${c.website||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Location</label><input type="text" id="edit-location" value="${c.location||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <button class="ios-modal-close" style="margin-top:8px;" onclick="saveContactDetails('${c.id}','${c.db}')">Save Details</button>
+    `;
+  }
 
   const fields = [
     c.company    && ['Company', c.company],
@@ -1175,7 +1240,7 @@ function openCrmModal(id) {
     c.whatsapp   && ['WhatsApp', c.whatsapp],
     c.insta      && ['Instagram', c.insta],
     c.linkedin   && ['LinkedIn', c.linkedin],
-    c.website    && ['Website', `<a href="${c.website.startsWith('http')?c.website:'https://'+c.website}" target="_blank" style="color:#B8935A;">${c.website}</a>`],
+    c.website    && ['Website', `<a href="${(c.website||'').startsWith('http')?c.website:'https://'+c.website}" target="_blank" style="color:#B8935A;">${c.website}</a>`],
     c.location   && ['Location', c.location],
     c.contact    && ['Contact', c.contact],
     c.engagedFirst && ['First contact', fmtD(c.engagedFirst)],
@@ -1183,16 +1248,20 @@ function openCrmModal(id) {
     c.salesCall    && ['Sales call', fmtD(c.salesCall)],
   ].filter(Boolean).map(([l,v]) => `<div class="crm-field"><span class="crm-field-label">${l}</span><span>${v}</span></div>`).join('');
 
-  $('crm-modal-content').innerHTML = `
+  return `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
       <div>
         <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">${c.name||'Unnamed'}</div>
         <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-top:2px;">${isLead ? 'Lead Pipeline' : 'Converted Lead'}</div>
       </div>
-      <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="openCrmModalEdit('${c.id}')" style="background:none;border:1px solid #D4C4A8;border-radius:3px;padding:5px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:#8B7355;">✎ Edit</button>
+        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+      </div>
     </div>
-    ${fields}
+    ${fields || '<div style="color:#B8935A;font-family:Lora,serif;font-size:12px;font-style:italic;">No details available</div>'}
     <div class="crm-section-hd">Status</div>
+    <div style="margin-bottom:8px;">${statusBadges || '—'}</div>
     ${isLead
       ? `<select class="crm-select" id="crm-status-sel">${statusOptions}</select>`
       : `<select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`
@@ -1202,9 +1271,83 @@ function openCrmModal(id) {
     <div class="crm-section-hd">Notes</div>
     <textarea class="crm-textarea" id="crm-notes-input">${c.notes||''}</textarea>
     <button class="ios-modal-close" style="margin-top:14px;" onclick="saveCrmContact('${c.id}','${c.db}')">Save Changes</button>
+    ${showPromote ? `<button onclick="promoteLead('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3D6636;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Move to Converted</button>` : ''}
     <button onclick="prefillOfferFromCRM('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3a3228;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Create Offer</button>
   `;
+}
+
+function openCrmModal(id) {
+  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
+  if (!c) return;
+  $('crm-modal-content').innerHTML = crmDetailHTML(c, false);
   $('crm-modal').classList.add('open');
+}
+
+function openCrmModalEdit(id) {
+  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
+  if (!c) return;
+  $('crm-modal-content').innerHTML = crmDetailHTML(c, true);
+}
+
+async function saveContactDetails(id, db) {
+  const props = {};
+  const name = $('edit-name')?.value;
+  const company = $('edit-company')?.value;
+  const email = $('edit-email')?.value;
+  const insta = $('edit-insta')?.value;
+  const whatsapp = $('edit-whatsapp')?.value;
+  const website = $('edit-website')?.value;
+  const location = $('edit-location')?.value;
+
+  if (db === 'leads') {
+    if (name !== undefined)    props['Name']     = { title:     [{ text: { content: name } }] };
+    if (company !== undefined) props['Company']  = { rich_text: [{ text: { content: company } }] };
+    if (email !== undefined)   props['Email']    = { email: email || null };
+    if (insta !== undefined)   props['Insta']    = { rich_text: [{ text: { content: insta } }] };
+    if (website !== undefined) props['Website']  = { rich_text: [{ text: { content: website } }] };
+    if (location !== undefined)props['Location'] = { rich_text: [{ text: { content: location } }] };
+  } else {
+    if (name !== undefined)     props['Name']     = { title:     [{ text: { content: name } }] };
+    if (company !== undefined)  props['Company']  = { rich_text: [{ text: { content: company } }] };
+    if (email !== undefined)    props['Mail']     = { rich_text: [{ text: { content: email } }] };
+    if (insta !== undefined)    props['Insta']    = { rich_text: [{ text: { content: insta } }] };
+    if (whatsapp !== undefined) props['Whatsapp'] = { rich_text: [{ text: { content: whatsapp } }] };
+    if (website !== undefined)  props['Website']  = { rich_text: [{ text: { content: website } }] };
+    if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location } }] };
+  }
+
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'updateDetails', pageId: id, props }) });
+    // Update local cache
+    const arr = db === 'leads' ? crmData.leads : crmData.converted;
+    const item = arr.find(x => x.id === id);
+    if (item) {
+      if (name) item.name = name;
+      if (company) item.company = company;
+      if (email) item.email = email;
+      if (insta) item.insta = insta;
+      if (whatsapp) item.whatsapp = whatsapp;
+      if (website) item.website = website;
+      if (location) item.location = location;
+    }
+    openCrmModal(id);
+    crmRender();
+  } catch(e) { alert('Could not save details.'); }
+}
+
+async function promoteLead(id) {
+  const c = crmData.leads.find(x => x.id === id);
+  if (!c || !confirm(`Move ${c.name || 'this lead'} to Converted Leads?`)) return;
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'promote', pageId: id, name: c.name, company: c.company,
+        email: c.email, insta: c.insta, website: c.website, location: c.location, notes: c.notes }) });
+    $('crm-modal').classList.remove('open');
+    crmData.leads = crmData.leads.filter(x => x.id !== id);
+    crmRender();
+    loadCRM(true);
+  } catch(e) { alert('Could not promote lead.'); }
 }
 
 function closeCrmModal(e) {
