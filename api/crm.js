@@ -201,6 +201,16 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
+    if (action === 'delete') {
+      const { pageId } = req.body;
+      if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
+      await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+        method: 'PATCH', headers,
+        body: JSON.stringify({ archived: true }),
+      });
+      return res.status(200).json({ success: true });
+    }
+
     return res.status(400).json({ error: `Unknown action: ${action}` });
 
   } catch (err) {
