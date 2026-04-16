@@ -7,7 +7,7 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-// Notion rich_text blocks have a 2000-char limit each — chunk it
+// Notion rich_text blocks have a 2000-char limit — chunk into multiple blocks
 function toRichTextBlocks(str) {
   const s = str || '';
   const chunks = [];
@@ -17,6 +17,7 @@ function toRichTextBlocks(str) {
   return chunks.length > 0 ? chunks : [{ text: { content: '' } }];
 }
 
+// Reassemble all rich_text blocks back into one string
 function fromRichText(prop) {
   if (!prop?.rich_text) return null;
   return prop.rich_text.map(b => b.plain_text).join('') || null;
@@ -102,7 +103,7 @@ export default async function handler(req, res) {
     // ── CREATE ─────────────────────────────────────────────────────────────────
     if (action === 'create') {
       const props = buildProperties(req.body);
-      console.log('[notion] creating page, formState blocks:', props['Form State'].rich_text.length);
+      console.log('[notion] creating | formState blocks:', props['Form State'].rich_text.length);
       const resp = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST',
         headers,
@@ -117,7 +118,7 @@ export default async function handler(req, res) {
         return res.status(resp.status).json({ error: text });
       }
       const data = await resp.json();
-      console.log('[notion] created page:', data.id);
+      console.log('[notion] created:', data.id);
       return res.status(200).json({ success: true, pageId: data.id });
     }
 
@@ -125,7 +126,7 @@ export default async function handler(req, res) {
     if (action === 'update') {
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
       const props = buildProperties(req.body);
-      console.log('[notion] updating page:', pageId, '| formState blocks:', props['Form State'].rich_text.length);
+      console.log('[notion] updating:', pageId, '| formState blocks:', props['Form State'].rich_text.length);
       const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
         method: 'PATCH',
         headers,
@@ -136,7 +137,7 @@ export default async function handler(req, res) {
         console.error('[notion] update failed:', resp.status, text);
         return res.status(resp.status).json({ error: text });
       }
-      console.log('[notion] updated page:', pageId);
+      console.log('[notion] updated:', pageId);
       return res.status(200).json({ success: true, pageId });
     }
 
@@ -153,7 +154,7 @@ export default async function handler(req, res) {
         console.error('[notion] delete failed:', resp.status, text);
         return res.status(resp.status).json({ error: text });
       }
-      console.log('[notion] deleted page:', pageId);
+      console.log('[notion] deleted:', pageId);
       return res.status(200).json({ success: true });
     }
 
