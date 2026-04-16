@@ -441,7 +441,7 @@ function toggleAutosave(){
 
 function pricing(){
   const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
-  const pkgRate=parseFloat($('f-pkgrate').value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
+  const pkgRate=parseFloat($('f-pkgrate')?.value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
   const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
   const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80;
   const parvDiscVal=$('f-parvati-disc').value; const parvDisc=parvDiscVal?parseFloat(parvDiscVal):parvOrig;
