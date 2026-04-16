@@ -1,62 +1,41 @@
 <script>
-  async function initCRM() {
-    const debugLog = document.getElementById('debug-log');
-    const crmContainer = document.getElementById('view-crm'); // Ensure this ID exists in your HTML
+async function loadCRM() {
+  const container = document.getElementById('view-crm');
+  const debugLog = document.getElementById('debug-log');
+  
+  if (!container) return; // Guard for "innerHTML of null"
 
-    try {
-      const resp = await fetch('/api/crm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'load' })
-      });
+  try {
+    const res = await fetch('/api/crm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load' })
+    });
 
-      // SAFETY CHECK 1: Prevent "Unexpected Token A"
-      // If the server sends back text/html (an error page), this catches it.
-      const contentType = resp.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const textError = await resp.text();
-        throw new Error(`Server returned text instead of JSON: ${textError.substring(0, 50)}...`);
-      }
-
-      const data = await resp.json();
-
-      // SAFETY CHECK 2: Prevent "innerHTML of null"
-      // Checks if the element exists AND if data was returned correctly.
-      if (!crmContainer) {
-        console.error("Critical Error: Container 'view-crm' not found in DOM.");
-        return;
-      }
-
-      if (data.leads && data.leads.length > 0) {
-        renderCRM(data);
-      } else {
-        crmContainer.innerHTML = '<div class="hint">No leads found in Notion.</div>';
-      }
-
-    } catch (err) {
-      console.error("CRM Load Failed:", err);
-      if (debugLog) {
-        debugLog.innerHTML += `<div style="color: #ff4d4d;">ERROR: ${err.message}</div>`;
-      }
+    // Check if response is actually JSON
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const raw = await res.text();
+      throw new Error(`Server sent non-JSON: ${raw.substring(0, 30)}`);
     }
-  }
 
-  function renderCRM(data) {
-    const container = document.getElementById('view-crm');
-    if (!container) return;
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
 
-    // Simple example of mapping data to the UI
-    const html = data.leads.map(lead => `
+    container.innerHTML = data.leads.map(l => `
       <div class="crm-card">
-        <div class="crm-card-name">${lead.name || 'Unnamed Lead'}</div>
-        <div class="crm-card-meta">${lead.company || 'No Company'}</div>
-        <span class="crm-badge crm-status-${(lead.status || 'draft').toLowerCase()}">${lead.status || 'New'}</span>
+        <div class="crm-card-name">${l.name}</div>
+        <div class="crm-badge crm-status-${l.status.toLowerCase()}">${l.status}</div>
       </div>
     `).join('');
-    
-    container.innerHTML = `<div class="crm-section-hd">Active Leads</div>${html}`;
-  }
 
-  // Run on load
-  window.addEventListener('DOMContentLoaded', initCRM);
+  } catch (e) {
+    console.error("CRM Error:", e);
+    if (debugLog) debugLog.innerHTML = `<div style="color:red">Error: ${e.message}</div>`;
+    container.innerHTML = `<p style="padding:20px; color:#8B3A2E;">Failed to load CRM data. Check Debug panel.</p>`;
+  }
+}
+
+// Run after page load
+document.addEventListener('DOMContentLoaded', loadCRM);
 </script>
