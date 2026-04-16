@@ -79,7 +79,10 @@ async function queryDB(dbId, mapper) {
       page_size: 100,
     }),
   });
-  if (!resp.ok) throw new Error(`DB query failed: ${await resp.text()}`);
+  if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(`Notion API Error: ${errorText}`);
+  }
   const data = await resp.json();
   return data.results.map(mapper);
 }
@@ -121,7 +124,6 @@ export default async function handler(req, res) {
   const { action } = req.body;
 
   try {
-    // ── LOAD ALL ──────────────────────────────────────────────────────────────
     if (action === 'load') {
       const [leads, converted] = await Promise.all([
         queryDB(LEAD_DB, mapLead),
@@ -130,7 +132,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ leads, converted });
     }
 
-    // ── UPDATE STATUS / NOTES ─────────────────────────────────────────────────
     if (action === 'update') {
       const { pageId, db, status, notes, engageNext } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
@@ -154,25 +155,5 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // ── CREATE LEAD ───────────────────────────────────────────────────────────
     if (action === 'create') {
-      const page = await createLead(req.body);
-      return res.status(200).json({ success: true, pageId: page.id });
-    }
-
-    return res.status(400).json({ error: `Unknown action: ${action}` });
-
-  } catch (err) {
-    console.error('[crm]', err.message);
-    return res.status(500).json({ error: err.message });
-  }
-}
-
-    return res.status(400).json({ error: `Unknown action: ${action}` });
-
-  } catch (err) {
-    console.error('[crm]', err.message);
-    return res.status(500).json({ error: err.message });
-  }
-}
-
+      const page = await createLead(
