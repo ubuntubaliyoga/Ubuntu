@@ -234,9 +234,9 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 <body>
 
 
-<div class="debug-panel" id="debug-panel">
-  <button class="debug-close" onclick="document.getElementById('debug-panel').classList.remove('open')">✕</button>
-  <div id="debug-log"><div>DEBUG READY — click Save to test</div></div>
+<div class="debug-panel" id="debug-panel" style="display:none;position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:10px 12px;max-height:180px;overflow-y:auto;z-index:9999;border-bottom:2px solid #0f0;">
+  <button onclick="document.getElementById('debug-panel').style.display='none'" style="position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:16px;cursor:pointer;line-height:1;">✕</button>
+  <div id="debug-log"><div>DEBUG READY</div></div>
 </div>
 <div class="nav" id="main-nav" style="position:relative;">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:44px;">
@@ -247,13 +247,12 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
   </div>
   <div id="nav-dropdown" style="display:none;position:absolute;top:44px;right:0;background:#221208;border:1px solid rgba(184,147,90,.3);border-top:none;padding:12px 14px;min-width:180px;z-index:201;box-shadow:0 4px 12px rgba(0,0,0,.4);">
-    <select id="notion-status" class="nav-select" style="width:100%;padding:6px 8px;border:1px solid rgba(184,147,90,.4);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.06em;text-transform:uppercase;outline:none;margin-bottom:8px;">
-      <option value="Draft">Draft</option><option value="Sent">Sent</option><option value="Signed">Signed</option><option value="Cancelled">Cancelled</option>
-    </select>
-    <button class="save-btn" id="save-btn" onclick="saveToNotion();toggleNavMenu()" style="width:100%;margin-bottom:8px;">Save Draft</button>
+
     <button class="update-btn" id="update-btn" onclick="applyUpdate()" style="display:none;width:100%;padding:7px;border-radius:3px;background:#B8935A;color:#221208;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;margin-bottom:6px;">↑ Update Available</button>
     <button class="install-btn" id="install-btn" onclick="handleInstall()" style="display:none;width:100%;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(184,147,90,.4);color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">⊕ Install App</button>
-    <button onclick="toggleDebug()" style="width:100%;margin-top:8px;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(0,255,0,.3);color:#0f0;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">🐛 Debug</button>
+    <div style="height:1px;background:rgba(184,147,90,.2);margin:10px 0;"></div>
+    <button onclick="switchTab('philosophy');toggleNavMenu()" style="width:100%;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(184,147,90,.3);color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">✦ Philosophy</button>
+    <button onclick="toggleDebug()" style="width:100%;margin-top:6px;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(0,255,0,.3);color:#0f0;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">🐛 Debug</button>
   </div>
   <div class="nav-tabs-row">
     <button class="nav-tab" onclick="newDraft()"><span class="nav-tab-icon">＋</span><span class="nav-tab-label">New</span></button>
@@ -266,6 +265,13 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 <!-- EDIT -->
 <div class="view active" id="view-edit">
 <div class="form-wrap" oninput="markDraftActive()" onchange="markDraftActive()">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+    <select id="notion-status" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;background:#FDFAF5;color:#5C3D2E;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;outline:none;">
+      <option value="Draft">Draft</option><option value="Sent">Sent</option><option value="Signed">Signed</option><option value="Cancelled">Cancelled</option>
+    </select>
+    <button class="save-btn" id="save-btn" onclick="saveToNotion()" style="padding:8px 18px;">Save Draft</button>
+    <span id="autosave-status" style="font-family:'Lora',serif;font-size:9px;color:#B8935A;font-style:italic;"></span>
+  </div>
   <div class="s-section">Contact</div>
   <div class="fg-row">
     <div class="fg"><label>Organizer Name</label><input type="text" id="f-name"></div>
@@ -459,7 +465,7 @@ document.addEventListener('click',e=>{
 
 function switchTab(t){
   activeTab=t;
-  ['edit','offer','contract','drafts','crm'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
+  ['edit','offer','contract','drafts','crm','philosophy'].forEach(v=>{const el=$('view-'+v);if(el)el.classList.toggle('active',v===t)});
   document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
@@ -858,108 +864,8 @@ const OFFER_STYLES=`body{font-family:Verdana,Geneva,sans-serif;font-size:10px;ba
 const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Lora',serif;background:#F0E9DF;padding:20px;color:#1A1208;}@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:40px 36px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;}.c-hd{text-align:center;margin-bottom:26px;border-bottom:2px solid #221208;padding-bottom:20px;}.c-hd-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}.c-hd-sub{font-family:'Lora',serif;font-size:11px;color:#8B7355;font-style:italic;}.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:22px;}.c-party{padding:13px 16px;background:#FDFAF5;}.c-party:first-child{border-right:1px solid #B8935A;}.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;}.c-party p{font-size:11.5px;margin-bottom:3px;}.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:9px 0;margin-bottom:22px;color:#221208;}.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:9px 14px;margin-bottom:22px;font-size:11.5px;color:#3D2B1F;line-height:1.65;}.c-sec{margin-bottom:20px;}.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:4px;margin-bottom:11px;}.c-sec p{margin-bottom:7px;font-size:12px;}.c-sec ul{margin:0 0 9px 18px;font-size:12px;}.c-sec ul li{margin-bottom:3px;}.c-table{width:100%;border-collapse:collapse;font-size:11.5px;margin:9px 0;}.c-table thead tr{background:#221208;}.c-table thead th{padding:7px 11px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.08em;text-align:left;font-weight:700;}.c-table tbody tr:nth-child(odd){background:#FDFAF5;}.c-table tbody tr:nth-child(even){background:#F5ECD7;}.c-table tbody td{padding:6px 11px;border-bottom:1px solid #EDE3D4;}.c-sigs{border-top:2px solid #221208;padding-top:22px;}.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:22px;}.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;}.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:10px;}.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:16px 0 5px;}.c-sig-note{font-size:10.5px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}.bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}.bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}@media print{body{padding:0;}}`;
 
 function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script>
-<!-- CRM -->
-<div class="view" id="view-crm">
-  <div style="max-width:800px;margin:0 auto;">
-    <div class="view-label">CRM</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
-      <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
-      <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Duplicates</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
-      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
-        <option value="date">↓ Date</option>
-        <option value="name">A–Z Name</option>
-        <option value="location">A–Z Location</option>
-      </select>
-      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
-        <option value="none">No grouping</option>
-        <option value="status">By Status</option>
-        <option value="location">By Location</option>
-        <option value="date">By Month</option>
-      </select>
-    </div>
-    <div id="crm-list"></div>
-  </div>
-</div>
-
-<!-- CRM Detail Modal -->
-<div class="ios-modal" id="crm-modal" onclick="closeCrmModal(event)">
-  <div class="ios-modal-box" style="max-height:85vh;overflow-y:auto;">
-    <div id="crm-modal-content"></div>
-  </div>
-</div>
-
-<!-- New Lead Modal -->
-<div class="ios-modal" id="new-lead-modal" onclick="closeNewLeadModal(event)">
-  <div class="ios-modal-box">
-    <div class="ios-modal-title">New Lead</div>
-    <div class="fg"><label>Name</label><input type="text" id="nl-name"></div>
-    <div class="fg"><label>Company</label><input type="text" id="nl-company"></div>
-    <div class="fg"><label>Email</label><input type="email" id="nl-email"></div>
-    <div class="fg"><label>Instagram</label><input type="text" id="nl-insta"></div>
-    <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
-    <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
-    <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
-    <button onclick="closeNewLeadModal()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
-  </div>
-</div>
 </body></html>`);w.document.close();}
 function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script>
-<!-- CRM -->
-<div class="view" id="view-crm">
-  <div style="max-width:800px;margin:0 auto;">
-    <div class="view-label">CRM</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
-      <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
-      <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Duplicates</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
-      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
-        <option value="date">↓ Date</option>
-        <option value="name">A–Z Name</option>
-        <option value="location">A–Z Location</option>
-      </select>
-      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
-        <option value="none">No grouping</option>
-        <option value="status">By Status</option>
-        <option value="location">By Location</option>
-        <option value="date">By Month</option>
-      </select>
-    </div>
-    <div id="crm-list"></div>
-  </div>
-</div>
-
-<!-- CRM Detail Modal -->
-<div class="ios-modal" id="crm-modal" onclick="closeCrmModal(event)">
-  <div class="ios-modal-box" style="max-height:85vh;overflow-y:auto;">
-    <div id="crm-modal-content"></div>
-  </div>
-</div>
-
-<!-- New Lead Modal -->
-<div class="ios-modal" id="new-lead-modal" onclick="closeNewLeadModal(event)">
-  <div class="ios-modal-box">
-    <div class="ios-modal-title">New Lead</div>
-    <div class="fg"><label>Name</label><input type="text" id="nl-name"></div>
-    <div class="fg"><label>Company</label><input type="text" id="nl-company"></div>
-    <div class="fg"><label>Email</label><input type="email" id="nl-email"></div>
-    <div class="fg"><label>Instagram</label><input type="text" id="nl-insta"></div>
-    <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
-    <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
-    <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
-    <button onclick="closeNewLeadModal()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
-  </div>
-</div>
 </body></html>`);w.document.close();}
 
 // PWA Install
@@ -1182,13 +1088,12 @@ function suitClass(s) {
 
 function crmSwitchTab(tab) {
   crmTab = tab;
-  [$('crm-tab-leads'), $('crm-tab-converted')].forEach(b => {
+  ['leads','converted'].forEach(t => {
+    const b = document.getElementById('crm-tab-'+t);
     if (!b) return;
-    const isActive = (b.id === 'crm-tab-'+tab);
-    b.classList.toggle('active', isActive);
-    b.style.background = isActive ? '#B8935A' : 'transparent';
-    b.style.color = isActive ? '#fff' : '#B8935A';
-    b.style.borderColor = isActive ? '#B8935A' : 'rgba(184,147,90,.35)';
+    b.style.background = t === tab ? '#B8935A' : 'transparent';
+    b.style.color = t === tab ? '#fff' : '#B8935A';
+    b.style.borderColor = t === tab ? '#B8935A' : 'rgba(184,147,90,.35)';
   });
   crmRender();
 }
@@ -1550,15 +1455,18 @@ async function saveNewLead() {
 <div class="view" id="view-crm">
   <div style="max-width:800px;margin:0 auto;">
     <div class="view-label">CRM</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
-      <button class="nav-tab active" id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="font-size:9px;">Leads</button>
-      <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+      <button id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="padding:7px 16px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:#B8935A;color:#fff;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;">Leads</button>
+      <button id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="padding:7px 16px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;">Converted</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Duplicates</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Dupes</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+      <div style="flex:1;min-width:120px;position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#B8935A;font-size:14px;pointer-events:none;">🔍</span>
+        <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="width:100%;padding:7px 10px 7px 32px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;box-sizing:border-box;">
+      </div>
       <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
         <option value="date">↓ Date</option>
         <option value="name">A–Z Name</option>
@@ -1575,15 +1483,15 @@ async function saveNewLead() {
   </div>
 </div>
 
-<!-- CRM Detail Modal -->
-<div class="ios-modal" id="crm-modal" onclick="closeCrmModal(event)">
+<!-- CRM DETAIL MODAL -->
+<div class="ios-modal" id="crm-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="ios-modal-box" style="max-height:85vh;overflow-y:auto;">
     <div id="crm-modal-content"></div>
   </div>
 </div>
 
-<!-- New Lead Modal -->
-<div class="ios-modal" id="new-lead-modal" onclick="closeNewLeadModal(event)">
+<!-- NEW LEAD MODAL -->
+<div class="ios-modal" id="new-lead-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="ios-modal-box">
     <div class="ios-modal-title">New Lead</div>
     <div class="fg"><label>Name</label><input type="text" id="nl-name"></div>
@@ -1593,8 +1501,98 @@ async function saveNewLead() {
     <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
     <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
     <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
-    <button onclick="closeNewLeadModal()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
+    <button onclick="document.getElementById('new-lead-modal').classList.remove('open')" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
   </div>
 </div>
+
+<!-- PHILOSOPHY -->
+<div class="view" id="view-philosophy" style="background:#221208;min-height:100vh;padding:0;">
+  <div style="max-width:680px;margin:0 auto;padding:48px 28px 80px;">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:56px;">
+      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:52px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:28px;display:block;margin-left:auto;margin-right:auto;">
+      <div style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:#B8935A;margin-bottom:16px;">Ubuntu Bali · Philosophy</div>
+      <div style="width:40px;height:1px;background:#B8935A;opacity:.4;margin:0 auto 28px;"></div>
+      <h1 style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:#F5ECD7;line-height:1.35;letter-spacing:.01em;">The Strength of the Circle</h1>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#B8935A;font-style:italic;margin-top:10px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
+    </div>
+
+    <!-- Intro -->
+    <p style="font-family:'Lora',serif;font-size:15px;color:#D4C4A8;line-height:1.9;margin-bottom:20px;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
+
+    <!-- Pull quote -->
+    <div style="border-left:3px solid #B8935A;padding:18px 24px;margin:36px 0;background:rgba(184,147,90,.07);border-radius:0 4px 4px 0;">
+      <p style="font-family:'Libre Baskerville',serif;font-size:18px;color:#F5ECD7;font-style:italic;line-height:1.5;letter-spacing:.01em;">"I am because we are."</p>
+      <p style="font-family:'Lora',serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#B8935A;margin-top:10px;">Ubuntu</p>
+    </div>
+
+    <!-- Section 1 -->
+    <div style="margin-bottom:40px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">The Illusion of the Individual</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">In the West, we often follow the Cartesian logic of "I think, therefore I am." It places the center of the universe squarely between our own ears. It suggests that our identity is a private project. But if you take a human being and strip away every relationship, every teacher who coached them, every parent who comforted them, and every colleague who challenged them, what is left?</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;">The truth is that none of us exists in a vacuum. A leader is not a leader without a team that chooses to follow. A speaker is not a speaker without an audience that chooses to listen. Our very humanity is a quality that is conferred upon us by others. Ubuntu reminds us that we do not find ourselves by looking inward. We find ourselves by looking at the people around us.</p>
+    </div>
+
+    <!-- Section 2 -->
+    <div style="margin-bottom:40px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">The Ecosystem of Humanity</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">Imagine a forest. We might point to a single, towering oak and marvel at its strength. But beneath the soil, that tree is part of a complex, invisible network of roots and fungi that share nutrients and warnings. If the forest dies, the tree dies, no matter how strong it thinks it is.</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:24px;">We are all one. We breathe the same air, we feel the same pain, and we live under the same sky. There is no such thing as a truly separate life. When we hurt someone else, we are essentially wounding the collective body that we all belong to. When we lift someone up, we are strengthening the air we all breathe.</p>
+
+      <!-- Three pillars -->
+      <p style="font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;margin-bottom:16px;">When we practice Ubuntu, we realize that:</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:4px;padding:16px 18px;">
+          <div style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:6px;">Your success is my success.</div>
+          <div style="font-family:'Lora',serif;font-size:13px;color:#B8935A;line-height:1.7;">If the team wins, the individual thrives.</div>
+        </div>
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:4px;padding:16px 18px;">
+          <div style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:6px;">Your suffering is my suffering.</div>
+          <div style="font-family:'Lora',serif;font-size:13px;color:#B8935A;line-height:1.7;">If a member of the community is marginalized, the integrity of the whole community is compromised.</div>
+        </div>
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:4px;padding:16px 18px;">
+          <div style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:6px;">Kindness is a survival strategy.</div>
+          <div style="font-family:'Lora',serif;font-size:13px;color:#B8935A;line-height:1.7;">Treating others with dignity is not just nice. It is the only way to sustain the environment that allows us to exist.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3 -->
+    <div style="margin-bottom:40px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">Leading with Ubuntu</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">In the world of business and leadership, we often prioritize <em>What</em> and <em>How</em>. We focus on the bottom line and the efficiency of the process. But Ubuntu asks us to focus on the <em>Who</em>. A company operating with the spirit of Ubuntu does not just see human resources. It sees a community of people whose lives are inextricably linked.</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;">When a leader says, "I am because we are," they are acknowledging that their authority is a gift from the people they serve. They realize that their job is not to be the smartest person in the room, but to create a room where everyone feels safe enough to be their best selves.</p>
+    </div>
+
+    <!-- Section 4 -->
+    <div style="margin-bottom:48px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">The Way Forward</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">We do not need more self-help. We need <em>us</em>-help. The challenges we face today — from the loneliness epidemic to global instability — cannot be solved by individuals acting in isolation. They require us to rebuild our circles. They require us to acknowledge that my humanity is caught up, bound up, inextricably, in yours.</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;">When we shift our perspective from <em>Me</em> to <em>We</em>, something incredible happens. The pressure to be perfect evaporates, replaced by the support of the collective. We stop competing for a bigger slice of the pie and start focusing on making a bigger pie for everyone.</p>
+    </div>
+
+    <!-- Closing quote -->
+    <div style="text-align:center;padding:36px 0;border-top:1px solid rgba(184,147,90,.2);">
+      <div style="font-family:'Libre Baskerville',serif;font-size:20px;color:#F5ECD7;font-style:italic;line-height:1.5;margin-bottom:14px;">"I am because we are."</div>
+      <div style="font-family:'Lora',serif;font-size:12px;color:#8B7355;line-height:1.7;">It is not just a philosophy.<br>It is a biological and social reality.<br>And the sooner we embrace it, the sooner we can start<br>building a world where everyone truly belongs.</div>
+      <div style="width:40px;height:1px;background:#B8935A;opacity:.3;margin:24px auto 0;"></div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
