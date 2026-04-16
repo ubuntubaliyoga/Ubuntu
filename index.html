@@ -401,6 +401,15 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 </div>
 
 <script>
+// Unregister old service workers and force fresh load
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    if(regs.length>0){
+      Promise.all(regs.map(r=>r.unregister())).then(()=>window.location.reload());
+    }
+  });
+}
+
 const $=id=>document.getElementById(id);
 const fmtN=(n,d=0)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const fmtD=s=>{if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});};
