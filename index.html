@@ -837,20 +837,25 @@ function handleInstall(){
 }
 function closeIosModal(e){if(e.target===document.getElementById('ios-modal'))document.getElementById('ios-modal').classList.remove('open');}
 
-// Service worker
+// Service worker — always skip waiting so new deploys load immediately
 let pendingSW = null;
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js').then(reg=>{
+    // Check for update immediately on load
+    reg.update();
     reg.addEventListener('updatefound',()=>{
       const sw=reg.installing;
       sw.addEventListener('statechange',()=>{
-        if(sw.state==='installed' && navigator.serviceWorker.controller){
-          // New version ready — show update button
-          pendingSW = sw;
-          $('update-btn').style.display='block';
+        if(sw.state==='installed'){
+          // Immediately activate new SW without waiting
+          sw.postMessage({type:'SKIP_WAITING'});
         }
       });
     });
+  });
+  // Reload page when new SW takes control
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    window.location.reload();
   });
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible')
@@ -858,12 +863,7 @@ if('serviceWorker' in navigator){
   });
 }
 function applyUpdate(){
-  if(pendingSW){
-    pendingSW.postMessage({type:'SKIP_WAITING'});
-    navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
-  } else {
-    window.location.reload();
-  }
+  window.location.reload();
 }
 
 // Init
