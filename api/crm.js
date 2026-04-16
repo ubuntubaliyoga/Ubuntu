@@ -1,7 +1,7 @@
 // api/crm.js
 // Handles read/update for Lead Pipeline and Converted Leads databases
 
-const LEAD_DB    = '8e5622d3e57482ba950081ac7695672e';
+const LEAD_DB    = 'a0b622d3e574829593bf0106312fbd3b';
 const CONV_DB    = '325622d3e57481bbbaaedeb47e377f2c';
 
 const headers = {
@@ -70,39 +70,18 @@ function mapConverted(page) {
   };
 }
 
-// Server-side cache — keyed by dbId
-const cache = {};
-const CACHE_TTL = 60 * 1000; // 60 seconds
-
-async function queryDB(dbId, mapper, forceRefresh = false) {
-  const now = Date.now();
-  if (!forceRefresh && cache[dbId] && (now - cache[dbId].ts) < CACHE_TTL) {
-    return cache[dbId].data;
-  }
-
-  // Paginate through ALL results
-  const results = [];
-  let cursor = undefined;
-  do {
-    const body = {
+async function queryDB(dbId, mapper) {
+  const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
       sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
       page_size: 100,
-    };
-    if (cursor) body.start_cursor = cursor;
-
-    const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    });
-    if (!resp.ok) throw new Error(`DB query failed: ${await resp.text()}`);
-    const data = await resp.json();
-    results.push(...data.results.map(mapper));
-    cursor = data.has_more ? data.next_cursor : undefined;
-  } while (cursor);
-
-  cache[dbId] = { ts: now, data: results };
-  return results;
+    }),
+  });
+  if (!resp.ok) throw new Error(`DB query failed: ${await resp.text()}`);
+  const data = await resp.json();
+  return data.results.map(mapper);
 }
 
 async function updatePage(pageId, properties) {
@@ -144,10 +123,9 @@ export default async function handler(req, res) {
   try {
     // ── LOAD ALL ──────────────────────────────────────────────────────────────
     if (action === 'load') {
-      const force = req.body.forceRefresh === true;
       const [leads, converted] = await Promise.all([
-        queryDB(LEAD_DB, mapLead, force),
-        queryDB(CONV_DB, mapConverted, force),
+        queryDB(LEAD_DB, mapLead),
+        queryDB(CONV_DB, mapConverted),
       ]);
       return res.status(200).json({ leads, converted });
     }
