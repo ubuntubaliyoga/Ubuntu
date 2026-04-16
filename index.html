@@ -174,7 +174,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .radio-grp{flex-direction:column;gap:6px;}
 }
 
-.debug-panel{position:fixed;top:60px;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;max-height:200px;overflow-y:auto;z-index:9999;display:block;border-bottom:2px solid #0f0;}
+.debug-panel{position:fixed;top:60px;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:13px;padding:12px;min-height:80px;max-height:200px;overflow-y:auto;z-index:9999;display:block;border-bottom:2px solid #0f0;}
 .debug-panel.open{display:block;}
 .debug-close{position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:14px;cursor:pointer;}
 </style>
@@ -184,7 +184,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <div class="debug-panel" id="debug-panel">
   <button class="debug-close" onclick="document.getElementById('debug-panel').classList.remove('open')">✕</button>
-  <div id="debug-log"></div>
+  <div id="debug-log"><div>DEBUG READY — click Save to test</div></div>
 </div>
 <div class="nav">
   <div class="nav-logo">
