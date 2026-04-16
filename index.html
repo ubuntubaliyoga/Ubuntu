@@ -1,50 +1,39 @@
 <script>
-async function refreshCRM() {
-  const crmView = document.getElementById('view-crm');
-  const debugLog = document.getElementById('debug-log');
-  
-  if (!crmView) return; // Prevent "innerHTML of null"
+async function startCRM() {
+  const crmEl = document.getElementById('view-crm');
+  if (!crmEl) return; // Safety check for "innerHTML of null"
 
   try {
-    const response = await fetch('/api/crm', {
+    const res = await fetch('/api/crm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'load' })
     });
 
-    // Check if the server actually sent JSON
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-       const text = await response.text();
-       throw new Error("Server error: " + text.substring(0, 40));
-    }
-
-    const data = await response.json();
+    const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    // Build the HTML string
     let html = '<div class="crm-section-hd">Active Leads</div>';
-    data.leads.forEach(lead => {
+    data.leads.forEach(l => {
       html += `
         <div class="crm-card">
-          <div class="crm-card-name">${lead.name}</div>
-          <div class="crm-card-meta">${lead.company}</div>
-          <span class="crm-badge crm-status-${lead.status.toLowerCase()}">${lead.status}</span>
-        </div>
-      `;
+          <div class="crm-card-name">${l.name}</div>
+          <div class="crm-card-meta">${l.company}</div>
+          <span class="crm-badge crm-status-${l.status.toLowerCase()}">${l.status}</span>
+        </div>`;
     });
-
-    crmView.innerHTML = html;
+    crmEl.innerHTML = html;
 
   } catch (err) {
-    console.error(err);
-    if (debugLog) {
-      debugLog.innerHTML += `<div style="color:#ff4d4d">Error: ${err.message}</div>`;
-    }
-    crmView.innerHTML = `<div class="hint" style="color:#8B3A2E; padding:20px;">Failed to load. Check the debug panel above.</div>`;
+    console.error("Load failed:", err);
+    crmEl.innerHTML = `<div style="padding:20px; color:red;">Failed: ${err.message}</div>`;
   }
 }
 
-// Start loading when the page is ready
-document.addEventListener('DOMContentLoaded', refreshCRM);
+// Fire only when page is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startCRM);
+} else {
+  startCRM();
+}
 </script>
