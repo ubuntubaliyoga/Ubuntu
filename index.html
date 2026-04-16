@@ -181,7 +181,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .accom-block{background:#FDFAF5;border:1px solid #EDE3D4;border-radius:4px;padding:12px;margin-bottom:13px;}
 .accom-block-title{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;font-weight:600;margin-bottom:8px;}
 .accom-divider{height:1px;background:#EDE3D4;margin:10px 0;}
-.debug-toggle{position:fixed;bottom:16px;right:16px;width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:2px solid #0f0;color:#0f0;font-size:14px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;}
+
 
 .crm-card{background:#fff;border:1px solid #D4C4A8;border-radius:4px;padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
 .crm-card:hover{border-color:#B8935A;}
@@ -253,13 +253,12 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <button class="save-btn" id="save-btn" onclick="saveToNotion();toggleNavMenu()" style="width:100%;margin-bottom:8px;">Save Draft</button>
     <button class="update-btn" id="update-btn" onclick="applyUpdate()" style="display:none;width:100%;padding:7px;border-radius:3px;background:#B8935A;color:#221208;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;margin-bottom:6px;">↑ Update Available</button>
     <button class="install-btn" id="install-btn" onclick="handleInstall()" style="display:none;width:100%;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(184,147,90,.4);color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">⊕ Install App</button>
+    <button onclick="toggleDebug()" style="width:100%;margin-top:8px;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(0,255,0,.3);color:#0f0;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">🐛 Debug</button>
   </div>
   <div class="nav-tabs-row">
     <button class="nav-tab" onclick="newDraft()"><span class="nav-tab-icon">＋</span><span class="nav-tab-label">New</span></button>
     <button class="nav-tab" data-tab="drafts" onclick="switchTab('drafts')"><span class="nav-tab-icon">▤</span><span class="nav-tab-label">Drafts</span></button>
     <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')"><span class="nav-tab-icon">✏</span><span class="nav-tab-label">Edit</span></button>
-    <button class="nav-tab" data-tab="offer" onclick="switchTab('offer')"><span class="nav-tab-icon">◎</span><span class="nav-tab-label">Offer</span></button>
-    <button class="nav-tab" data-tab="contract" onclick="switchTab('contract')"><span class="nav-tab-icon">📋</span><span class="nav-tab-label">Contract</span></button>
     <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')"><span class="nav-tab-icon">◈</span><span class="nav-tab-label">CRM</span></button>
   </div>
 </div>
@@ -440,6 +439,12 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 
 let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
+
+function toggleDebug(){
+  const p=document.getElementById('debug-panel');
+  if(p)p.style.display=p.style.display==='block'?'none':'block';
+  document.getElementById('nav-dropdown').style.display='none';
+}
 
 function toggleNavMenu(){
   const d=document.getElementById('nav-dropdown');
@@ -862,6 +867,7 @@ function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTY
       <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Duplicates</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
@@ -913,6 +919,7 @@ function printContract(){const w=window.open('','_blank');w.document.write(`<!DO
       <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Duplicates</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
@@ -998,6 +1005,8 @@ $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
 // Start on drafts view
 switchTab('drafts');
+// Init CRM tab visual state
+setTimeout(()=>crmSwitchTab('leads'),0);
 
 function startAutosave(){
   if(autosaveOn) return;
@@ -1067,6 +1076,86 @@ window.onunhandledrejection = function(e) {
   dbg('PROMISE ERROR: ' + (e.reason?.message || e.reason || 'unknown'));
 };
 
+
+// ── DUPLICATES ───────────────────────────────────────────────────────────────
+function findDuplicates() {
+  const all = [...crmData.leads, ...crmData.converted];
+  const groups = {};
+  all.forEach(c => {
+    const key = (c.name||'').toLowerCase().trim().replace(/\s+/g,' ');
+    if (!key || key === 'new lead') return;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
+  });
+  return Object.values(groups).filter(g => g.length > 1);
+}
+
+function showDuplicates() {
+  const dups = findDuplicates();
+  const modal = document.getElementById('crm-modal');
+  const content = document.getElementById('crm-modal-content');
+
+  if (dups.length === 0) {
+    content.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates</div>
+        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+      </div>
+      <div style="font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;padding:20px 0;text-align:center;">No duplicates found 🎉</div>`;
+    modal.classList.add('open');
+    return;
+  }
+
+  content.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates (${dups.length})</div>
+      <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+    </div>
+    <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-bottom:14px;">Same name found in multiple entries. Review and merge or delete.</div>
+    ${dups.map((group, gi) => `
+      <div style="border:1px solid #EDE3D4;border-radius:4px;margin-bottom:12px;overflow:hidden;">
+        <div style="background:#F5ECD7;padding:8px 12px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;font-weight:700;">${group[0].name}</div>
+        ${group.map(c => `
+          <div style="padding:10px 12px;border-top:1px solid #EDE3D4;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-family:'Lora',serif;font-size:12px;color:#1A1208;">${c.db === 'leads' ? '📋 Lead Pipeline' : '✓ Converted'} · ${c.location||'No location'}</div>
+              <div style="font-family:'Lora',serif;font-size:10px;color:#8B7355;margin-top:2px;">${c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="openCrmModal('${c.id}');document.getElementById('crm-modal').classList.add('open')" style="padding:5px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8B7355;">View</button>
+              <button onclick="deleteDupConfirm('${c.id}','${c.name}',${gi})" style="padding:5px 10px;border:1px solid #F5D6D6;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8A1A1A;">Delete</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('')}`;
+  modal.classList.add('open');
+}
+
+async function deleteDupConfirm(id, name, groupIndex) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    await fetch('/api/crm', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'delete', pageId: id})
+    });
+    // Remove from local data
+    crmData.leads = crmData.leads.filter(x => x.id !== id);
+    crmData.converted = crmData.converted.filter(x => x.id !== id);
+    showDuplicates(); // refresh duplicate view
+  } catch(e) { alert('Could not delete.'); }
+}
+
+// ── LINKED DRAFTS IN CRM ─────────────────────────────────────────────────────
+function getLinkedDrafts(contactName, company) {
+  if (!window._drafts || (!contactName && !company)) return [];
+  const name = (contactName||'').toLowerCase();
+  const comp = (company||'').toLowerCase();
+  return window._drafts.filter(d =>
+    (d.organizer && d.organizer.toLowerCase().includes(name) && name) ||
+    (d.retreatName && comp && d.retreatName.toLowerCase().includes(comp))
+  );
+}
+
 // ── CRM ──────────────────────────────────────────────────────────────────────
 
 function statusClass(s) {
@@ -1093,8 +1182,14 @@ function suitClass(s) {
 
 function crmSwitchTab(tab) {
   crmTab = tab;
-  $('crm-tab-leads').classList.toggle('active', tab === 'leads');
-  $('crm-tab-converted').classList.toggle('active', tab === 'converted');
+  [$('crm-tab-leads'), $('crm-tab-converted')].forEach(b => {
+    if (!b) return;
+    const isActive = (b.id === 'crm-tab-'+tab);
+    b.classList.toggle('active', isActive);
+    b.style.background = isActive ? '#B8935A' : 'transparent';
+    b.style.color = isActive ? '#fff' : '#B8935A';
+    b.style.borderColor = isActive ? '#B8935A' : 'rgba(184,147,90,.35)';
+  });
   crmRender();
 }
 
@@ -1287,6 +1382,16 @@ function crmDetailHTML(c, editMode=false) {
     <button class="ios-modal-close" style="margin-top:14px;" onclick="saveCrmContact('${c.id}','${c.db}')">Save Changes</button>
     ${showPromote ? `<button onclick="promoteLead('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3D6636;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Move to Converted</button>` : ''}
     <button onclick="prefillOfferFromCRM('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3a3228;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Create Offer</button>
+    ${(() => {
+      const linked = getLinkedDrafts(c.name, c.company);
+      if (!linked.length) return '';
+      return `<div class="crm-section-hd">Linked Drafts (${linked.length})</div>` +
+        linked.map(d => `<div onclick="loadDraftById('${d.pageId}')" style="padding:8px 10px;border:1px solid #EDE3D4;border-radius:3px;margin-bottom:6px;cursor:pointer;background:#FDFAF5;font-family:'Lora',serif;font-size:11px;color:#1A1208;">
+          <span style="font-weight:600;">${d.organizer||'Unnamed'}${d.retreatName?' · '+d.retreatName:''}</span>
+          <span class="draft-status s-${d.status||'Draft'}" style="margin-left:6px;">${d.status||'Draft'}</span>
+          <div style="font-size:10px;color:#8B7355;margin-top:2px;">${d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates'} · USD ${d.totalUSD?Number(d.totalUSD).toLocaleString('en-US'):'—'}</div>
+        </div>`).join('');
+    })()}
   `;
 }
 
@@ -1388,6 +1493,12 @@ async function saveCrmContact(id, db) {
   } catch(e) { alert('Could not save.'); }
 }
 
+function loadDraftById(pageId) {
+  if (!window._drafts) return;
+  const idx = window._drafts.findIndex(d => d.pageId === pageId);
+  if (idx >= 0) { loadDraftByIndex(idx); document.getElementById('crm-modal').classList.remove('open'); }
+}
+
 function prefillOfferFromCRM(id) {
   const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
   if (!c) return;
@@ -1444,6 +1555,7 @@ async function saveNewLead() {
       <button class="nav-tab" id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="font-size:9px;">Converted</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Duplicates</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
