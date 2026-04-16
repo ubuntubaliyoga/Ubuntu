@@ -211,14 +211,23 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 
 /* ── Navigation ── */
-.nav{background:#221208;border-bottom:1px solid rgba(184,147,90,.4);position:sticky;top:0;z-index:200;padding:0 16px;}
-.nav-row-1{display:flex;align-items:center;gap:12px;height:52px;overflow-x:auto;}
-.nav-logo-img{height:30px;filter:brightness(0) invert(1);flex-shrink:0;margin-right:4px;}
-.nav-tabs-row{display:flex;gap:4px;flex:1;align-items:center;}
-.nav-tab{padding:6px 14px;border:1px solid rgba(184,147,90,.3);border-radius:20px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
-.nav-tab:hover{border-color:#B8935A;}
-.nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
-.nav-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.nav{background:#221208;border-bottom:1px solid rgba(184,147,90,.2);position:sticky;top:0;z-index:200;}
+.nav-row-1{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:44px;}
+.nav-logo-img{height:26px;filter:brightness(0) invert(1);}
+.nav-actions{display:flex;gap:6px;align-items:center;}
+.nav-tabs-row{display:flex;border-top:1px solid rgba(184,147,90,.15);}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px 10px;background:transparent;border:none;border-bottom:2px solid transparent;color:#6B5A45;cursor:pointer;transition:all .15s;min-width:0;}
+.nav-tab-icon{font-size:16px;line-height:1;}
+.nav-tab-label{font-family:'Libre Baskerville',serif;font-size:7px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;white-space:nowrap;}
+.nav-tab:hover{color:#B8935A;}
+.nav-tab.active{color:#F5ECD7;border-bottom:2px solid #B8935A;}
+.nav-tabs-row{display:flex;align-items:flex-end;justify-content:center;gap:0;margin-top:6px;overflow-x:auto;}
+.nav-tab{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;padding:8px 18px 10px;background:transparent;border:none;border-bottom:2px solid transparent;color:#8B7355;font-family:'Libre Baskerville',serif;font-size:7px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;min-width:60px;}
+.nav-tab-icon{font-size:17px;line-height:1;margin-bottom:2px;transition:all .18s;}
+.nav-tab:hover{color:#B8935A;}
+.nav-tab:hover .nav-tab-icon{color:#B8935A;}
+.nav-tab.active{color:#F5ECD7;border-bottom:2px solid #B8935A;font-weight:700;}
+.nav-tab.active .nav-tab-icon{color:#F5ECD7;}
 
 </style>
 </head>
@@ -229,30 +238,29 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <button class="debug-close" onclick="document.getElementById('debug-panel').classList.remove('open')">✕</button>
   <div id="debug-log"><div>DEBUG READY — click Save to test</div></div>
 </div>
-<div class="nav">
-  <div class="nav-row-1">
-    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" class="nav-logo-img">
-    <div class="nav-tabs-row">
-      <button class="nav-tab" onclick="newDraft()" title="New Draft">+ New</button>
-      <button class="nav-tab" data-tab="drafts" onclick="switchTab('drafts')">Drafts</button>
-      <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')">Edit</button>
-      <button class="nav-tab" data-tab="offer" onclick="switchTab('offer')">Offer</button>
-      <button class="nav-tab" data-tab="contract" onclick="switchTab('contract')">Contract</button>
-      <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')">CRM</button>
+<div class="nav" id="main-nav" style="position:relative;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:44px;">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" style="height:26px;filter:brightness(0) invert(1);">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="autosave-status" id="autosave-status" style="font-size:8px;color:#B8935A;font-style:italic;font-family:'Lora',serif;"></span>
+      <button onclick="toggleNavMenu()" style="background:none;border:none;color:#B8935A;font-size:24px;cursor:pointer;padding:0 4px;line-height:1;letter-spacing:2px;">···</button>
     </div>
-    <div class="nav-actions">
-      <select id="notion-status" class="nav-select">
-        <option value="Draft">Draft</option>
-        <option value="Sent">Sent</option>
-        <option value="Signed">Signed</option>
-        <option value="Cancelled">Cancelled</option>
-      </select>
-      <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
-      <span class="autosave-status" id="autosave-status"></span>
-      <button class="autosave-btn" id="autosave-btn" onclick="toggleAutosave()" style="display:none;"></button>
-      <button class="update-btn" id="update-btn" onclick="applyUpdate()">↑ Update</button>
-      <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
-    </div>
+  </div>
+  <div id="nav-dropdown" style="display:none;position:absolute;top:44px;right:0;background:#221208;border:1px solid rgba(184,147,90,.3);border-top:none;padding:12px 14px;min-width:180px;z-index:201;box-shadow:0 4px 12px rgba(0,0,0,.4);">
+    <select id="notion-status" class="nav-select" style="width:100%;padding:6px 8px;border:1px solid rgba(184,147,90,.4);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.06em;text-transform:uppercase;outline:none;margin-bottom:8px;">
+      <option value="Draft">Draft</option><option value="Sent">Sent</option><option value="Signed">Signed</option><option value="Cancelled">Cancelled</option>
+    </select>
+    <button class="save-btn" id="save-btn" onclick="saveToNotion();toggleNavMenu()" style="width:100%;margin-bottom:8px;">Save Draft</button>
+    <button class="update-btn" id="update-btn" onclick="applyUpdate()" style="display:none;width:100%;padding:7px;border-radius:3px;background:#B8935A;color:#221208;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;margin-bottom:6px;">↑ Update Available</button>
+    <button class="install-btn" id="install-btn" onclick="handleInstall()" style="display:none;width:100%;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(184,147,90,.4);color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">⊕ Install App</button>
+  </div>
+  <div class="nav-tabs-row">
+    <button class="nav-tab" onclick="newDraft()"><span class="nav-tab-icon">＋</span><span class="nav-tab-label">New</span></button>
+    <button class="nav-tab" data-tab="drafts" onclick="switchTab('drafts')"><span class="nav-tab-icon">▤</span><span class="nav-tab-label">Drafts</span></button>
+    <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')"><span class="nav-tab-icon">✏</span><span class="nav-tab-label">Edit</span></button>
+    <button class="nav-tab" data-tab="offer" onclick="switchTab('offer')"><span class="nav-tab-icon">◎</span><span class="nav-tab-label">Offer</span></button>
+    <button class="nav-tab" data-tab="contract" onclick="switchTab('contract')"><span class="nav-tab-icon">📋</span><span class="nav-tab-label">Contract</span></button>
+    <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')"><span class="nav-tab-icon">◈</span><span class="nav-tab-label">CRM</span></button>
   </div>
 </div>
 
@@ -433,6 +441,17 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
 
+function toggleNavMenu(){
+  const d=document.getElementById('nav-dropdown');
+  d.style.display=d.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#main-nav')){
+    const d=document.getElementById('nav-dropdown');
+    if(d)d.style.display='none';
+  }
+});
+
 function switchTab(t){
   activeTab=t;
   ['edit','offer','contract','drafts','crm'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
@@ -441,6 +460,7 @@ function switchTab(t){
   if(t==='contract') renderContract();
   if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;}
   if(t==='crm') loadCRM();
+  const nd=document.getElementById('nav-dropdown');if(nd)nd.style.display='none';
 }
 
 function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);}
@@ -844,13 +864,17 @@ function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTY
       <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-<div style="flex:1;min-width:120px;position:relative;">
-  <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#B8935A;font-size:14px;pointer-events:none;">🔍</span>
-  <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="width:100%;padding:7px 10px 7px 32px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;box-sizing:border-box;">
-</div>      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
         <option value="date">↓ Date</option>
         <option value="name">A–Z Name</option>
         <option value="location">A–Z Location</option>
+      </select>
+      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="none">No grouping</option>
+        <option value="status">By Status</option>
+        <option value="location">By Location</option>
+        <option value="date">By Month</option>
       </select>
     </div>
     <div id="crm-list"></div>
@@ -896,6 +920,12 @@ function printContract(){const w=window.open('','_blank');w.document.write(`<!DO
         <option value="date">↓ Date</option>
         <option value="name">A–Z Name</option>
         <option value="location">A–Z Location</option>
+      </select>
+      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="none">No grouping</option>
+        <option value="status">By Status</option>
+        <option value="location">By Location</option>
+        <option value="date">By Month</option>
       </select>
     </div>
     <div id="crm-list"></div>
@@ -1073,14 +1103,57 @@ function crmSort(items) {
   return [...items].sort((a, b) => {
     if (s === 'name')     return (a.name||'').localeCompare(b.name||'');
     if (s === 'location') return (a.location||'').localeCompare(b.location||'');
-    // date: sort by lastEdited descending
     return new Date(b.lastEdited||0) - new Date(a.lastEdited||0);
   });
+}
+
+function groupKey(c, groupBy) {
+  if (groupBy === 'status') {
+    const s = Array.isArray(c.status) ? c.status[0] : c.status;
+    return s || 'No Status';
+  }
+  if (groupBy === 'location') return c.location || 'No Location';
+  if (groupBy === 'date') {
+    if (!c.lastEdited) return 'Unknown';
+    const d = new Date(c.lastEdited);
+    return d.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+  }
+  return null;
+}
+
+function buildGrid(items, tab) {
+  const header = tab === 'leads'
+    ? ['Name','Location','Status','Added']
+    : ['Name','Location','Status','Updated'];
+  const hRow = header.map(h =>
+    `<div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">${h}</div>`
+  ).join('');
+
+  const rows = items.map((c, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
+    const border = 'border-bottom:1px solid #EDE3D4;';
+    const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+    const statusHtml = statusArr.length
+      ? statusArr.map(s => `<span class="crm-badge ${statusClass(s)}" style="font-size:7.5px;">${s}</span>`).join(' ')
+      : '—';
+    const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
+    const cell = `padding:9px 10px;cursor:pointer;border-bottom:1px solid #EDE3D4;`;
+    return `
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};">${c.name||'Unnamed'}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};">${c.location||'—'}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}background:${bg};">${statusHtml}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};">${date}</div>
+    `;
+  }).join('');
+
+  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid #EDE3D4;border-radius:4px;overflow:hidden;margin-bottom:8px;">${hRow}${rows}</div>`;
 }
 
 function crmRender() {
   const list = $('crm-list');
   const q = ($('crm-search')?.value || '').toLowerCase();
+  const groupBy = $('crm-group')?.value || 'none';
+
   let items = crmData[crmTab].filter(c =>
     !q || (c.name||'').toLowerCase().includes(q) ||
           (c.company||'').toLowerCase().includes(q) ||
@@ -1093,50 +1166,25 @@ function crmRender() {
     return;
   }
 
-  if (crmTab === 'leads') {
-    // Minimalist list view for leads
-    list.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid #EDE3D4;border-radius:4px;overflow:hidden;">
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Name</div>
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Location</div>
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Status</div>
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Added</div>
-        ${items.map((c, i) => {
-          const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
-          const border = 'border-bottom:1px solid #EDE3D4;';
-          const status = c.status || '—';
-          const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
-          return `
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};${border}cursor:pointer;">${c.name||'Unnamed'}</div>
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};${border}cursor:pointer;">${c.location||'—'}</div>
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;background:${bg};${border}cursor:pointer;"><span class="crm-badge ${statusClass(status)}" style="font-size:7.5px;">${status}</span></div>
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};${border}cursor:pointer;">${date}</div>
-          `;
-        }).join('')}
-      </div>`;
-  } else {
-    // Minimalist list for converted leads too
-    list.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid #EDE3D4;border-radius:4px;overflow:hidden;">
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Name</div>
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Location</div>
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Status</div>
-        <div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">Updated</div>
-        ${items.map((c, i) => {
-          const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
-          const border = 'border-bottom:1px solid #EDE3D4;';
-          const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-          const statusBadges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}" style="font-size:7.5px;">${s}</span>`).join(' ');
-          const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
-          return `
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};${border}cursor:pointer;">${c.name||'Unnamed'}</div>
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};${border}cursor:pointer;">${c.location||'—'}</div>
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;background:${bg};${border}cursor:pointer;">${statusBadges||'—'}</div>
-            <div onclick="openCrmModal('${c.id}')" style="padding:9px 10px;font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};${border}cursor:pointer;">${date}</div>
-          `;
-        }).join('')}
-      </div>`;
+  if (groupBy === 'none') {
+    list.innerHTML = buildGrid(items, crmTab);
+    return;
   }
+
+  // Grouped view
+  const groups = {};
+  items.forEach(c => {
+    const key = groupKey(c, groupBy);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
+  });
+
+  list.innerHTML = Object.entries(groups).map(([key, groupItems]) => `
+    <div style="font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B8935A;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid #EDE3D4;">
+      ${key} <span style="font-weight:400;color:#8B7355;">(${groupItems.length})</span>
+    </div>
+    ${buildGrid(groupItems, crmTab)}
+  `).join('');
 }
 
 async function fetchCRM(force=false) {
@@ -1403,6 +1451,12 @@ async function saveNewLead() {
         <option value="date">↓ Date</option>
         <option value="name">A–Z Name</option>
         <option value="location">A–Z Location</option>
+      </select>
+      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="none">No grouping</option>
+        <option value="status">By Status</option>
+        <option value="location">By Location</option>
+        <option value="date">By Month</option>
       </select>
     </div>
     <div id="crm-list"></div>
