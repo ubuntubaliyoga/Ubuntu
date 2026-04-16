@@ -457,7 +457,7 @@ function toggleNavMenu(){
   d.style.display=d.style.display==='block'?'none':'block';
 }
 document.addEventListener('click',e=>{
-  if(!e.target.closest('#main-nav')){
+  if(!e.target.closest('#main-nav') && !e.target.closest('#nav-dropdown')){
     const d=document.getElementById('nav-dropdown');
     if(d)d.style.display='none';
   }
@@ -912,7 +912,7 @@ $('f-validuntil').value=addDays(todayStr(),7);
 // Start on drafts view
 switchTab('drafts');
 // Init CRM tab visual state
-setTimeout(()=>crmSwitchTab('leads'),0);
+setTimeout(()=>crmSwitchTab('retreat_leaders'),0);
 
 function startAutosave(){
   if(autosaveOn) return;
@@ -985,7 +985,7 @@ window.onunhandledrejection = function(e) {
 
 // ── DUPLICATES ───────────────────────────────────────────────────────────────
 function findDuplicates() {
-  const all = [...crmData.leads, ...crmData.converted];
+  const all = [...(crmData.retreat_leaders||[]), ...(crmData.shala_rental||[]), ...(crmData.whatsapp_leaders||[]), ...(crmData.converted||[])];
   const groups = {};
   all.forEach(c => {
     const key = (c.name||'').toLowerCase().trim().replace(/\s+/g,' ');
@@ -1088,7 +1088,7 @@ function suitClass(s) {
 
 function crmSwitchTab(tab) {
   crmTab = tab;
-  ['leads','converted'].forEach(t => {
+  ['retreat_leaders','whatsapp_leaders','shala_rental','converted'].forEach(t => {
     const b = document.getElementById('crm-tab-'+t);
     if (!b) return;
     b.style.background = t === tab ? '#B8935A' : 'transparent';
@@ -1154,7 +1154,10 @@ function crmRender() {
   const q = ($('crm-search')?.value || '').toLowerCase();
   const groupBy = $('crm-group')?.value || 'none';
 
-  let items = crmData[crmTab].filter(c =>
+  const allInTab = crmData[crmTab] || [];
+  const countEl = document.getElementById('crm-count');
+  if (countEl) countEl.textContent = allInTab.length + ' records';
+  let items = allInTab.filter(c =>
     !q || (c.name||'').toLowerCase().includes(q) ||
           (c.company||'').toLowerCase().includes(q) ||
           (c.location||'').toLowerCase().includes(q)
@@ -1190,13 +1193,12 @@ function crmRender() {
 async function fetchCRM(force=false) {
   const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load', forceRefresh: !!force }) });
   const data = await r.json();
-  if (!data.leads) throw new Error(JSON.stringify(data));
+  if (!data.retreat_leaders) throw new Error(JSON.stringify(data));
   return data;
 }
 
 async function loadCRM(force=false) {
   if (!crmLoaded) {
-    // First ever load — show spinner, wait for data
     $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
     try {
       crmData = await fetchCRM(false);
@@ -1207,16 +1209,14 @@ async function loadCRM(force=false) {
       return;
     }
   } else {
-    // Already have data — show it immediately, refresh in background
     crmRender();
   }
-
-  // Always refresh in background (bypasses cache if force=true)
   fetchCRM(force).then(data => {
     crmData = data;
     crmRender();
-    dbg('CRM refreshed: ' + data.leads.length + ' leads, ' + data.converted.length + ' converted');
-  }).catch(e => dbg('CRM background refresh failed: ' + e.message));
+    const total = (data.retreat_leaders||[]).length + (data.shala_rental||[]).length + (data.whatsapp_leaders||[]).length + (data.converted||[]).length;
+    dbg('CRM refreshed: ' + total + ' total records');
+  }).catch(e => dbg('CRM bg refresh failed: ' + e.message));
 }
 
 function crmDetailHTML(c, editMode=false) {
@@ -1301,14 +1301,14 @@ function crmDetailHTML(c, editMode=false) {
 }
 
 function openCrmModal(id) {
-  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
+  const c = [...(crmData.retreat_leaders||[]), ...(crmData.shala_rental||[]), ...(crmData.whatsapp_leaders||[]), ...(crmData.converted||[])].find(x => x.id === id);
   if (!c) return;
   $('crm-modal-content').innerHTML = crmDetailHTML(c, false);
   $('crm-modal').classList.add('open');
 }
 
 function openCrmModalEdit(id) {
-  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
+  const c = [...(crmData.retreat_leaders||[]), ...(crmData.shala_rental||[]), ...(crmData.whatsapp_leaders||[]), ...(crmData.converted||[])].find(x => x.id === id);
   if (!c) return;
   $('crm-modal-content').innerHTML = crmDetailHTML(c, true);
 }
@@ -1361,7 +1361,7 @@ async function saveContactDetails(id, db) {
 }
 
 async function promoteLead(id) {
-  const c = crmData.leads.find(x => x.id === id);
+  const c = [...(crmData.retreat_leaders||[]), ...(crmData.shala_rental||[]), ...(crmData.whatsapp_leaders||[])].find(x => x.id === id);
   if (!c || !confirm(`Move ${c.name || 'this lead'} to Converted Leads?`)) return;
   try {
     await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
@@ -1405,7 +1405,7 @@ function loadDraftById(pageId) {
 }
 
 function prefillOfferFromCRM(id) {
-  const c = [...crmData.leads, ...crmData.converted].find(x => x.id === id);
+  const c = [...(crmData.retreat_leaders||[]), ...(crmData.shala_rental||[]), ...(crmData.whatsapp_leaders||[]), ...(crmData.converted||[])].find(x => x.id === id);
   if (!c) return;
   $('crm-modal').classList.remove('open');
   intentionalDraft = true;
@@ -1440,12 +1440,13 @@ async function saveNewLead() {
         insta: $('nl-insta').value,
         location: $('nl-location').value,
         notes: $('nl-notes').value,
-        status: 'Followed + Engaged',
+        db: $('nl-db').value,
       })
     });
+    const targetDb = $('nl-db').value;
     $('new-lead-modal').classList.remove('open');
     crmLoaded = false;
-    loadCRM();
+    loadCRM().then(()=>crmSwitchTab(targetDb));
   } catch(e) { alert('Could not save lead.'); }
 }
 
@@ -1455,13 +1456,21 @@ async function saveNewLead() {
 <div class="view" id="view-crm">
   <div style="max-width:800px;margin:0 auto;">
     <div class="view-label">CRM</div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
-      <button id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="padding:7px 16px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:#B8935A;color:#fff;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;">Leads</button>
-      <button id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="padding:7px 16px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;">Converted</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="openNewLeadModal()">+ New Lead</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="loadCRM(true)">↻ Refresh</button>
-      <button class="action-btn dark" style="flex:none;padding:7px 14px;font-size:8.5px;" onclick="showDuplicates()">⊕ Dupes</button>
+    <!-- DB Tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center;overflow-x:auto;padding-bottom:4px;">
+      <button id="crm-tab-retreat_leaders" onclick="crmSwitchTab('retreat_leaders')" style="padding:6px 12px;border:1px solid #B8935A;border-radius:100px;background:#B8935A;color:#fff;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;white-space:nowrap;">📱 Instagram</button>
+      <button id="crm-tab-whatsapp_leaders" onclick="crmSwitchTab('whatsapp_leaders')" style="padding:6px 12px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;white-space:nowrap;">💬 WhatsApp</button>
+      <button id="crm-tab-shala_rental" onclick="crmSwitchTab('shala_rental')" style="padding:6px 12px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;white-space:nowrap;">🏛 Shala Rental</button>
+      <button id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="padding:6px 12px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;white-space:nowrap;">✓ Converted</button>
     </div>
+    <!-- Actions -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+      <button class="action-btn dark" style="flex:none;padding:7px 12px;font-size:8px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 12px;font-size:8px;" onclick="loadCRM(true)">↻ Refresh</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 12px;font-size:8px;" onclick="showDuplicates()">⊕ Dupes</button>
+      <div id="crm-count" style="font-family:'Lora',serif;font-size:10px;color:#8B7355;font-style:italic;margin-left:4px;"></div>
+    </div>
+    <!-- Search + Sort -->
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
       <div style="flex:1;min-width:120px;position:relative;">
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#B8935A;font-size:14px;pointer-events:none;">🔍</span>
@@ -1500,6 +1509,13 @@ async function saveNewLead() {
     <div class="fg"><label>Instagram</label><input type="text" id="nl-insta"></div>
     <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
     <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
+    <div class="fg"><label>Add to Database</label>
+      <select id="nl-db" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+        <option value="retreat_leaders">📱 Instagram Leads</option>
+        <option value="whatsapp_leaders">💬 WhatsApp Leads</option>
+        <option value="shala_rental">🏛 Shala Rental</option>
+      </select>
+    </div>
     <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
     <button onclick="document.getElementById('new-lead-modal').classList.remove('open')" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
   </div>
