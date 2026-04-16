@@ -15,10 +15,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;}
-.nav{background:#221208;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:54px;border-bottom:2px solid #B8935A;position:sticky;top:0;z-index:200;gap:8px;flex-wrap:nowrap;}
+.nav{background:#221208;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 16px;min-height:72px;border-bottom:2px solid #B8935A;position:sticky;top:0;z-index:200;gap:6px;flex-wrap:nowrap;}
 .nav-logo img{height:30px;filter:brightness(0) invert(1);display:block;flex-shrink:0;}
 .nav-tabs{display:flex;gap:3px;flex-shrink:0;}
-.nav-tab{padding:6px 12px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.nav-tab{padding:7px 16px;border:1px solid rgba(184,147,90,.35);border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .nav-tab.active{background:#B8935A;color:#221208;border-color:#B8935A;}
 .nav-actions{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;flex-shrink:0;padding:4px 0;}
 .nav-actions-row{display:flex;gap:5px;align-items:center;}
@@ -27,7 +27,7 @@ body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;
 .save-btn:hover{background:#B8935A;color:#221208;}
 .save-btn.saved{background:#3D6636;color:#fff;border-color:#3D6636;}
 .save-btn.error{background:#8B3A2E;color:#fff;border-color:#8B3A2E;}
-.autosave-btn{padding:6px 10px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.autosave-btn{display:none;}
 .autosave-btn.off{background:#5C1A1A;color:#F5A0A0;}
 .autosave-btn.on{background:#1A4D1A;color:#A0F0A0;}
 .autosave-status{font-family:'Lora',serif;font-size:8px;color:#27AE60;font-style:italic;white-space:nowrap;display:none;}
@@ -45,7 +45,7 @@ body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;
 .fg textarea{resize:vertical;line-height:1.6;}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .hint{font-size:9px;color:#A08060;font-style:italic;margin-top:3px;}
-.villa-box{border:1px solid #EDE3D4;border-radius:4px;padding:10px 12px;margin-bottom:10px;background:#FDFAF5;}
+.villa-box{border:1px solid #EDE3D4;border-radius:4px;padding:10px 12px;margin-bottom:10px;background:transparent;}
 .villa-box-hd{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
 .villa-box-hd input{width:auto;}
 .villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
@@ -174,9 +174,14 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .radio-grp{flex-direction:column;gap:6px;}
 }
 
-.debug-panel{position:fixed;top:60px;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:13px;padding:12px;min-height:80px;max-height:200px;overflow-y:auto;z-index:9999;display:block;border-bottom:2px solid #0f0;}
+.debug-panel{position:fixed;top:80px;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:13px;padding:12px;min-height:80px;max-height:200px;overflow-y:auto;z-index:9999;display:none;border-bottom:2px solid #0f0;}
 .debug-panel.open{display:block;}
 .debug-close{position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:14px;cursor:pointer;}
+
+.accom-block{background:#FDFAF5;border:1px solid #EDE3D4;border-radius:4px;padding:12px;margin-bottom:13px;}
+.accom-block-title{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;font-weight:600;margin-bottom:8px;}
+.accom-divider{height:1px;background:#EDE3D4;margin:10px 0;}
+.debug-toggle{position:fixed;bottom:16px;right:16px;width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:2px solid #0f0;color:#0f0;font-size:14px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;}
 </style>
 </head>
 <body>
@@ -187,29 +192,26 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div id="debug-log"><div>DEBUG READY — click Save to test</div></div>
 </div>
 <div class="nav">
-  <div class="nav-logo">
-    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
+  <div style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" style="height:26px;filter:brightness(0) invert(1);flex-shrink:0;">
+    <button class="nav-tab" onclick="newDraft()">+ New Draft</button>
+    <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
+    <button class="nav-tab" onclick="switchTab('edit')">Edit</button>
+    <button class="nav-tab" onclick="switchTab('offer')">Offer</button>
+    <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
   </div>
-  <div class="nav-center">
-    <div class="nav-actions-row">
-      <button class="nav-tab active" onclick="switchTab('edit')">Edit</button>
-      <button class="nav-tab" onclick="switchTab('offer')">Offer</button>
-      <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
-      <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
-    </div>
-    <div class="nav-actions-row">
-      <select id="notion-status" class="nav-select">
-        <option value="Draft">Draft</option>
-        <option value="Sent">Sent</option>
-        <option value="Signed">Signed</option>
-        <option value="Cancelled">Cancelled</option>
-      </select>
-      <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
-      <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()">● Autosave Off</button>
-      <span class="autosave-status" id="autosave-status"></span>
-      <button class="update-btn" id="update-btn" onclick="applyUpdate()">↑ Update Available</button>
-      <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
-    </div>
+  <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
+    <select id="notion-status" class="nav-select">
+      <option value="Draft">Draft</option>
+      <option value="Sent">Sent</option>
+      <option value="Signed">Signed</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+    <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
+    <span class="autosave-status" id="autosave-status" style="display:inline;font-family:'Lora',serif;font-size:8px;color:#B8935A;font-style:italic;"></span>
+    <button class="autosave-btn off" id="autosave-btn" onclick="toggleAutosave()" style="display:none;">Autosave</button>
+    <button class="update-btn" id="update-btn" onclick="applyUpdate()">↑ Update Available</button>
+    <button class="install-btn" id="install-btn" onclick="handleInstall()">⊕ Install</button>
   </div>
 </div>
 
@@ -222,6 +224,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <button class="ios-modal-close" onclick="document.getElementById('ios-modal').classList.remove('open')">Got it</button>
   </div>
 </div>
+<button class="debug-toggle" onclick="const p=$('debug-panel');p.style.display=p.style.display==='none'?'block':'none'">🐛</button>
 
 <!-- EDIT -->
 <div class="view active" id="view-edit">
@@ -272,24 +275,28 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div class="s-section">Accommodation</div>
   <div class="accom-block">
     <div class="accom-block-title">Gladaks</div>
-    <div class="fg-row" style="margin-bottom:0;">
+    <div class="fg-row" style="margin-bottom:8px;">
       <div class="fg" style="margin-bottom:0;"><label>Number (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15"></div>
       <div class="fg" style="margin-bottom:0;"><label>Rate / night</label><input type="number" id="f-roomrate" value="60" min="0"></div>
+    </div>
+    <div class="fg-row" style="margin-bottom:0;">
+      <div class="fg" style="margin-bottom:0;"><label>Rooms with discount</label><select id="f-disc-room"><option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+      <div class="fg" style="margin-bottom:0;"><label>Discount %</label><input type="number" id="f-disc-pct" value="0" min="0" max="50"><div class="hint">Max 50%.</div></div>
     </div>
     <div class="accom-divider"></div>
     <div class="accom-block-title">Villas</div>
     <div class="villa-box" style="background:#fff;margin-bottom:8px;">
       <div class="villa-box-hd"><input type="checkbox" id="f-parvati-on" onchange="toggleVilla('parvati')" checked> Parvati Villa</div>
       <div class="villa-fields" id="parvati-fields">
-        <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-parvati-orig" value="80" min="0"></div>
-        <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-parvati-disc" placeholder="Optional" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Rate / night</label><input type="number" id="f-parvati-orig" value="80" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-parvati-disc" placeholder="0" min="0" max="100"></div>
       </div>
     </div>
     <div class="villa-box" style="background:#fff;margin-bottom:0;">
       <div class="villa-box-hd"><input type="checkbox" id="f-buddha-on" onchange="toggleVilla('buddha')" checked> Buddha Villa</div>
       <div class="villa-fields" id="buddha-fields">
-        <div class="fg" style="margin-bottom:0"><label>Original / night</label><input type="number" id="f-buddha-orig" value="80" min="0"></div>
-        <div class="fg" style="margin-bottom:0"><label>Discounted / night</label><input type="number" id="f-buddha-disc" placeholder="Optional" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Rate / night</label><input type="number" id="f-buddha-orig" value="80" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-buddha-disc" placeholder="0" min="0" max="100"></div>
       </div>
     </div>
   </div>
@@ -308,22 +315,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <input type="number" id="f-discount" value="5" min="0" max="20">
       <div class="hint">Max 20%.</div>
     </div>
-    <div class="fg"><label>Individual Room Discount</label>
-      <div class="fg-row" style="gap:6px;">
-        <div>
-          <label style="font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;font-family:'Libre Baskerville',serif;display:block;margin-bottom:4px;"># Rooms</label>
-          <select id="f-disc-room">
-            <option value="0">None</option><option value="1">1</option><option value="2">2</option>
-            <option value="3">3</option><option value="4">4</option><option value="5">5</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;font-family:'Libre Baskerville',serif;display:block;margin-bottom:4px;">Discount %</label>
-          <input type="number" id="f-disc-pct" value="0" min="0" max="50">
-        </div>
-      </div>
-      <div class="hint">Max 50%.</div>
-    </div>
+
   </div>
   <div class="fg"><label>Show Price Totals</label>
     <div class="radio-grp">
@@ -339,7 +331,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   </div>
   <div class="hint" style="margin-top:-9px;margin-bottom:13px;">Use {guests} to auto-insert guest count.</div>
   <div class="fg-row">
-    <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid"></div>
     <div class="fg"><label>Deposit % (0 = none)</label>
       <input type="number" id="f-deposit" value="0" min="0" max="100">
       <div class="hint">Drives contract payment schedule.</div>
@@ -409,7 +400,7 @@ const todayStr=()=>new Date().toISOString().split('T')[0];
 const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
 const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
 
-let activeTab='edit', currentPageId=null, autosaveOn=false, autosaveInterval=null;
+let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null;
 
 function switchTab(t){
   activeTab=t;
@@ -431,7 +422,7 @@ function toggleAutosave(){
     autosaveInterval=setInterval(async()=>{
       await saveToNotion(true);
       status.textContent='saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    },60000);
+    },15000);
   } else {
     btn.textContent='● Off'; btn.className='autosave-btn off';
     status.style.display='none'; status.textContent='';
@@ -444,9 +435,9 @@ function pricing(){
   const pkgRate=parseFloat($('f-pkgrate')?.value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
   const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
   const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80;
-  const parvDiscVal=$('f-parvati-disc').value; const parvDisc=parvDiscVal?parseFloat(parvDiscVal):parvOrig;
+  const parvDiscPct=parseFloat($('f-parvati-disc')?.value)||0; const parvDisc=parvDiscPct>0?parvOrig*(1-parvDiscPct/100):parvOrig;
   const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($('f-buddha-orig').value)||80;
-  const buddDiscVal=$('f-buddha-disc').value; const buddDisc=buddDiscVal?parseFloat(buddDiscVal):buddOrig;
+  const buddDiscPct=parseFloat($('f-buddha-disc')?.value)||0; const buddDisc=buddDiscPct>0?buddOrig*(1-buddDiscPct/100):buddOrig;
   const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
   const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
   const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
@@ -454,7 +445,7 @@ function pricing(){
   const roomDiscAmt=discRooms>0&&discRoomPct>0?roomRate*(discRoomPct/100)*discRooms:0;
   const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight*1.15;
   const nights=parseInt($('f-nights').value)||7, totalEx=perNight*nights, totalIn=perNightTax*nights;
-  return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,buddOn,buddOrig,buddDisc,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
+  return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,parvDiscPct,buddOn,buddOrig,buddDisc,buddDiscPct,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
 }
 
 function payments(total,checkin,depositPct){
@@ -498,12 +489,12 @@ function buildOfferHTML(){
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
-  const vLbl=(orig,disc)=>orig!==disc?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)}`:`USD ${fmtN(disc)}`;
+  const vLbl=(orig,disc,pct)=>pct>0?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)} (${pct}% off)`:`USD ${fmtN(disc)}`;
   const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
   const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
   const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
-  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.parvOrig,P.parvDisc)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
-  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.buddOrig,P.buddDisc)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
+  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
   const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
   const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
   const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
@@ -868,6 +859,22 @@ function applyUpdate(){
 // Init
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
+// Auto-start autosave
+toggleAutosave();
+// Start on drafts view
+switchTab('drafts');
+
+function newDraft(){
+  // Reset form
+  currentPageId=null;
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'];
+  ids.forEach(id=>{const el=$(id);if(el)el.value='';});
+  $('f-contractdate').value=todayStr();
+  $('f-validuntil').value=addDays(todayStr(),7);
+  $('f-offervalid').value='';
+  $('notion-status').value='Draft';
+  switchTab('edit');
+}
 
 // Live IDR rate
 (async()=>{
