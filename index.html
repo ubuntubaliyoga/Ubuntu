@@ -173,10 +173,19 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .action-row{flex-direction:column;}
   .radio-grp{flex-direction:column;gap:6px;}
 }
+
+.debug-panel{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;max-height:160px;overflow-y:auto;z-index:9999;display:none;border-top:2px solid #0f0;}
+.debug-panel.open{display:block;}
+.debug-close{position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:14px;cursor:pointer;}
 </style>
 </head>
 <body>
 
+
+<div class="debug-panel" id="debug-panel">
+  <button class="debug-close" onclick="document.getElementById('debug-panel').classList.remove('open')">✕</button>
+  <div id="debug-log"></div>
+</div>
 <div class="nav">
   <div class="nav-logo">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
@@ -760,6 +769,15 @@ async function deleteDraft(i){
   } catch{alert('Could not delete.');}
 }
 
+function dbg(msg){
+  const p=$('debug-panel'),l=$('debug-log');
+  if(!p||!l)return;
+  p.classList.add('open');
+  const t=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  l.innerHTML+=`<div>[${t}] ${msg}</div>`;
+  p.scrollTop=p.scrollHeight;
+}
+
 async function saveToNotion(silent=false){
   const btn=$('save-btn');
   if(!silent){btn.textContent='Saving…';btn.className='save-btn';}
@@ -773,23 +791,28 @@ async function saveToNotion(silent=false){
     totalUSD:P.totalIn,status:$('notion-status').value,
     formState:JSON.stringify(getFormState()),
   };
+  const action=currentPageId?'update':'create';
+  const fsLen=payload.formState.length;
+  dbg(`action=${action} | formState=${fsLen} chars | pageId=${currentPageId||'none'}`);
   try{
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),15000);
-    let r;
-    if(currentPageId){
-      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',...payload,pageId:currentPageId}),signal:controller.signal});
-    } else {
-      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...payload}),signal:controller.signal});
-    }
+    const timeout=setTimeout(()=>{dbg('ABORT: 15s timeout hit');controller.abort();},15000);
+    const body=currentPageId
+      ?JSON.stringify({action:'update',...payload,pageId:currentPageId})
+      :JSON.stringify({action:'create',...payload});
+    dbg(`fetching /api/notion...`);
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body,signal:controller.signal});
     clearTimeout(timeout);
+    dbg(`response status: ${r.status}`);
     const data=await r.json();
+    dbg(`response body: ${JSON.stringify(data).slice(0,200)}`);
     if(!r.ok) throw new Error(data.error||'HTTP '+r.status);
     if(!currentPageId&&data.pageId) currentPageId=data.pageId;
+    dbg('SUCCESS ✓');
     if(!silent){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
   } catch(err){
     const msg=err.name==='AbortError'?'Timeout':(err.message||'Error');
-    console.error('[save]',msg);
+    dbg(`ERROR: ${msg}`);
     if(!silent){btn.textContent='✗ '+msg;btn.className='save-btn error';btn.title=msg;setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';btn.title='';},6000);}
   }
 }
