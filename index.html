@@ -1067,15 +1067,16 @@ function crmRender() {
 }
 
 async function loadCRM() {
-  if (!crmLoaded) $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
+  $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
   try {
     const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load' }) });
     const data = await r.json();
+    if (!data.leads) throw new Error(JSON.stringify(data));
     crmData = data;
     crmLoaded = true;
     crmRender();
   } catch(e) {
-    $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load CRM.</div>`;
+    $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load CRM: ${e.message}</div>`;
   }
 }
 
