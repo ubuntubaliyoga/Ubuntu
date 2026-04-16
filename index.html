@@ -195,10 +195,10 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" style="height:33px;filter:brightness(0) invert(1);flex-shrink:0;">
     <button class="nav-tab" onclick="newDraft()">+ New Draft</button>
-    <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
-    <button class="nav-tab" onclick="switchTab('edit')">Edit</button>
-    <button class="nav-tab" onclick="switchTab('offer')">Offer</button>
-    <button class="nav-tab" onclick="switchTab('contract')">Contract</button>
+    <button class="nav-tab" data-tab="drafts" onclick="switchTab('drafts')">Drafts</button>
+    <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')">Edit</button>
+    <button class="nav-tab" data-tab="offer" onclick="switchTab('offer')">Offer</button>
+    <button class="nav-tab" data-tab="contract" onclick="switchTab('contract')">Contract</button>
   </div>
   <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
     <select id="notion-status" class="nav-select">
@@ -228,7 +228,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- EDIT -->
 <div class="view active" id="view-edit">
-<div class="form-wrap">
+<div class="form-wrap" oninput="markDraftActive()" onchange="markDraftActive()">
   <div class="s-section">Contact</div>
   <div class="fg-row">
     <div class="fg"><label>Organizer Name</label><input type="text" id="f-name"></div>
@@ -400,12 +400,12 @@ const todayStr=()=>new Date().toISOString().split('T')[0];
 const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
 const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
 
-let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null;
+let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false;
 
 function switchTab(t){
   activeTab=t;
   ['edit','offer','contract','drafts'].forEach(v=>$('view-'+v).classList.toggle('active',v===t));
-  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['edit','offer','contract','drafts'][i]===t));
+  document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
   if(t==='drafts') loadDrafts();
@@ -414,20 +414,7 @@ function switchTab(t){
 function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);}
 
 function toggleAutosave(){
-  autosaveOn=!autosaveOn;
-  const btn=$('autosave-btn'), status=$('autosave-status');
-  if(autosaveOn){
-    btn.textContent='● On'; btn.className='autosave-btn on';
-    status.style.display='inline';
-    autosaveInterval=setInterval(async()=>{
-      await saveToNotion(true);
-      status.textContent='saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    },15000);
-  } else {
-    btn.textContent='● Off'; btn.className='autosave-btn off';
-    status.style.display='none'; status.textContent='';
-    clearInterval(autosaveInterval); autosaveInterval=null;
-  }
+  // kept for compatibility but autosave is managed automatically
 }
 
 function pricing(){
@@ -709,6 +696,8 @@ function loadDraftByIndex(i){
     if(!d||!d.formState) return;
     setFormState(JSON.parse(d.formState));
     currentPageId=d.pageId;
+    draftActive=true;
+    startAutosave();
     switchTab('edit');
   } catch(e){alert('Could not load this draft.');}
 }
@@ -854,10 +843,26 @@ function applyUpdate(){
 // Init
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
-// Auto-start autosave
-toggleAutosave();
 // Start on drafts view
 switchTab('drafts');
+
+function startAutosave(){
+  if(autosaveOn) return;
+  autosaveOn=true;
+  const status=$('autosave-status');
+  status.style.display='inline';
+  autosaveInterval=setInterval(async()=>{
+    await saveToNotion(true);
+    status.textContent='saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  },15000);
+}
+
+function markDraftActive(){
+  if(!draftActive){
+    draftActive=true;
+    startAutosave();
+  }
+}
 
 function newDraft(){
   // Reset form
@@ -868,7 +873,13 @@ function newDraft(){
   $('f-validuntil').value=addDays(todayStr(),7);
   $('f-offervalid').value='';
   $('notion-status').value='Draft';
+  draftActive=false;
   switchTab('edit');
+  // reset autosave for new draft
+  autosaveOn=false;
+  clearInterval(autosaveInterval);
+  autosaveInterval=null;
+  $('autosave-status').textContent='';
 }
 
 // Live IDR rate
