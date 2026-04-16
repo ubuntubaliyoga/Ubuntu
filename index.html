@@ -193,7 +193,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 </div>
 <div class="nav">
   <div style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;">
-    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" style="height:26px;filter:brightness(0) invert(1);flex-shrink:0;">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" style="height:33px;filter:brightness(0) invert(1);flex-shrink:0;">
     <button class="nav-tab" onclick="newDraft()">+ New Draft</button>
     <button class="nav-tab" onclick="switchTab('drafts')">Drafts</button>
     <button class="nav-tab" onclick="switchTab('edit')">Edit</button>
@@ -848,12 +848,7 @@ if('serviceWorker' in navigator){
   });
 }
 function applyUpdate(){
-  if(pendingSW){
-    pendingSW.postMessage({type:'SKIP_WAITING'});
-    navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
-  } else {
-    window.location.reload();
-  }
+  window.location.reload(true);
 }
 
 // Init
