@@ -426,6 +426,7 @@ const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.
 const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
 
 let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
+let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
 
 function switchTab(t){
   activeTab=t;
@@ -1004,10 +1005,16 @@ function newDraft(){
   }
 })();
 
+
+// Global error capture → debug panel
+window.onerror = function(msg, src, line, col, err) {
+  dbg('ERROR: ' + msg + ' (' + (src||'').split('/').pop() + ':' + line + ')');
+};
+window.onunhandledrejection = function(e) {
+  dbg('PROMISE ERROR: ' + (e.reason?.message || e.reason || 'unknown'));
+};
+
 // ── CRM ──────────────────────────────────────────────────────────────────────
-let crmData = { leads: [], converted: [] };
-let crmTab = 'leads';
-let crmLoaded = false;
 
 function statusClass(s) {
   if (!s) return '';
