@@ -774,17 +774,23 @@ async function saveToNotion(silent=false){
     formState:JSON.stringify(getFormState()),
   };
   try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),15000);
     let r;
     if(currentPageId){
-      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',...payload,pageId:currentPageId})});
+      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',...payload,pageId:currentPageId}),signal:controller.signal});
     } else {
-      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...payload})});
-      if(r.ok){const d=await r.json();currentPageId=d.pageId;}
+      r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...payload}),signal:controller.signal});
     }
-    if(!r.ok) throw new Error();
+    clearTimeout(timeout);
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||'HTTP '+r.status);
+    if(!currentPageId&&data.pageId) currentPageId=data.pageId;
     if(!silent){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
-  } catch{
-    if(!silent){btn.textContent='Error';btn.className='save-btn error';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
+  } catch(err){
+    const msg=err.name==='AbortError'?'Timeout':(err.message||'Error');
+    console.error('[save]',msg);
+    if(!silent){btn.textContent='✗ '+msg;btn.className='save-btn error';btn.title=msg;setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';btn.title='';},6000);}
   }
 }
 
