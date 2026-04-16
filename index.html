@@ -174,7 +174,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .radio-grp{flex-direction:column;gap:6px;}
 }
 
-.debug-panel{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;max-height:160px;overflow-y:auto;z-index:9999;display:none;border-top:2px solid #0f0;}
+.debug-panel{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;max-height:160px;overflow-y:auto;z-index:9999;display:block;border-top:2px solid #0f0;}
 .debug-panel.open{display:block;}
 .debug-close{position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:14px;cursor:pointer;}
 </style>
@@ -772,7 +772,6 @@ async function deleteDraft(i){
 function dbg(msg){
   const p=$('debug-panel'),l=$('debug-log');
   if(!p||!l)return;
-  p.classList.add('open');
   const t=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   l.innerHTML+=`<div>[${t}] ${msg}</div>`;
   p.scrollTop=p.scrollHeight;
@@ -837,25 +836,20 @@ function handleInstall(){
 }
 function closeIosModal(e){if(e.target===document.getElementById('ios-modal'))document.getElementById('ios-modal').classList.remove('open');}
 
-// Service worker — always skip waiting so new deploys load immediately
+// Service worker
 let pendingSW = null;
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js').then(reg=>{
-    // Check for update immediately on load
-    reg.update();
     reg.addEventListener('updatefound',()=>{
       const sw=reg.installing;
       sw.addEventListener('statechange',()=>{
-        if(sw.state==='installed'){
-          // Immediately activate new SW without waiting
-          sw.postMessage({type:'SKIP_WAITING'});
+        if(sw.state==='installed' && navigator.serviceWorker.controller){
+          // New version ready — show update button
+          pendingSW = sw;
+          $('update-btn').style.display='block';
         }
       });
     });
-  });
-  // Reload page when new SW takes control
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    window.location.reload();
   });
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible')
@@ -863,7 +857,12 @@ if('serviceWorker' in navigator){
   });
 }
 function applyUpdate(){
-  window.location.reload();
+  if(pendingSW){
+    pendingSW.postMessage({type:'SKIP_WAITING'});
+    navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
+  } else {
+    window.location.reload();
+  }
 }
 
 // Init
