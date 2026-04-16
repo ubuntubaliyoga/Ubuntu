@@ -1,16 +1,21 @@
+// api/crm.js
 const LEAD_DB = '8e5622d3e57482ba950081ac7695672e';
 const CONV_DB = '325622d3e57481bbbaaedeb47e377f2c';
 
 export default async function handler(req, res) {
-  // Set headers so the browser always sees JSON
+  // Ensure we always return JSON to avoid the "Unexpected Token A" error
   res.setHeader('Content-Type', 'application/json');
 
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const { action } = req.body;
 
   try {
+    // Check for the secret token
     if (!process.env.NOTION_TOKEN) {
-      throw new Error("NOTION_TOKEN is missing in Vercel environment variables.");
+      return res.status(500).json({ error: "Missing NOTION_TOKEN in Vercel settings." });
     }
 
     const headers = {
@@ -20,30 +25,38 @@ export default async function handler(req, res) {
     };
 
     if (action === 'load') {
-      const fetchDB = async (dbId) => {
-        const r = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-          method: 'POST', headers, body: JSON.stringify({ page_size: 100 })
-        });
-        if (!r.ok) throw new Error(`Notion DB ${dbId} failed: ${r.status}`);
-        return await r.json();
-      };
+      // Fetch both databases
+      const [leadsRes, convRes] = await Promise.all([
+        fetch(`https://api.notion.com/v1/databases/${LEAD_DB}/query`, { 
+          method: 'POST', headers, body: JSON.stringify({ page_size: 100 }) 
+        }),
+        fetch(`https://api.notion.com/v1/databases/${CONV_DB}/query`, { 
+          method: 'POST', headers, body: JSON.stringify({ page_size: 100 }) 
+        })
+      ]);
 
-      const [leadsData, convData] = await Promise.all([fetchDB(LEAD_DB), fetchDB(CONV_DB)]);
-      
-      // Minimal mapper for brevity
-      const leads = leadsData.results.map(p => ({
-        id: p.id,
-        name: p.properties.Name?.title[0]?.plain_text || 'Unnamed',
-        status: p.properties.Instagram?.select?.name || 'New'
+      if (!leadsRes.ok || !convRes.ok) {
+        throw new Error(`Notion API returned error: ${leadsRes.status}`);
+      }
+
+      const leadsData = await leadsRes.json();
+      const convData = await convRes.json();
+
+      // Safe mapping logic
+      const leads = (leadsData.results || []).map(page => ({
+        id: page.id,
+        name: page.properties.Name?.title?.[0]?.plain_text || 'Unnamed Lead',
+        company: page.properties.Company?.rich_text?.[0]?.plain_text || '',
+        status: page.properties.Instagram?.select?.name || 'New'
       }));
 
-      return res.status(200).json({ leads, converted: convData.results.length });
+      return res.status(200).json({ leads, convertedCount: convData.results?.length || 0 });
     }
 
-    return res.status(400).json({ error: 'Unknown action' });
+    return res.status(400).json({ error: `Action ${action} not supported` });
+
   } catch (err) {
-    console.error(err);
-    // Explicitly returning JSON so the frontend doesn't see "Unexpected Token A"
+    console.error('[API ERROR]', err.message);
     return res.status(500).json({ error: err.message });
   }
 }
