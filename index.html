@@ -174,9 +174,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* ── FORM ── */
 .s-section{
-  font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--gold);margin:24px 0 12px;
-  padding-top:20px;border-top:1px solid var(--border);
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:600;letter-spacing:.01em;
+  color:var(--dark);margin:32px 0 16px;
+  padding-top:24px;border-top:2px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.s-section::before{
+  content:'';display:block;width:4px;height:20px;
+  background:var(--gold);border-radius:2px;flex-shrink:0;
 }
 .s-section:first-child{margin-top:0;padding-top:0;border-top:none;}
 .fg{margin-bottom:14px;}
@@ -473,6 +479,11 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .idr-dot.error{background:#E74C3C;}
 .idr-info{font-size:10px;color:var(--muted);font-style:italic;}
 
+
+/* ── MORE DETAILS TOGGLE ── */
+.more-details{animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 /* ── RESPONSIVE ── */
 @media(max-width:600px){
@@ -486,6 +497,20 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .action-row{flex-direction:column;}
   .view{padding:20px 14px 60px;}
 }
+
+/* ── EXTRA SERVICE TAGS ── */
+.extra-tag{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 14px;
+}
+.extra-tag-label{flex:1;font-size:13px;font-weight:500;color:var(--text);}
+.extra-tag-qty{display:flex;align-items:center;gap:6px;}
+.extra-tag-qty input{width:56px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;text-align:center;background:var(--bg);outline:none;}
+.extra-tag-price{font-size:12px;font-weight:600;color:var(--gold);min-width:64px;text-align:right;}
+.extra-tag-del{width:28px;height:28px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0;}
+.extra-tag-del:hover{background:#FDECEA;border-color:#E57373;color:#B71C1C;}
+
 </style>
 </head>
 <body>
@@ -592,34 +617,38 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <div class="view-hero-sub">Fill in retreat details to generate offer &amp; contract</div>
     </div>
     <div oninput="markDraftActive()" onchange="markDraftActive()">
-      <div class="s-section">Contact</div>
+
+      <!-- ── CLIENT ── -->
+      <div class="s-section">Client</div>
       <div class="fg-row">
         <div class="fg"><label>Organizer Name</label><input type="text" id="f-name"></div>
         <div class="fg"><label>Company</label><input type="text" id="f-company"></div>
       </div>
-      <div class="fg"><label>Address</label><input type="text" id="f-address"></div>
-      <div class="fg-row">
-        <div class="fg"><label>Phone</label><input type="text" id="f-phone"></div>
-        <div class="fg"><label>Website</label><input type="text" id="f-website"></div>
+      <!-- More details toggle -->
+      <div style="margin-bottom:16px;">
+        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:5px 14px;">
+          + More details
+        </button>
+        <div class="more-details" style="display:none;margin-top:12px;">
+          <div class="fg"><label>Address</label><input type="text" id="f-address"></div>
+          <div class="fg-row">
+            <div class="fg"><label>Phone</label><input type="text" id="f-phone"></div>
+            <div class="fg"><label>Website</label><input type="text" id="f-website"></div>
+          </div>
+          <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title"></div>
+        </div>
       </div>
-      <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title"></div>
-
-      <div class="s-section">Intro Text</div>
-      <div class="fg"><label>Opening paragraph</label>
-        <textarea id="f-intro" rows="4">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
+      <div class="fg">
+        <label style="color:var(--muted);font-size:10px;">Intro paragraph <span style="font-weight:400;text-transform:none;letter-spacing:0;">(appears in offer email)</span></label>
+        <textarea id="f-intro" rows="3">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
       </div>
 
-      <div class="s-section">Booking Dates</div>
+      <!-- ── BOOKING ── -->
+      <div class="s-section">Booking</div>
       <div class="fg-row">
         <div class="fg"><label>Check-in</label><input type="date" id="f-checkin"></div>
         <div class="fg"><label>Check-out</label><input type="date" id="f-checkout"></div>
       </div>
-      <div class="fg-row">
-        <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate"></div>
-        <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil"><div class="hint">Default: 7 days after offer date</div></div>
-      </div>
-
-      <div class="s-section">Retreat Details</div>
       <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname"></div>
       <div class="fg-row">
         <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50"></div>
@@ -628,14 +657,41 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <div class="fg-row">
         <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30"></div>
       </div>
-      <div class="fg"><label>Booking Type</label>
-        <select id="f-bookingtype">
-          <option value="STANDARD">Standard (&gt;120 days)</option>
-          <option value="SHORT-NOTICE">Short-Notice (&lt;120 days)</option>
-        </select>
+      <!-- Booking advanced -->
+      <div style="margin-bottom:16px;">
+        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:5px 14px;">
+          + Dates &amp; contract details
+        </button>
+        <div class="more-details" style="display:none;margin-top:12px;">
+          <div class="fg-row">
+            <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate"></div>
+            <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil"><div class="hint">Default: 7 days after offer date</div></div>
+          </div>
+          <div class="fg-row">
+            <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid"></div>
+            <div class="fg"><label>Booking Type</label>
+              <select id="f-bookingtype">
+                <option value="STANDARD">Standard (&gt;120 days)</option>
+                <option value="SHORT-NOTICE">Short-Notice (&lt;120 days)</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label>IDR Exchange Rate</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:13px;color:var(--muted);white-space:nowrap;">1 USD =</span>
+              <input type="number" id="f-idrrate" value="17085" style="max-width:140px;">
+              <span style="font-size:13px;color:var(--muted);">IDR</span>
+            </div>
+            <div class="idr-status-row">
+              <div class="idr-dot" id="idr-dot"></div>
+              <span class="idr-info" id="idr-info">Fetching live rate…</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="s-section">Accommodation</div>
+      <!-- ── PRICING ── -->
+      <div class="s-section">Pricing</div>
       <div class="accom-block">
         <div class="accom-block-title">Gladaks</div>
         <div class="fg-row" style="margin-bottom:8px;">
@@ -674,9 +730,15 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
           <option value="13">13</option><option value="14">14</option><option value="15" selected>15</option>
         </select>
       </div>
-      <div class="fg"><label>Early Bird Discount %</label>
-        <input type="number" id="f-discount" value="5" min="0" max="20">
-        <div class="hint">Max 20%</div>
+      <div class="fg-row">
+        <div class="fg"><label>Early Bird Discount %</label>
+          <input type="number" id="f-discount" value="5" min="0" max="20">
+          <div class="hint">Max 20%</div>
+        </div>
+        <div class="fg"><label>Deposit %</label>
+          <input type="number" id="f-deposit" value="0" min="0" max="100">
+          <div class="hint">Drives payment schedule</div>
+        </div>
       </div>
       <div class="fg"><label>Show Price Totals</label>
         <div class="radio-grp">
@@ -686,28 +748,50 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         </div>
       </div>
 
-      <div class="s-section">Offer Note</div>
-      <div class="fg"><label>Package note</label>
-        <textarea id="f-note" rows="4">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.</textarea>
+      <!-- ── EXTRAS & NOTE ── -->
+      <div class="s-section">Extras &amp; Note</div>
+      <div style="margin-bottom:16px;">
+        <select id="extras-picker" onchange="addExtraService(this.value);this.value=''"
+          style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);background:var(--surface);outline:none;cursor:pointer;">
+          <option value="">＋ Add a service…</option>
+          <optgroup label="Airport">
+            <option value="airport|✈ Airport Transfer|20|per transfer">✈ Airport Transfer — USD 20</option>
+          </optgroup>
+          <optgroup label="Meals">
+            <option value="meals_vegan|🌿 Vegan Meal|9|per meal">🌿 Vegan Meal — USD 9</option>
+            <option value="meals_veg|🥗 Vegetarian Meal|9|per meal">🥗 Vegetarian Meal — USD 9</option>
+            <option value="meals_ayur|🍵 Ayurvedic Meal|9|per meal">🍵 Ayurvedic Meal — USD 9</option>
+          </optgroup>
+          <optgroup label="Wellness">
+            <option value="wellness_sig60|💆 Signature Massage 60min|22|per session">💆 Signature Massage 60min — USD 22</option>
+            <option value="wellness_sig90|💆 Signature Massage 90min|30|per session">💆 Signature Massage 90min — USD 30</option>
+            <option value="wellness_sig120|💆 Signature Massage 120min|35|per session">💆 Signature Massage 120min — USD 35</option>
+            <option value="wellness_bal60|🌺 Balinese Massage 60min|22|per session">🌺 Balinese Massage 60min — USD 22</option>
+            <option value="wellness_bal90|🌺 Balinese Massage 90min|30|per session">🌺 Balinese Massage 90min — USD 30</option>
+            <option value="wellness_shi60|👐 Shiatsu Dry Massage 60min|22|per session">👐 Shiatsu Dry Massage 60min — USD 22</option>
+            <option value="wellness_ref45|🦶 Foot Reflexology 45min|17|per session">🦶 Foot Reflexology 45min — USD 17</option>
+            <option value="wellness_ref60|🦶 Foot Reflexology 60min|20|per session">🦶 Foot Reflexology 60min — USD 20</option>
+            <option value="wellness_thai90|🧘 Thai Yoga Massage 90min|32|per session">🧘 Thai Yoga Massage 90min — USD 32</option>
+            <option value="wellness_thai120|🧘 Thai Yoga Massage 120min|41|per session">🧘 Thai Yoga Massage 120min — USD 41</option>
+            <option value="wellness_hot60|🔥 Hot Stone Massage 60min|23|per session">🔥 Hot Stone Massage 60min — USD 23</option>
+            <option value="wellness_dam|✨ Bodywork with Damien 75min|59|per session">✨ Bodywork with Damien 75min — USD 59</option>
+          </optgroup>
+          <optgroup label="Ceremonies">
+            <option value="ritual|🕯 Ritual|29|per person">🕯 Ritual — USD 29</option>
+            <option value="mandala|🪷 Mandala|20|flat fee">🪷 Mandala — USD 20</option>
+          </optgroup>
+          <optgroup label="Custom">
+            <option value="custom|🛎 Custom Service|0|per unit">🛎 Custom Service…</option>
+          </optgroup>
+        </select>
       </div>
-      <div class="hint" style="margin-top:-10px;margin-bottom:14px;">Use {guests} to auto-insert guest count.</div>
-      <div class="fg"><label>Offer Valid Until</label><input type="date" id="f-offervalid"></div>
-      <div class="fg"><label>Deposit % (0 = none)</label>
-        <input type="number" id="f-deposit" value="0" min="0" max="100">
-        <div class="hint">Drives contract payment schedule</div>
-      </div>
+      <div id="extras-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="extras-total" style="display:none;text-align:right;font-size:12px;font-weight:600;color:var(--gold);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);"></div>
 
-      <div class="s-section">Contract</div>
-      <div class="fg"><label>IDR Exchange Rate</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:13px;color:var(--muted);white-space:nowrap;">1 USD =</span>
-          <input type="number" id="f-idrrate" value="17085" style="max-width:140px;">
-          <span style="font-size:13px;color:var(--muted);">IDR</span>
-        </div>
-        <div class="idr-status-row">
-          <div class="idr-dot" id="idr-dot"></div>
-          <span class="idr-info" id="idr-info">Fetching live rate…</span>
-        </div>
+      <div class="fg" style="margin-top:16px;">
+        <label style="color:var(--muted);font-size:10px;">Package note <span style="font-weight:400;text-transform:none;letter-spacing:0;">(appears in offer)</span></label>
+        <textarea id="f-note" rows="3">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.</textarea>
+        <div class="hint">Use {guests} to auto-insert guest count.</div>
       </div>
 
       <div class="action-row">
