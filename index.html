@@ -515,7 +515,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 </head>
 <body>
 
-<div id="debug-panel" style="display:none;"><div id="debug-log"></div></div>
+<div id="debug-panel" style="display:none;position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:10px 12px 10px 12px;max-height:180px;overflow-y:auto;z-index:9999;border-bottom:2px solid #0f0;"><button onclick="document.getElementById('debug-panel').style.display='none'" style="position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:18px;cursor:pointer;line-height:1;">✕</button><div id="debug-log"></div></div>
 
 <!-- IOS INSTALL MODAL -->
 <div class="ios-modal" id="ios-modal" onclick="if(event.target===this)this.classList.remove('open')">
@@ -843,7 +843,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <!-- Actions -->
   <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
     <button class="pill-btn dark" onclick="openNewLeadModal()">+ New Lead</button>
-    <button class="pill-btn" onclick="loadCRM(true)">↻ Refresh</button>
+    <button class="pill-btn" id="crm-refresh-btn" onclick="loadCRM(true)">↻ Refresh</button>
     <button class="pill-btn" onclick="showDuplicates()">⊕ Dupes</button>
   </div>
   <!-- Filters -->
@@ -896,6 +896,11 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <div style="width:40px;height:1px;background:var(--gold);opacity:.4;margin:0 auto 28px;"></div>
       <h1 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:#F5ECD7;line-height:1.35;">The Strength of the Circle</h1>
       <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);font-style:italic;margin-top:10px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
+    </div>
+    <div style="margin-bottom:28px;border-radius:var(--radius);overflow:hidden;">
+      <img src="https://balirescentre.com/wp-content/uploads/2025/12/UbuntuBali.Yoga_.Benjamin.2024_8128.jpg"
+        alt="Ubuntu Bali Yoga"
+        style="width:100%;height:auto;display:block;border-radius:var(--radius);">
     </div>
     <p style="font-size:15px;color:#D4C4A8;line-height:1.9;margin-bottom:20px;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
     <div style="border-left:3px solid var(--gold);padding:18px 24px;margin:36px 0;background:rgba(184,147,90,.07);border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
