@@ -470,7 +470,7 @@ function switchTab(t){
   if(t==='offer') renderOffer();
   if(t==='contract') renderContract();
   if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;}
-  if(t==='crm') loadCRM();
+  if(t==='crm'){loadCRM();crmSwitchTab(crmTab);}
   const nd=document.getElementById('nav-dropdown');if(nd)nd.style.display='none';
 }
 
@@ -911,8 +911,7 @@ $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
 // Start on drafts view
 switchTab('drafts');
-// Init CRM tab visual state
-setTimeout(()=>crmSwitchTab('leads'),0);
+// CRM tab visual state set on first open
 
 function startAutosave(){
   if(autosaveOn) return;
@@ -1099,11 +1098,11 @@ function crmSwitchTab(tab) {
 }
 
 function crmSort(items) {
-  const s = document.getElementById('crm-sort')?.value || 'date';
+  const g = document.getElementById('crm-group')?.value || 'none';
   return [...items].sort((a, b) => {
-    if (s === 'name')     return (a.name||'').localeCompare(b.name||'');
-    if (s === 'location') return (a.location||'').localeCompare(b.location||'');
-    return new Date(b.lastEdited||0) - new Date(a.lastEdited||0);
+    if (g === 'none_name')     return (a.name||'').localeCompare(b.name||'');
+    if (g === 'none_location') return (a.location||'').localeCompare(b.location||'');
+    return new Date(b.lastEdited||0) - new Date(a.lastEdited||0); // default date desc
   });
 }
 
@@ -1146,8 +1145,10 @@ function buildGrid(items) {
 
 function crmRender() {
   const list = document.getElementById('crm-list');
+  if (!list) return; // view not in DOM yet
   const q = (document.getElementById('crm-search')?.value || '').toLowerCase();
-  const groupBy = document.getElementById('crm-group')?.value || 'none';
+  const groupRaw = document.getElementById('crm-group')?.value || 'none';
+  const groupBy = groupRaw.startsWith('none') ? 'none' : groupRaw;
   const sourceFilter = document.getElementById('crm-source-filter')?.value || '';
 
   let items = (crmData[crmTab] || []).filter(c => {
@@ -1481,26 +1482,23 @@ async function saveNewLead() {
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#B8935A;font-size:14px;pointer-events:none;">🔍</span>
         <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="width:100%;padding:7px 10px 7px 32px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;box-sizing:border-box;">
       </div>
-      <select id="crm-source-filter" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+      <select id="crm-source-filter" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;" title="Filter by source">
         <option value="">All Sources</option>
-        <option value="Instagram">Instagram</option>
-        <option value="WhatsApp">WhatsApp</option>
-        <option value="Shala Rental">Shala Rental</option>
-        <option value="Email">Email</option>
-        <option value="In Person">In Person</option>
+        <option value="Instagram">📱 Instagram</option>
+        <option value="WhatsApp">💬 WhatsApp</option>
+        <option value="Shala Rental">🏛 Shala Rental</option>
+        <option value="Email">📧 Email</option>
+        <option value="In Person">🤝 In Person</option>
         <option value="Other">Other</option>
       </select>
-      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
-        <option value="none">No grouping</option>
-        <option value="location">By Location</option>
-        <option value="status">By Status</option>
-        <option value="source">By Source</option>
-        <option value="date">By Month</option>
-      </select>
-      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
-        <option value="date">↓ Date</option>
-        <option value="name">A–Z Name</option>
-        <option value="location">A–Z Location</option>
+      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;" title="Group by">
+        <option value="none">↕ Sort: Date</option>
+        <option value="none_name">↕ Sort: Name</option>
+        <option value="none_location">↕ Sort: Location</option>
+        <option value="location">⊞ Group: Location</option>
+        <option value="status">⊞ Group: Status</option>
+        <option value="source">⊞ Group: Source</option>
+        <option value="date">⊞ Group: Month</option>
       </select>
     </div>
     <div id="crm-list"></div>
