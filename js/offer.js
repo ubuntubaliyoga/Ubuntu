@@ -31,6 +31,8 @@ function getFormState(){
   ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
   s['f-parvati-on']=$('f-parvati-on').checked;
   s['f-buddha-on']=$('f-buddha-on').checked;
+  s['extra-services']=getExtraServicesState();
+
   s['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
   return s;
 }
@@ -40,6 +42,7 @@ function setFormState(s){
   const r=document.querySelector(`input[name="price-display"][value="${s['price-display']||'both'}"]`);
   if(r)r.checked=true;
   ['parvati','buddha'].forEach(n=>$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked));
+  if(s['extra-services'])setExtraServicesState(s['extra-services']);
 }
 
 function buildOfferHTML(){
@@ -92,6 +95,7 @@ function buildOfferHTML(){
     <div class="e-pkg-body"><table class="ptable">
       <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate</td><td class="col-sub">Subtotal</td></tr>
       ${baleRow}${parvRow}${buddRow}${pkgRow}
+      ${extraServicesHTML()}
       <tr class="pt-subtotal"><td class="col-item">Standard Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
       ${ebRow}${rdRow}${dailyBlock}${divBlock}${totalBlock}
     </table></div>
@@ -230,3 +234,103 @@ function buildContractHTML(){
 function renderOffer(){$('offer-output').innerHTML=buildOfferHTML();}
 function renderContract(){$('contract-output').innerHTML=buildContractHTML();}
 function render(){}
+
+// ── EXTRA SERVICES ────────────────────────────────────────────────────────────
+// Each extra: { id, label, unitUsd, unit, qty, customLabel }
+let extraServices = [];
+
+function getIdrRate() {
+  return parseFloat(document.getElementById('f-idrrate')?.value) || 17085;
+}
+
+function addExtraService(val) {
+  if (!val) return;
+  const parts = val.split('|');
+  const id = parts[0], label = parts[1];
+  let unitUsd = parseFloat(parts[2]) || 0;
+  const unit = parts[3] || 'per unit';
+
+  let finalLabel = label;
+  if (id === 'custom') {
+    finalLabel = prompt('Service name:') || 'Custom Service';
+    const customUsd = parseFloat(prompt('Price in USD:') || '0');
+    unitUsd = customUsd;
+  }
+
+  const item = { id: Date.now(), serviceId: id, label: finalLabel, unitUsd, unit, qty: 1 };
+  extraServices.push(item);
+  renderExtraServices();
+  markDraftActive();
+}
+
+function removeExtraService(id) {
+  extraServices = extraServices.filter(s => s.id !== id);
+  renderExtraServices();
+  markDraftActive();
+}
+
+function updateExtraQty(id, qty) {
+  const s = extraServices.find(s => s.id === id);
+  if (s) { s.qty = Math.max(1, parseInt(qty) || 1); renderExtraServices(); markDraftActive(); }
+}
+
+function updateExtraPrice(id, usd) {
+  const s = extraServices.find(s => s.id === id);
+  if (s) { s.unitUsd = parseFloat(usd) || 0; renderExtraServices(); markDraftActive(); }
+}
+
+function renderExtraServices() {
+  const list = document.getElementById('extras-list');
+  const totalEl = document.getElementById('extras-total');
+  if (!list) return;
+
+  if (!extraServices.length) {
+    list.innerHTML = '';
+    if (totalEl) totalEl.style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = extraServices.map(s => `
+    <div class="extra-tag">
+      <div class="extra-tag-label">${s.label}</div>
+      <div class="extra-tag-qty">
+        <span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>
+        ${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}
+        <input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:70px;" onchange="updateExtraPrice(${s.id}, this.value)" onclick="this.select()" title="USD per unit">
+      </div>
+      <div class="extra-tag-price">USD ${fmtN(s.unitUsd * s.qty, 0)}</div>
+      <button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button>
+    </div>
+  `).join('');
+
+  const total = extraServices.reduce((sum, s) => sum + s.unitUsd * s.qty, 0);
+  if (totalEl) {
+    totalEl.style.display = 'block';
+    totalEl.textContent = `Extra Services Total: USD ${fmtN(total, 0)}`;
+  }
+}
+
+function extraServicesTotal() {
+  return extraServices.reduce((sum, s) => sum + s.unitUsd * s.qty, 0);
+}
+
+function extraServicesHTML() {
+  if (!extraServices.length) return '';
+  const rows = extraServices.map(s => {
+    const total = s.unitUsd * s.qty;
+    const qtyStr = s.unit === 'flat fee' ? '' : ` × ${s.qty}`;
+    return `<tr class="pt-item"><td class="col-item">${s.label}</td><td class="col-rate" style="color:#555;">USD ${fmtN(s.unitUsd,0)}${qtyStr}</td><td class="col-sub">USD ${fmtN(total,0)}</td></tr>`;
+  }).join('');
+  return `<tr class="pt-colhead"><td colspan="3" style="padding-top:8px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;">Extra Services</td></tr>${rows}`;
+}
+
+function getExtraServicesState() {
+  return JSON.stringify(extraServices);
+}
+
+function setExtraServicesState(json) {
+  try {
+    extraServices = JSON.parse(json) || [];
+  } catch { extraServices = []; }
+  renderExtraServices();
+}
