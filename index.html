@@ -1,169 +1,1633 @@
-// api/crm.js
-// Handles read/update for Lead Pipeline and Converted Leads databases
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Ubuntu Bali · Offer & Contract Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Ubuntu%20Bali%20Hub%22,%22short_name%22:%22Ubuntu%20Bali%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23F0E9DF%22,%22theme_color%22:%22%23221208%22,%22icons%22:[{%22src%22:%22https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w%22,%22sizes%22:%22any%22,%22type%22:%22image/png%22}]}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ubuntu Bali">
+<meta name="theme-color" content="#221208">
+<link rel="apple-touch-icon" href="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Lora',serif;background:#F0E9DF;color:#1A1208;min-height:100vh;}
 
-const LEAD_DB    = 'a0b622d3e574829593bf0106312fbd3b';
-const CONV_DB    = '325622d3e57481bbbaaedeb47e377f2c';
+.nav-logo img{height:30px;filter:brightness(0) invert(1);display:block;flex-shrink:0;}
+.nav-tabs{display:flex;gap:3px;flex-shrink:0;}
 
-const headers = {
-  'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
-  'Notion-Version': '2022-06-28',
-  'Content-Type': 'application/json',
+
+.nav-actions{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;flex-shrink:0;padding:4px 0;}
+.nav-actions-row{display:flex;gap:5px;align-items:center;}
+.nav-select{padding:5px 7px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.06em;text-transform:uppercase;outline:none;max-width:80px;}
+.save-btn{padding:6px 11px;border:1px solid #B8935A;border-radius:3px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.save-btn:hover{background:#B8935A;color:#221208;}
+.save-btn.saved{background:#3D6636;color:#fff;border-color:#3D6636;}
+.save-btn.error{background:#8B3A2E;color:#fff;border-color:#8B3A2E;}
+.autosave-btn{display:none;}
+.autosave-btn.off{background:#5C1A1A;color:#F5A0A0;}
+.autosave-btn.on{background:#1A4D1A;color:#A0F0A0;}
+.autosave-status{font-family:'Lora',serif;font-size:8px;color:#27AE60;font-style:italic;white-space:nowrap;display:none;}
+.update-btn{padding:6px 12px;border-radius:3px;background:#B8935A;color:#221208;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;display:none;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+.view{display:none;padding:24px 20px;}
+.view.active{display:block;}
+.form-wrap{max-width:680px;margin:0 auto;}
+.s-section{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#B8935A;margin:22px 0 10px;padding-top:14px;border-top:1px solid #EDE3D4;}
+.s-section:first-child{margin-top:0;padding-top:0;border-top:none;}
+.fg{margin-bottom:13px;}
+.fg label{display:block;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;font-weight:600;margin-bottom:4px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;color:#2C2416;background:#FDFAF5;outline:none;transition:border-color .15s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#8B7355;background:#fff;}
+.fg textarea{resize:vertical;line-height:1.6;}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hint{font-size:9px;color:#A08060;font-style:italic;margin-top:3px;}
+.villa-box{border:1px solid #EDE3D4;border-radius:4px;padding:10px 12px;margin-bottom:10px;background:transparent;}
+.villa-box-hd{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.villa-box-hd input{width:auto;}
+.villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.villa-fields.disabled{opacity:.4;pointer-events:none;}
+.radio-grp{display:flex;gap:16px;margin-top:4px;flex-wrap:wrap;}
+.radio-grp label{font-size:12px;text-transform:none;letter-spacing:0;color:#333;display:flex;align-items:center;gap:5px;cursor:pointer;font-family:'Lora',serif;}
+.radio-grp input{width:auto;}
+.action-row{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap;}
+.action-btn{flex:1;min-width:140px;padding:11px;border:none;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .18s;}
+.action-btn.dark{background:#3a3228;color:#fff;}
+.action-btn.dark:hover{background:#5a4e42;}
+.action-btn.gold{background:linear-gradient(135deg,#221208,#4A2E1A);color:#F5ECD7;}
+.action-btn.gold:hover{background:linear-gradient(135deg,#4A2E1A,#7A4E2E);}
+.offer-wrap{max-width:620px;margin:0 auto;}
+.email-wrap{background:#e8e3dc;padding:16px 10px;border-radius:4px;overflow-x:auto;}
+.email{background:#fff;width:560px;margin:0 auto;font-family:Verdana,Geneva,sans-serif;font-size:10px;color:#2a2520;}
+.e-header{background:#3a3228;text-align:center;padding:22px 32px 18px;}
+.e-logo{max-width:56px;margin:0 auto 11px;display:block;filter:brightness(0) invert(1);}
+.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:4px;}
+.e-header-line{width:34px;height:1px;background:#c8b89a;margin:6px auto;opacity:.6;}
+.e-header-date{font-size:9px;color:#c8b89a;}
+.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}
+.e-body{padding:16px 32px 0;line-height:1.9;color:#2a2520;}
+.e-body p{margin-bottom:9px;}
+.e-badge{margin:11px 32px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:7px 12px;text-align:center;font-size:10px;color:#3a3228;}
+.e-package{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}
+.e-pkg-hd{background:#3a3228;padding:10px 14px;}
+.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}
+.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}
+.e-pkg-body{padding:0 14px;}
+table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
+.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}
+.pt-item td{padding:5px 0;border-top:1px solid #eee;}
+.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}
+.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}
+.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}
+.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}
+.pt-divider td{padding:0 0 5px;}
+.pt-divline{height:1px;background:#eee;font-size:1px;}
+.pt-grand td{padding:2px 0;font-weight:bold;}
+.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}
+.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}
+.e-note{margin:9px 32px 0;border-left:3px solid #c8b89a;padding:5px 10px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}
+.e-note p{margin-bottom:5px;}.e-note p:last-child{margin-bottom:0;}
+.e-included{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;padding:10px 14px 6px;}
+.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}
+.e-included table{width:100%;border-collapse:collapse;font-size:10px;}
+.e-included td{padding:2px 0;vertical-align:top;width:50%;}
+.e-also{margin:13px 32px 0;}
+.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}
+.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}
+.e-closing{padding:18px 32px 0;line-height:1.9;font-size:10px;}
+.e-closing p{margin-bottom:5px;}
+.e-footer-band{background:#3a3228;margin-top:24px;padding:14px 32px 18px;text-align:center;}
+.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:5px;letter-spacing:1px;}
+.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}
+.contract-wrap{max-width:760px;margin:0 auto;}
+.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:40px 36px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;box-shadow:0 4px 20px rgba(34,18,8,.08);}
+.c-hd{text-align:center;margin-bottom:26px;border-bottom:2px solid #221208;padding-bottom:20px;}
+.c-hd-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}
+.c-hd-sub{font-family:'Lora',serif;font-size:11px;color:#8B7355;font-style:italic;}
+.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:22px;}
+.c-party{padding:13px 16px;background:#FDFAF5;}
+.c-party:first-child{border-right:1px solid #B8935A;}
+.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;}
+.c-party p{font-size:11.5px;margin-bottom:3px;}
+.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:9px 0;margin-bottom:22px;color:#221208;}
+.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:9px 14px;margin-bottom:22px;font-size:11.5px;color:#3D2B1F;line-height:1.65;}
+.c-sec{margin-bottom:20px;}
+.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:4px;margin-bottom:11px;}
+.c-sec p{margin-bottom:7px;font-size:12px;}
+.c-sec ul{margin:0 0 9px 18px;font-size:12px;}
+.c-sec ul li{margin-bottom:3px;}
+.c-table{width:100%;border-collapse:collapse;font-size:11.5px;margin:9px 0;}
+.c-table thead tr{background:#221208;}
+.c-table thead th{padding:7px 11px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.08em;text-align:left;font-weight:700;}
+.c-table tbody tr:nth-child(odd){background:#FDFAF5;}
+.c-table tbody tr:nth-child(even){background:#F5ECD7;}
+.c-table tbody td{padding:6px 11px;border-bottom:1px solid #EDE3D4;font-size:11.5px;}
+.c-sigs{border-top:2px solid #221208;padding-top:22px;}
+.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:22px;}
+.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;}
+.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:10px;}
+.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:16px 0 5px;}
+.c-sig-note{font-size:10.5px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}
+.bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}
+.bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}
+.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}
+.view-label{font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#B8935A;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #EDE3D4;}
+.draft-card{background:#fff;border:1px solid #D4C4A8;border-radius:4px;padding:14px 16px;margin-bottom:12px;}
+.draft-name{font-family:'Libre Baskerville',serif;font-size:13px;font-weight:700;color:#221208;margin-bottom:3px;}
+.draft-meta{font-family:'Lora',serif;font-size:11px;color:#8B7355;}
+.draft-status{display:inline-block;padding:2px 9px;border-radius:10px;font-size:9px;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-left:8px;}
+.s-Draft{background:#E8E4E0;color:#666;}
+.s-Sent{background:#D6E8F5;color:#1A5F8A;}
+.s-Signed{background:#D6F0D6;color:#1A6A1A;}
+.s-Cancelled{background:#F5D6D6;color:#8A1A1A;}
+.draft-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;}
+.draft-btn{padding:7px 12px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:all .18s;}
+.draft-btn.load{background:#3a3228;color:#fff;}
+.draft-btn.load:hover{background:#5a4e42;}
+.draft-btn.ghost{background:transparent;border:1px solid #D4C4A8;color:#8B7355;}
+.draft-btn.ghost:hover{border-color:#8B3A2E;color:#8B3A2E;}
+.draft-edit-row{display:none;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.draft-edit-row.open{display:flex;}
+.draft-edit-input{flex:1;min-width:120px;padding:6px 9px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;color:#2C2416;background:#FDFAF5;outline:none;}
+.draft-edit-input:focus{border-color:#8B7355;}
+.draft-edit-btn{padding:6px 12px;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;}
+.draft-edit-btn.confirm{background:#3a3228;color:#fff;}
+.draft-edit-btn.cancel{background:transparent;border:1px solid #D4C4A8;color:#8B7355;}
+.ios-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-end;justify-content:center;}
+.ios-modal.open{display:flex;}
+.ios-modal-box{background:#fff;border-radius:12px 12px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;font-family:'Lora',serif;}
+.ios-modal-title{font-family:'Libre Baskerville',serif;font-size:13px;font-weight:700;color:#221208;margin-bottom:16px;text-align:center;}
+.ios-modal-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;font-size:13px;color:#2C2416;line-height:1.6;}
+.ios-modal-step .num{font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#B8935A;background:#F5ECD7;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ios-modal-close{width:100%;margin-top:20px;padding:12px;background:#221208;color:#F5ECD7;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;}
+@media(max-width:600px){
+  .nav-tab{padding:5px 8px;font-size:7.5px;}
+  .fg-row{grid-template-columns:1fr;}
+  .c-parties{grid-template-columns:1fr;}
+  .c-party:first-child{border-right:none;border-bottom:1px solid #B8935A;}
+  .c-sigs-grid{grid-template-columns:1fr;gap:26px;}
+  .contract-doc{padding:20px 14px;}
+  .action-row{flex-direction:column;}
+  .radio-grp{flex-direction:column;gap:6px;}
+}
+
+.debug-panel{position:fixed;top:80px;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:13px;padding:12px;min-height:80px;max-height:200px;overflow-y:auto;z-index:9999;display:none;border-bottom:2px solid #0f0;}
+.debug-panel.open{display:block;}
+.debug-close{position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:14px;cursor:pointer;}
+
+.accom-block{background:#FDFAF5;border:1px solid #EDE3D4;border-radius:4px;padding:12px;margin-bottom:13px;}
+.accom-block-title{font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8B7355;font-weight:600;margin-bottom:8px;}
+.accom-divider{height:1px;background:#EDE3D4;margin:10px 0;}
+
+
+.crm-card{background:#fff;border:1px solid #D4C4A8;border-radius:4px;padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.crm-card:hover{border-color:#B8935A;}
+.crm-card-name{font-family:'Libre Baskerville',serif;font-size:13px;font-weight:700;color:#221208;margin-bottom:3px;}
+.crm-card-meta{font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-bottom:6px;}
+.crm-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:8.5px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-right:4px;}
+.crm-status-ghosted,.crm-status-terminated,.crm-status-not-good{background:#E8E4E0;color:#666;}
+.crm-status-followed{background:#FFF3CD;color:#856404;}
+.crm-status-reached{background:#D6F0D6;color:#1A6A1A;}
+.crm-status-warm{background:#D6E8F5;color:#1A5F8A;}
+.crm-status-hot,.crm-status-qualified{background:#F5D6D6;color:#8A1A1A;}
+.crm-status-closed,.crm-status-booked{background:#221208;color:#F5ECD7;}
+.crm-status-responded{background:#D6F0D6;color:#1A6A1A;}
+.crm-status-face2face{background:#E8D6F5;color:#5A1A8A;}
+.crm-status-phone{background:#F5E6D6;color:#8A4A1A;}
+.crm-suit-1{background:#D6F0D6;color:#1A6A1A;}
+.crm-suit-2{background:#D6E8F5;color:#1A5F8A;}
+.crm-suit-3{background:#F5ECD7;color:#8B7355;}
+.crm-suit-4{background:#F5D6D6;color:#8A1A1A;}
+.crm-section-hd{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B8935A;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid #EDE3D4;}
+.crm-field{display:flex;gap:8px;margin-bottom:6px;font-size:12px;font-family:'Lora',serif;}
+.crm-field-label{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8B7355;min-width:80px;padding-top:2px;}
+.crm-select{width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;margin-bottom:8px;}
+.crm-textarea{width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:12px;background:#FDFAF5;outline:none;resize:vertical;min-height:70px;}
+
+
+
+
+/* ── Navigation ── */
+.nav{background:#221208;border-bottom:1px solid rgba(184,147,90,.2);position:sticky;top:0;z-index:200;}
+.nav-row-1{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:44px;}
+.nav-logo-img{height:26px;filter:brightness(0) invert(1);}
+.nav-actions{display:flex;gap:6px;align-items:center;}
+.nav-tabs-row{display:flex;border-top:1px solid rgba(184,147,90,.15);}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px 10px;background:transparent;border:none;border-bottom:2px solid transparent;color:#6B5A45;cursor:pointer;transition:all .15s;min-width:0;}
+.nav-tab-icon{font-size:16px;line-height:1;}
+.nav-tab-label{font-family:'Libre Baskerville',serif;font-size:7px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;white-space:nowrap;}
+.nav-tab:hover{color:#B8935A;}
+.nav-tab.active{color:#F5ECD7;border-bottom:2px solid #B8935A;}
+.nav-tabs-row{display:flex;align-items:flex-end;justify-content:center;gap:0;margin-top:6px;overflow-x:auto;}
+.nav-tab{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;padding:8px 18px 10px;background:transparent;border:none;border-bottom:2px solid transparent;color:#8B7355;font-family:'Libre Baskerville',serif;font-size:7px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;min-width:60px;}
+.nav-tab-icon{font-size:17px;line-height:1;margin-bottom:2px;transition:all .18s;}
+.nav-tab:hover{color:#B8935A;}
+.nav-tab:hover .nav-tab-icon{color:#B8935A;}
+.nav-tab.active{color:#F5ECD7;border-bottom:2px solid #B8935A;font-weight:700;}
+.nav-tab.active .nav-tab-icon{color:#F5ECD7;}
+
+</style>
+</head>
+<body>
+
+
+<div class="debug-panel" id="debug-panel" style="display:none;position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:10px 12px;max-height:180px;overflow-y:auto;z-index:9999;border-bottom:2px solid #0f0;">
+  <button onclick="document.getElementById('debug-panel').style.display='none'" style="position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:16px;cursor:pointer;line-height:1;">✕</button>
+  <div id="debug-log"><div>DEBUG READY</div></div>
+</div>
+<div class="nav" id="main-nav" style="position:relative;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:44px;">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" style="height:26px;filter:brightness(0) invert(1);">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="autosave-status" id="autosave-status" style="font-size:8px;color:#B8935A;font-style:italic;font-family:'Lora',serif;"></span>
+      <button onclick="toggleNavMenu()" style="background:none;border:none;color:#B8935A;font-size:24px;cursor:pointer;padding:0 4px;line-height:1;letter-spacing:2px;">···</button>
+    </div>
+  </div>
+  <div id="nav-dropdown" style="display:none;position:absolute;top:44px;right:0;background:#221208;border:1px solid rgba(184,147,90,.3);border-top:none;padding:12px 14px;min-width:180px;z-index:201;box-shadow:0 4px 12px rgba(0,0,0,.4);">
+
+    <button class="update-btn" id="update-btn" onclick="applyUpdate()" style="display:none;width:100%;padding:7px;border-radius:3px;background:#B8935A;color:#221208;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;margin-bottom:6px;">↑ Update Available</button>
+    <button class="install-btn" id="install-btn" onclick="handleInstall()" style="display:none;width:100%;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(184,147,90,.4);color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">⊕ Install App</button>
+    <div style="height:1px;background:rgba(184,147,90,.2);margin:10px 0;"></div>
+    <button onclick="switchTab('philosophy');toggleNavMenu()" style="width:100%;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(184,147,90,.3);color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">✦ Philosophy</button>
+    <button onclick="toggleDebug()" style="width:100%;margin-top:6px;padding:7px;border-radius:3px;background:transparent;border:1px solid rgba(0,255,0,.3);color:#0f0;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">🐛 Debug</button>
+  </div>
+  <div class="nav-tabs-row">
+    <button class="nav-tab" onclick="newDraft()"><span class="nav-tab-icon">＋</span><span class="nav-tab-label">New</span></button>
+    <button class="nav-tab" data-tab="drafts" onclick="switchTab('drafts')"><span class="nav-tab-icon">▤</span><span class="nav-tab-label">Drafts</span></button>
+    <button class="nav-tab" data-tab="edit" onclick="switchTab('edit')"><span class="nav-tab-icon">✏</span><span class="nav-tab-label">Edit</span></button>
+    <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')"><span class="nav-tab-icon">◈</span><span class="nav-tab-label">CRM</span></button>
+  </div>
+</div>
+
+<!-- EDIT -->
+<div class="view active" id="view-edit">
+<div class="form-wrap" oninput="markDraftActive()" onchange="markDraftActive()">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+    <select id="notion-status" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;background:#FDFAF5;color:#5C3D2E;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;outline:none;">
+      <option value="Draft">Draft</option><option value="Sent">Sent</option><option value="Signed">Signed</option><option value="Cancelled">Cancelled</option>
+    </select>
+    <button class="save-btn" id="save-btn" onclick="saveToNotion()" style="padding:8px 18px;">Save Draft</button>
+    <span id="autosave-status" style="font-family:'Lora',serif;font-size:9px;color:#B8935A;font-style:italic;"></span>
+  </div>
+  <div class="s-section">Contact</div>
+  <div class="fg-row">
+    <div class="fg"><label>Organizer Name</label><input type="text" id="f-name"></div>
+    <div class="fg"><label>Company</label><input type="text" id="f-company"></div>
+  </div>
+  <div class="fg"><label>Address</label><input type="text" id="f-address"></div>
+  <div class="fg-row">
+    <div class="fg"><label>Phone</label><input type="text" id="f-phone"></div>
+    <div class="fg"><label>Website</label><input type="text" id="f-website"></div>
+  </div>
+  <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title"></div>
+
+  <div class="s-section">Intro Text</div>
+  <div class="fg"><label>Opening paragraph</label>
+    <textarea id="f-intro" rows="4">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
+  </div>
+
+  <div class="s-section">Booking Dates</div>
+  <div class="fg-row">
+    <div class="fg"><label>Check-in</label><input type="date" id="f-checkin"></div>
+    <div class="fg"><label>Check-out</label><input type="date" id="f-checkout"></div>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate"></div>
+    <div class="fg"><label>Valid Until</label><input type="date" id="f-validuntil"><div class="hint">Default: 7 days after offer date</div></div>
+  </div>
+
+  <div class="s-section">Retreat Details</div>
+  <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname"></div>
+  <div class="fg-row">
+    <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50"></div>
+    <div class="fg"><label>Facilitators</label><input type="number" id="f-facilitators" value="1" min="0" max="10"></div>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30"></div>
+  </div>
+  <div class="fg"><label>Booking Type</label>
+    <select id="f-bookingtype">
+      <option value="STANDARD">Standard (&gt;120 days)</option>
+      <option value="SHORT-NOTICE">Short-Notice (&lt;120 days)</option>
+    </select>
+  </div>
+
+  <div class="s-section">Accommodation</div>
+  <div class="accom-block">
+    <div class="accom-block-title">Gladaks</div>
+    <div class="fg-row" style="margin-bottom:8px;">
+      <div class="fg" style="margin-bottom:0;"><label>Number (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15"></div>
+      <div class="fg" style="margin-bottom:0;"><label>Rate / night</label><input type="number" id="f-roomrate" value="60" min="0"></div>
+    </div>
+    <div class="fg-row" style="margin-bottom:0;">
+      <div class="fg" style="margin-bottom:0;"><label>Rooms with discount</label><select id="f-disc-room"><option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+      <div class="fg" style="margin-bottom:0;"><label>Discount %</label><input type="number" id="f-disc-pct" value="0" min="0" max="50"><div class="hint">Max 50%.</div></div>
+    </div>
+    <div class="accom-divider"></div>
+    <div class="accom-block-title">Villas</div>
+    <div class="villa-box" style="background:#fff;margin-bottom:8px;">
+      <div class="villa-box-hd"><input type="checkbox" id="f-parvati-on" onchange="toggleVilla('parvati')" checked> Parvati Villa</div>
+      <div class="villa-fields" id="parvati-fields">
+        <div class="fg" style="margin-bottom:0"><label>Rate / night</label><input type="number" id="f-parvati-orig" value="80" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-parvati-disc" placeholder="0" min="0" max="100"></div>
+      </div>
+    </div>
+    <div class="villa-box" style="background:#fff;margin-bottom:0;">
+      <div class="villa-box-hd"><input type="checkbox" id="f-buddha-on" onchange="toggleVilla('buddha')" checked> Buddha Villa</div>
+      <div class="villa-fields" id="buddha-fields">
+        <div class="fg" style="margin-bottom:0"><label>Rate / night</label><input type="number" id="f-buddha-orig" value="80" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-buddha-disc" placeholder="0" min="0" max="100"></div>
+      </div>
+    </div>
+  </div>
+  <div class="fg"><label>Retreat Packages (people)</label>
+    <select id="f-pkgcount">
+      <option value="0">None</option>
+      <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+      <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+      <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+      <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+      <option value="13">13</option><option value="14">14</option><option value="15" selected>15</option>
+    </select>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>Early Bird Discount %</label>
+      <input type="number" id="f-discount" value="5" min="0" max="20">
+      <div class="hint">Max 20%.</div>
+    </div>
+
+  </div>
+  <div class="fg"><label>Show Price Totals</label>
+    <div class="radio-grp">
+      <label><input type="radio" name="price-display" value="daily"> Daily only</label>
+      <label><input type="radio" name="price-display" value="total"> Total only</label>
+      <label><input type="radio" name="price-display" value="both" checked> Both</label>
+    </div>
+  </div>
+
+  <div class="s-section">Offer Note</div>
+  <div class="fg"><label>Package note</label>
+    <textarea id="f-note" rows="4">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest. You can also increase your own profitability by offering guests the option to share a Gladak or a Villa — keeping your accommodation costs fixed while freeing up margin on your retreat pricing.</textarea>
+  </div>
+  <div class="hint" style="margin-top:-9px;margin-bottom:13px;">Use {guests} to auto-insert guest count.</div>
+  <div class="fg-row">
+    <div class="fg"><label>Deposit % (0 = none)</label>
+      <input type="number" id="f-deposit" value="0" min="0" max="100">
+      <div class="hint">Drives contract payment schedule.</div>
+    </div>
+  </div>
+
+  <div class="s-section">Contract</div>
+  <div class="fg"><label>IDR Exchange Rate</label>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;white-space:nowrap;">1 USD =</span>
+      <input type="number" id="f-idrrate" value="17085" style="max-width:130px;">
+      <span style="font-size:12px;color:#5C3D2E;font-family:'Lora',serif;">IDR</span>
+    </div>
+    <div class="idr-status-row">
+      <div class="idr-dot" id="idr-dot"></div>
+      <span class="idr-info" id="idr-info">Fetching live rate…</span>
+    </div>
+  </div>
+
+  <div class="action-row">
+    <button class="action-btn dark" onclick="switchTab('offer')">Preview Offer →</button>
+    <button class="action-btn gold" onclick="switchTab('contract')">Preview Contract →</button>
+  </div>
+</div>
+</div>
+
+<!-- OFFER -->
+<div class="view" id="view-offer">
+  <div class="offer-wrap">
+    <div class="view-label">Offer Preview</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="action-btn dark" style="flex:none;padding:8px 18px;" onclick="switchTab('edit')">← Edit</button>
+      <button class="action-btn gold" style="flex:none;padding:8px 18px;" onclick="printOffer()">Print / Save PDF</button>
+    </div>
+    <div class="email-wrap"><div class="email" id="offer-output"></div></div>
+  </div>
+</div>
+
+<!-- CONTRACT -->
+<div class="view" id="view-contract">
+  <div class="contract-wrap">
+    <div class="view-label">Contract Preview</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="action-btn dark" style="flex:none;padding:8px 18px;" onclick="switchTab('edit')">← Edit</button>
+      <button class="action-btn gold" style="flex:none;padding:8px 18px;" onclick="printContract()">Print / Save PDF</button>
+    </div>
+    <div id="contract-output"></div>
+  </div>
+</div>
+
+<!-- DRAFTS -->
+<div class="view" id="view-drafts">
+  <div style="max-width:680px;margin:0 auto;">
+    <div class="view-label">Saved Drafts</div>
+    <div id="drafts-list">
+      <div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading drafts…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmtN=(n,d=0)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtD=s=>{if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});};
+const fmtDS=s=>{if(!s)return'___________';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});};
+const todayStr=()=>new Date().toISOString().split('T')[0];
+const addDays=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
+const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0];};
+
+let activeTab='drafts', currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
+let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
+
+function toggleDebug(){
+  const p=document.getElementById('debug-panel');
+  if(p)p.style.display=p.style.display==='block'?'none':'block';
+  document.getElementById('nav-dropdown').style.display='none';
+}
+
+function toggleNavMenu(){
+  const d=document.getElementById('nav-dropdown');
+  d.style.display=d.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#main-nav') && !e.target.closest('#nav-dropdown')){
+    const d=document.getElementById('nav-dropdown');
+    if(d)d.style.display='none';
+  }
+});
+
+function switchTab(t){
+  activeTab=t;
+  ['edit','offer','contract','drafts','crm','philosophy'].forEach(v=>{const el=$('view-'+v);if(el)el.classList.toggle('active',v===t)});
+  document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  if(t==='offer') renderOffer();
+  if(t==='contract') renderContract();
+  if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;}
+  if(t==='crm') loadCRM();
+  const nd=document.getElementById('nav-dropdown');if(nd)nd.style.display='none';
+}
+
+function toggleVilla(n){$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);}
+
+function toggleAutosave(){
+  // kept for compatibility but autosave is managed automatically
+}
+
+function pricing(){
+  const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
+  const pkgRate=parseFloat($('f-pkgrate')?.value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
+  const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
+  const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80;
+  const parvDiscPct=parseFloat($('f-parvati-disc')?.value)||0; const parvDisc=parvDiscPct>0?parvOrig*(1-parvDiscPct/100):parvOrig;
+  const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($('f-buddha-orig').value)||80;
+  const buddDiscPct=parseFloat($('f-buddha-disc')?.value)||0; const buddDisc=buddDiscPct>0?buddOrig*(1-buddDiscPct/100):buddOrig;
+  const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
+  const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
+  const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
+  const earlyAmt=discPct>0?stdSub*(discPct/100):0;
+  const roomDiscAmt=discRooms>0&&discRoomPct>0?roomRate*(discRoomPct/100)*discRooms:0;
+  const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight*1.15;
+  const nights=parseInt($('f-nights').value)||7, totalEx=perNight*nights, totalIn=perNightTax*nights;
+  return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,parvDiscPct,buddOn,buddOrig,buddDisc,buddDiscPct,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
+}
+
+function payments(total,checkin,depositPct){
+  const d=depositPct>0?depositPct/100:0.5, rem=1-d;
+  return{
+    dep:{pct:Math.round(d*100)+'%',amt:total*d,due:fmtDS(addDays(todayStr(),2))},
+    p2:{pct:Math.round(rem*0.6*100)+'%',amt:total*rem*0.6,due:checkin?fmtDS(addMonths(checkin,-3)):'___________'},
+    p3:{pct:Math.round(rem*0.4*100)+'%',amt:total*rem*0.4,due:checkin?fmtDS(checkin):'___________'},
+  };
+}
+
+function getFormState(){
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note'];
+  const s={};
+  ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
+  s['f-parvati-on']=$('f-parvati-on').checked;
+  s['f-buddha-on']=$('f-buddha-on').checked;
+  s['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  return s;
+}
+
+function setFormState(s){
+  Object.entries(s).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=val;else el.value=val;});
+  const r=document.querySelector(`input[name="price-display"][value="${s['price-display']||'both'}"]`);
+  if(r)r.checked=true;
+  ['parvati','buddha'].forEach(n=>$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked));
+}
+
+function buildOfferHTML(){
+  const name=$('f-name').value||'', company=$('f-company').value, address=$('f-address').value;
+  const intro=$('f-intro').value.trim(), guests=parseInt($('f-guests').value)||10, facilitators=parseInt($('f-facilitators').value)||0;
+  const retreatName=$('f-retreatname').value||'Healing Retreat', noteText=$('f-note').value.trim();
+  const offerValid=$('f-offervalid').value, depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
+  const pd=document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  const showDaily=pd==='daily'||pd==='both', showTotal=pd==='total'||pd==='both';
+  const P=pricing(), totalPeople=guests+facilitators, days=P.nights+1;
+  const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
+  const depositAmt=depositPct>0?P.totalEx*(depositPct/100):0;
+  const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+  const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
+  const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+  const vLbl=(orig,disc,pct)=>pct>0?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)} (${pct}% off)`:`USD ${fmtN(disc)}`;
+  const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
+  const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
+  const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
+  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
+  const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
+  const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
+  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Total Investment</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl. tax &amp; service</td></tr>`:'';
+  const divBlock=showDaily&&showTotal?`<tr class="pt-divider"><td colspan="3"><div class="pt-divline">&nbsp;</div></td></tr>`:'';
+  const totalBlock=showTotal?`<tr class="pt-grand"><td class="col-item">Total for ${P.nights} Nights</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
+  const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
+  const validLine=hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
+  const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (USD ${fmtN(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
+  const datesLine=fmtD(checkin)&&fmtD(checkout)?`<div class="e-header-dates">Check-in: ${fmtD(checkin)} &nbsp;·&nbsp; Check-out: ${fmtD(checkout)}</div>`:'';
+  return`<div class="e-header">
+    <img class="e-logo" src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
+    <div class="e-header-label">Retreat Hosting Offer</div>
+    <div class="e-header-line"></div>
+    <div class="e-header-date">${monthStr}</div>${datesLine}
+  </div>
+  <div class="e-body">
+    ${company||address?`<p>${company||''}${address?'<br>'+address:''}</p>`:''}
+    ${name?`<p>Dear ${name},</p>`:''}
+    ${introPara}
+    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} Kindly open the attached brochure for pictures of the full property.${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
+  </div>
+  ${ebBadge}
+  <div class="e-package">
+    <div class="e-pkg-hd"><div class="e-pkg-hd-label">Package</div>
+    <div class="e-pkg-hd-title">${retreatName} &nbsp;·&nbsp; ${P.nights} Nights, ${days} Days &nbsp;·&nbsp; ${totalPeople} People</div></div>
+    <div class="e-pkg-body"><table class="ptable">
+      <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate</td><td class="col-sub">Subtotal</td></tr>
+      ${baleRow}${parvRow}${buddRow}${pkgRow}
+      <tr class="pt-subtotal"><td class="col-item">Standard Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
+      ${ebRow}${rdRow}${dailyBlock}${divBlock}${totalBlock}
+    </table></div>
+  </div>
+  <div class="e-note">${notePara}${validLine}${depositLine}</div>
+  <div class="e-included"><div class="e-included-label">What's Included</div>
+    <table><tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>2 organic meals per day</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Tea &amp; afternoon snack</td></tr>
+    <tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Shala of your choice + cleaning</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Full staff support</td></tr>
+    <tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Dedicated contact person</td><td></td></tr></table>
+  </div>
+  <div class="e-also"><div class="e-also-label">Also of Interest</div>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Ayurvedic or Balinese menus available on request.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Day trips and activities around Bali can be arranged.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Massages, rituals, and photography available.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Airport pick-up available on request.</p>
+  </div>
+  <div class="e-closing"><p>For any further questions, please don't hesitate to reach out.</p><p>Warmly,<br><strong>Kevin</strong></p></div>
+  <div class="e-footer-band"><div class="e-footer-tagline">I am, because we are.</div>
+  <div class="e-footer-contact">Ubuntu Bali &nbsp;·&nbsp; namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</div></div>`;
+}
+
+function buildContractHTML(){
+  const name=$('f-name').value||'___________', company=$('f-company').value||'___________';
+  const address=$('f-address').value||'___________', phone=$('f-phone').value||'___________';
+  const website=$('f-website').value||'___________', contactTitle=$('f-title').value||'___________';
+  const retreatName=$('f-retreatname').value||'___________';
+  const guests=parseInt($('f-guests').value)||10, facilitators=parseInt($('f-facilitators').value)||0;
+  const totalPeople=guests+facilitators, checkin=$('f-checkin').value, checkout=$('f-checkout').value;
+  const contractDate=$('f-contractdate').value||todayStr(), validUntil=$('f-validuntil').value||addDays(contractDate,7);
+  const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
+  const P=pricing(), nights=P.nights, days=nights+1, idrTotal=P.totalIn*idrRate;
+  const PMT=payments(P.totalIn,checkin,depositPct);
+  const BANK={Currency:'IDR','Account Holder':'PT PURUSA YOGA BALI',Bank:'PT Bank Permata, Tbk','Account Number':'4122048077','BIC / SWIFT':'BBBAIDJAXXX','Bank Address':'Jalan Subak Sari No. 1, Badung, Bali'};
+  const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
+  const bR=P.bales>0?`<tr><td>Accommodation — ${P.bales} Gladak${P.bales>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.bales*P.roomRate*nights,2)}</td></tr>`:'';
+  const pR=P.parvOn?`<tr><td>Parvati Villa × ${nights} nights × USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc*nights,2)}</td></tr>`:'';
+  const buR=P.buddOn?`<tr><td>Buddha Villa × ${nights} nights × USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc*nights,2)}</td></tr>`:'';
+  const pkR=P.pkgCount>0?`<tr><td>Retreat Package — ${P.pkgCount} people × ${nights} nights × USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgSub*nights,2)}</td></tr>`:'';
+  const txR=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(P.totalIn-P.totalEx,2)}</td></tr>`;
+  const ebR=P.discPct>0?`<tr><td><strong>${P.discPct}% Early Bird Discount</strong></td><td></td><td><strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong></td></tr>`:'';
+  const rdR=P.discRooms>0&&P.discRoomPct>0?`<tr><td><strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong></td><td></td><td><strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong></td></tr>`:'';
+  const totR=`<tr style="background:#F5ECD7;"><td colspan="2">Total incl. tax &amp; service</td><td>USD ${fmtN(P.totalIn,2)}</td></tr>`;
+  const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td colspan="2" style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;">IDR for transaction (rate: 1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue)</td><td style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
+  return`<div class="contract-doc">
+  <div class="c-hd">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
+    <div class="c-hd-title">Retreat Booking Confirmation & Agreement</div>
+    <div class="c-hd-sub">PT Purusa Yoga Bali · Operating as Ubuntu Bali</div>
+  </div>
+  <div style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-bottom:12px;color:#5C3D2E;">BETWEEN</div>
+  <div class="c-parties">
+    <div class="c-party"><div class="c-party-title">Retreat Organizer</div>
+      <p>Company Name: ${company}</p><p>Contact Person: ${name}</p><p>Address: ${address}</p><p>Phone: ${phone}</p><p>Website: ${website}</p></div>
+    <div class="c-party"><div class="c-party-title">Venue Holder</div>
+      <p>Company: PT Purusa Yoga Bali (Ubuntu Bali)</p><p>Director: Witri Utari</p><p>Contract: Andréa Drottholm</p><p>Phone: +62 812 3862 0082</p><p>Email: namaste@ubuntubali.com</p></div>
+  </div>
+  <div class="c-datebar">Date: ${fmtDS(contractDate)} &nbsp;|&nbsp; Check-in: ${fmtDS(checkin)} &nbsp;|&nbsp; Check-out: ${fmtDS(checkout)}</div>
+  <div class="c-validity"><strong style="font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;">Contract Validity: </strong>This contract offer is valid until <strong>${fmtDS(validUntil)}</strong>. If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.</div>
+  <div class="c-sec"><div class="c-sec-hd">A) Purpose of Agreement</div>
+    <p>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
+    <p>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">B) Pricing & Inclusions</div>
+    <p>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
+    <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
+    <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
+    <table class="c-table"><thead><tr><th>ITEM</th><th>RATE</th><th>SUBTOTAL</th></tr></thead>
+    <tbody>${bR}${pR}${buR}${pkR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
+    <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
+    <p><strong>What's Included:</strong></p>
+    <ul><li>2 organic plant-based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
+    <p>The package price is fixed for ${totalPeople} guests. Should the group exceed ${totalPeople} people, the room rate remains the same — only meals would be added for each additional guest.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">C) Payments & Bank Details</div>
+    <p>Payments must be made to the following account:</p>
+    <table class="bank-table">${Object.entries(BANK).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>
+    <p>All bank and transfer fees are the responsibility of the Retreat Organizer.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">D) Payment Schedule</div>
+    <p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p>
+    <table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (USD)</th><th>Due Date</th></tr></thead>
+    <tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>USD ${fmtN(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr>
+    <tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>USD ${fmtN(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr>
+    <tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>USD ${fmtN(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table>
+    <p>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">E) Cancellation & Refund Policy</div>
+    <p><strong>Standard Bookings:</strong> Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees.</p>
+    <table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead>
+    <tbody>${CANCEL.map(([p,r])=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table>
+    <p><strong>Short-Notice Bookings:</strong> Deposits are non-refundable except in cases of force majeure.</p>
+    <p><strong>Rescheduling:</strong></p>
+    <ul><li>One reschedule permitted within 12 months, subject to availability and a 10% administrative fee</li><li>Requests must be made at least 3 months prior to retreat start</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">F) Liability, Insurance & Indemnification</div>
+    <ul><li>All participants must carry adequate travel and health insurance covering yoga, wellness activities, and medical evacuation</li><li>Retreat Organizer must communicate health restrictions to Ubuntu Bali in writing at least 30 days prior</li><li>Ubuntu Bali shall not be held liable for personal injury, loss, or theft except in cases of gross negligence</li><li>Ubuntu Bali's maximum liability is limited to 50% of the total contract value</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">G) Property Use & Conduct</div>
+    <ul><li>Quiet hours: 9:30pm – 7:00am</li><li>No smoking, alcohol, drugs, or intoxicants on the premises</li><li>Yoga Shala must be left tidied, fans and lights switched off</li><li>Participant-caused property damage will be charged to the Retreat Organizer</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">H) Meals</div>
+    <p>Two organic plant-based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">I) Swimming Pool</div>
+    <p>Available to all registered retreat participants. All users must shower before entering.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">J) Wi-Fi</div>
+    <p>Provided across the property in common areas, subject to local service availability.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">K) Photography & Media</div>
+    <p>Ubuntu Bali may photograph or film during the retreat for promotional use, subject to retreat leader permission. Participants will not be identified by name without written consent.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">L) Force Majeure</div>
+    <p>In the event of circumstances beyond reasonable control, Ubuntu Bali shall provide immediate notice and offer: (a) reschedule within 18 months, (b) 100% credit valid 24 months, or (c) pro-rata refund minus 5% admin fee.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">M) Dispute Resolution</div>
+    <ul><li>Informal Resolution (7 days): Written notice</li><li>Management Discussion (14 days): In-person or video meeting</li><li>Mediation (30 days, optional): Neutral third party</li><li>Legal Action: Only after above steps attempted</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">N) Ubuntu Bali Cancellation</div>
+    <p>Ubuntu Bali may cancel with 60 days written notice. Retreat Organizer receives 100% refund and priority rebooking within 18 months. Short-notice cancellation (&lt;60 days): full refund plus 5% credit.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">O) Termination</div>
+    <p>Either party may terminate for material breach with 14 days written notice.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">P) Governing Law</div>
+    <p>Governed by the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">Q) Entire Agreement</div>
+    <p>This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.</p></div>
+  <div class="c-sigs"><div class="c-sigs-title">Signatures</div>
+    <div class="c-sigs-grid">
+      <div><div class="c-sig-party">For Ubuntu Bali</div>
+        <p style="font-size:12px;margin-bottom:3px;">Name: Andréa Drottholm</p>
+        <p style="font-size:12px;margin-bottom:3px;">Title: Contract Representative</p>
+        <p style="font-size:12px;margin-bottom:16px;">Date: ${fmtDS(contractDate)}</p>
+        <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
+        <div class="c-sig-line"></div>
+        <div class="c-sig-note">Tari, as representative of Andréa Drottholm</div></div>
+      <div><div class="c-sig-party">For Retreat Organizer</div>
+        <p style="font-size:12px;margin-bottom:3px;">Name: ${name}</p>
+        <p style="font-size:12px;margin-bottom:3px;">Title: ${contactTitle}</p>
+        <p style="font-size:12px;margin-bottom:16px;">Date: ___________</p>
+        <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
+        <div class="c-sig-line"></div>
+        <div class="c-sig-note">${name}</div></div>
+    </div>
+  </div>
+</div>`;
+}
+
+function renderOffer(){$('offer-output').innerHTML=buildOfferHTML();}
+function renderContract(){$('contract-output').innerHTML=buildContractHTML();}
+function render(){}
+
+async function loadDrafts(){
+  const list=$('drafts-list');
+  list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading drafts…</div>`;
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'load'})});
+    if(!r.ok) throw new Error();
+    const data=await r.json();
+    if(!data.drafts||data.drafts.length===0){
+      list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">No drafts saved yet.</div>`;
+      return;
+    }
+    window._drafts=data.drafts;
+    list.innerHTML=data.drafts.map((d,i)=>{
+      const hasState=d.formState&&d.formState!=='null';
+      const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set';
+      const total=d.totalUSD?'USD '+Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—';
+      const edited=d.lastEdited?new Date(d.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+      return`<div class="draft-card" id="draft-card-${i}">
+        <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
+        <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
+        ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:4px;font-style:italic;">Last edited: ${edited}</div>`:''}
+        <div class="draft-actions">
+          ${hasState?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`:`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
+          <button class="draft-btn ghost" onclick="toggleRenameRow(${i})" title="Rename">✎ Rename</button>
+          ${hasState?`<button class="draft-btn ghost" onclick="duplicateDraft(${i})" title="Duplicate">⧉ Duplicate</button>`:''}
+          <button class="draft-btn ghost" onclick="deleteDraft(${i})" title="Delete">🗑 Delete</button>
+        </div>
+        <div class="draft-edit-row" id="rename-row-${i}">
+          <input class="draft-edit-input" id="rename-input-${i}" placeholder="Organizer name" value="${d.organizer||''}">
+          <input class="draft-edit-input" id="rename-retreat-${i}" placeholder="Retreat name" value="${d.retreatName||''}">
+          <button class="draft-edit-btn confirm" onclick="confirmRename(${i})">Save</button>
+          <button class="draft-edit-btn cancel" onclick="toggleRenameRow(${i})">Cancel</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){
+    list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load drafts.</div>`;
+  }
+}
+
+function loadDraftByIndex(i){
+  try{
+    const d=window._drafts[i];
+    if(!d||!d.formState) return;
+    setFormState(JSON.parse(d.formState));
+    currentPageId=d.pageId;
+    draftActive=true;
+    intentionalDraft=true;
+    startAutosave();
+    switchTab('edit');
+  } catch(e){alert('Could not load this draft.');}
+}
+
+function toggleRenameRow(i){
+  const row=$(`rename-row-${i}`);
+  row.classList.toggle('open');
+  if(row.classList.contains('open')) $(`rename-input-${i}`).focus();
+}
+
+async function confirmRename(i){
+  const d=window._drafts[i];
+  if(!d) return;
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      action:'update',pageId:d.pageId,
+      organizer:$(`rename-input-${i}`).value.trim()||d.organizer,
+      retreatName:$(`rename-retreat-${i}`).value.trim()||d.retreatName,
+      checkin:d.checkin,checkout:d.checkout,nights:d.nights,
+      guests:d.guests,totalUSD:d.totalUSD,status:d.status,formState:d.formState,
+    })});
+    if(!r.ok) throw new Error();
+    loadDrafts();
+  } catch{alert('Could not rename.');}
+}
+
+async function duplicateDraft(i){
+  const d=window._drafts[i];
+  if(!d||!d.formState) return;
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      action:'create',organizer:(d.organizer||'')+' (copy)',retreatName:d.retreatName,
+      checkin:d.checkin,checkout:d.checkout,nights:d.nights,
+      guests:d.guests,totalUSD:d.totalUSD,status:'Draft',formState:d.formState,
+    })});
+    if(!r.ok) throw new Error();
+    loadDrafts();
+  } catch{alert('Could not duplicate.');}
+}
+
+async function deleteDraft(i){
+  const d=window._drafts[i];
+  if(!d||!confirm(`Move "${d.organizer||'this draft'}" to trash?`)) return;
+  try{
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',pageId:d.pageId})});
+    if(!r.ok) throw new Error();
+    if(currentPageId===d.pageId) currentPageId=null;
+    loadDrafts();
+  } catch{alert('Could not delete.');}
+}
+
+function dbg(msg){
+  const p=$('debug-panel'),l=$('debug-log');
+  if(!p||!l)return;
+  const t=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  l.innerHTML+=`<div>[${t}] ${msg}</div>`;
+  p.scrollTop=p.scrollHeight;
+}
+
+async function saveToNotion(silent=false){
+  const btn=$('save-btn');
+  if(!silent){btn.textContent='Saving…';btn.className='save-btn';}
+  const P=pricing();
+  const payload={
+    organizer:$('f-name').value,retreatName:$('f-retreatname').value,
+    checkin:$('f-checkin').value,checkout:$('f-checkout').value,
+    contractDate:$('f-contractdate').value||todayStr(),
+    rooms:P.bales+(P.parvOn?1:0)+(P.buddOn?1:0),
+    nights:P.nights,guests:parseInt($('f-guests').value)||0,
+    totalUSD:P.totalIn,status:$('notion-status').value,
+    formState:JSON.stringify(getFormState()),
+  };
+  const action=currentPageId?'update':'create';
+  const fsLen=payload.formState.length;
+  dbg(`action=${action} | formState=${fsLen} chars | pageId=${currentPageId||'none'}`);
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>{dbg('ABORT: 15s timeout hit');controller.abort();},15000);
+    const body=currentPageId
+      ?JSON.stringify({action:'update',...payload,pageId:currentPageId})
+      :JSON.stringify({action:'create',...payload});
+    dbg(`fetching /api/notion...`);
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body,signal:controller.signal});
+    clearTimeout(timeout);
+    dbg(`response status: ${r.status}`);
+    const data=await r.json();
+    dbg(`response body: ${JSON.stringify(data).slice(0,200)}`);
+    if(!r.ok) throw new Error(data.error||'HTTP '+r.status);
+    if(!currentPageId&&data.pageId) currentPageId=data.pageId;
+    dbg('SUCCESS ✓');
+    if(!silent){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';},3000);}
+  } catch(err){
+    const msg=err.name==='AbortError'?'Timeout':(err.message||'Error');
+    dbg(`ERROR: ${msg}`);
+    if(!silent){btn.textContent='✗ '+msg;btn.className='save-btn error';btn.title=msg;setTimeout(()=>{btn.textContent='Save';btn.className='save-btn';btn.title='';},6000);}
+  }
+}
+
+const OFFER_STYLES=`body{font-family:Verdana,Geneva,sans-serif;font-size:10px;background:#e8e3dc;margin:0;padding:16px;color:#2a2520;}.email{background:#fff;width:560px;margin:0 auto;}.e-header{background:#3a3228;text-align:center;padding:22px 32px 18px;}.e-logo{max-width:56px;margin:0 auto 11px;display:block;filter:brightness(0) invert(1);}.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:4px;}.e-header-line{width:34px;height:1px;background:#c8b89a;margin:6px auto;opacity:.6;}.e-header-date,.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}.e-body{padding:16px 32px 0;line-height:1.9;color:#2a2520;}.e-body p{margin-bottom:9px;}.e-badge{margin:11px 32px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:7px 12px;text-align:center;font-size:10px;color:#3a3228;}.e-package{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}.e-pkg-hd{background:#3a3228;padding:10px 14px;}.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}.e-pkg-body{padding:0 14px;}table.ptable{width:100%;border-collapse:collapse;font-size:10px;}.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}.pt-item td{padding:5px 0;border-top:1px solid #eee;}.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}.pt-divider td{padding:0 0 5px;}.pt-divline{height:1px;background:#eee;font-size:1px;}.pt-grand td{padding:2px 0;font-weight:bold;}.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}.e-note{margin:9px 32px 0;border-left:3px solid #c8b89a;padding:5px 10px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}.e-note p{margin-bottom:5px;}.e-included{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;padding:10px 14px 6px;}.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-included table{width:100%;border-collapse:collapse;font-size:10px;}.e-included td{padding:2px 0;vertical-align:top;width:50%;}.e-also{margin:13px 32px 0;}.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}.e-closing{padding:18px 32px 0;line-height:1.9;font-size:10px;}.e-closing p{margin-bottom:5px;}.e-footer-band{background:#3a3228;margin-top:24px;padding:14px 32px 18px;text-align:center;}.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:5px;letter-spacing:1px;}.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}@media print{body{padding:0;}}`;
+const CONTRACT_STYLES=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Lora',serif;background:#F0E9DF;padding:20px;color:#1A1208;}@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');.contract-doc{background:#fff;border:1px solid #D4C4A8;border-radius:6px;padding:40px 36px;font-family:'Lora',serif;color:#1A1208;font-size:12.5px;line-height:1.75;}.c-hd{text-align:center;margin-bottom:26px;border-bottom:2px solid #221208;padding-bottom:20px;}.c-hd-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}.c-hd-sub{font-family:'Lora',serif;font-size:11px;color:#8B7355;font-style:italic;}.c-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B8935A;margin-bottom:22px;}.c-party{padding:13px 16px;background:#FDFAF5;}.c-party:first-child{border-right:1px solid #B8935A;}.c-party-title{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:8px;}.c-party p{font-size:11.5px;margin-bottom:3px;}.c-datebar{text-align:center;font-family:'Libre Baskerville',serif;font-size:10.5px;font-weight:700;border-top:1px solid #DDD0BA;border-bottom:1px solid #DDD0BA;padding:9px 0;margin-bottom:22px;color:#221208;}.c-validity{background:#F5ECD7;border:1px solid #C8A96E;border-radius:3px;padding:9px 14px;margin-bottom:22px;font-size:11.5px;color:#3D2B1F;line-height:1.65;}.c-sec{margin-bottom:20px;}.c-sec-hd{font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#221208;border-bottom:1.5px solid #B8935A;padding-bottom:4px;margin-bottom:11px;}.c-sec p{margin-bottom:7px;font-size:12px;}.c-sec ul{margin:0 0 9px 18px;font-size:12px;}.c-sec ul li{margin-bottom:3px;}.c-table{width:100%;border-collapse:collapse;font-size:11.5px;margin:9px 0;}.c-table thead tr{background:#221208;}.c-table thead th{padding:7px 11px;color:#F5ECD7;font-family:'Libre Baskerville',serif;font-size:8.5px;letter-spacing:.08em;text-align:left;font-weight:700;}.c-table tbody tr:nth-child(odd){background:#FDFAF5;}.c-table tbody tr:nth-child(even){background:#F5ECD7;}.c-table tbody td{padding:6px 11px;border-bottom:1px solid #EDE3D4;}.c-sigs{border-top:2px solid #221208;padding-top:22px;}.c-sigs-title{font-family:'Libre Baskerville',serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:22px;}.c-sigs-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;}.c-sig-party{font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;margin-bottom:10px;}.c-sig-line{border-bottom:1px solid #1A1208;width:80%;height:20px;margin:16px 0 5px;}.c-sig-note{font-size:10.5px;color:#8B7355;font-style:italic;font-family:'Lora',serif;}.bank-table{border-collapse:collapse;font-size:11.5px;margin:7px 0 9px;}.bank-table td{padding:4px 18px 4px 0;font-family:'Lora',serif;}.bank-table td:first-child{font-weight:700;font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}@media print{body{padding:0;}}`;
+
+function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Offer</title><style>${OFFER_STYLES}</style></head><body><div class="email">${buildOfferHTML()}</div><script>window.onload=function(){window.print();}<\/script>
+</body></html>`);w.document.close();}
+function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);w.document.close();}
+
+// PWA Install
+let deferredPrompt=null;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+if(!isStandalone){
+  if(isIOS){$('install-btn').style.display='block';$('install-btn').textContent='⊕ Add to Home Screen';}
+  else window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('install-btn').style.display='block';});
+}
+function handleInstall(){
+  if(isIOS) document.getElementById('ios-modal').classList.add('open');
+  else if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;$('install-btn').style.display='none';});}
+}
+function closeIosModal(e){if(e.target===document.getElementById('ios-modal'))document.getElementById('ios-modal').classList.remove('open');}
+
+// Service worker
+let pendingSW = null;
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').then(reg=>{
+    reg.addEventListener('updatefound',()=>{
+      const sw=reg.installing;
+      sw.addEventListener('statechange',()=>{
+        if(sw.state==='installed' && navigator.serviceWorker.controller){
+          // New version ready — show update button
+          pendingSW = sw;
+          $('update-btn').style.display='block';
+        }
+      });
+    });
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')
+      navigator.serviceWorker.getRegistration().then(reg=>{if(reg)reg.update();});
+  });
+}
+function applyUpdate(){
+  window.location.reload(true);
+}
+
+// Init
+$('f-contractdate').value=todayStr();
+$('f-validuntil').value=addDays(todayStr(),7);
+// Start on drafts view
+switchTab('drafts');
+// Init CRM tab visual state
+setTimeout(()=>crmSwitchTab('leads'),0);
+
+function startAutosave(){
+  if(autosaveOn) return;
+  autosaveOn=true;
+  const status=$('autosave-status');
+  status.style.display='inline';
+  autosaveInterval=setInterval(async()=>{
+    await saveToNotion(true);
+    status.textContent='saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  },15000);
+}
+
+function markDraftActive(){
+  if(!intentionalDraft) return;
+  if(!draftActive){
+    draftActive=true;
+    startAutosave();
+  }
+}
+
+function newDraft(){
+  // Reset form
+  currentPageId=null;
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'];
+  ids.forEach(id=>{const el=$(id);if(el)el.value='';});
+  $('f-contractdate').value=todayStr();
+  $('f-validuntil').value=addDays(todayStr(),7);
+  $('f-offervalid').value='';
+  $('notion-status').value='Draft';
+  draftActive=false;
+  intentionalDraft=true;
+  switchTab('edit');
+  // reset autosave for new draft
+  autosaveOn=false;
+  clearInterval(autosaveInterval);
+  autosaveInterval=null;
+  $('autosave-status').textContent='';
+}
+
+// Live IDR rate
+(async()=>{
+  const dot=$('idr-dot'), info=$('idr-info');
+  try{
+    const r=await fetch('/api/exchange-rate');
+    const d=await r.json();
+    $('f-idrrate').value=d.rate;
+    const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    if(d.fallback){
+      dot.className='idr-dot fallback';
+      info.textContent=`⚠ Fallback rate · ${now}`;
+    } else {
+      dot.className='idr-dot live';
+      info.textContent=`Live · ExchangeRate-API · ${now}`;
+    }
+  } catch{
+    dot.className='idr-dot error';
+    info.textContent='Could not fetch — using default rate';
+  }
+})();
+
+
+// Global error capture → debug panel
+window.onerror = function(msg, src, line, col, err) {
+  dbg('ERROR: ' + msg + ' (' + (src||'').split('/').pop() + ':' + line + ')');
+};
+window.onunhandledrejection = function(e) {
+  dbg('PROMISE ERROR: ' + (e.reason?.message || e.reason || 'unknown'));
 };
 
-function getProp(props, name, type) {
-  const p = props[name];
-  if (!p) return null;
-  if (type === 'title')        return p.title?.map(t => t.plain_text).join('') || null;
-  if (type === 'text')         return p.rich_text?.map(t => t.plain_text).join('') || null;
-  if (type === 'email')        return p.email || null;
-  if (type === 'select')       return p.select?.name || null;
-  if (type === 'multi_select') return p.multi_select?.map(s => s.name) || [];
-  if (type === 'date')         return p.date?.start || null;
-  if (type === 'url')          return p.url || null;
-  if (type === 'phone')        return p.phone_number || null;
+
+// ── DUPLICATES ───────────────────────────────────────────────────────────────
+function findDuplicates() {
+  const all = [...(crmData.leads||[]), ...(crmData.converted||[])];
+  const groups = {};
+  all.forEach(c => {
+    const key = (c.name||'').toLowerCase().trim().replace(/\s+/g,' ');
+    if (!key || key === 'new lead') return;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
+  });
+  return Object.values(groups).filter(g => g.length > 1);
+}
+
+function showDuplicates() {
+  const dups = findDuplicates();
+  const modal = document.getElementById('crm-modal');
+  const content = document.getElementById('crm-modal-content');
+
+  if (dups.length === 0) {
+    content.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates</div>
+        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+      </div>
+      <div style="font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;padding:20px 0;text-align:center;">No duplicates found 🎉</div>`;
+    modal.classList.add('open');
+    return;
+  }
+
+  content.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates (${dups.length})</div>
+      <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+    </div>
+    <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-bottom:14px;">Same name found in multiple entries. Review and merge or delete.</div>
+    ${dups.map((group, gi) => `
+      <div style="border:1px solid #EDE3D4;border-radius:4px;margin-bottom:12px;overflow:hidden;">
+        <div style="background:#F5ECD7;padding:8px 12px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;font-weight:700;">${group[0].name}</div>
+        ${group.map(c => `
+          <div style="padding:10px 12px;border-top:1px solid #EDE3D4;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-family:'Lora',serif;font-size:12px;color:#1A1208;">${c.db === 'leads' ? '📋 Lead Pipeline' : '✓ Converted'} · ${c.location||'No location'}</div>
+              <div style="font-family:'Lora',serif;font-size:10px;color:#8B7355;margin-top:2px;">${c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="openCrmModal('${c.id}');document.getElementById('crm-modal').classList.add('open')" style="padding:5px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8B7355;">View</button>
+              <button onclick="deleteDupConfirm('${c.id}','${c.name}',${gi})" style="padding:5px 10px;border:1px solid #F5D6D6;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8A1A1A;">Delete</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('')}`;
+  modal.classList.add('open');
+}
+
+async function deleteDupConfirm(id, name, groupIndex) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    await fetch('/api/crm', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'delete', pageId: id})
+    });
+    // Remove from local data
+    crmData.leads = crmData.leads.filter(x => x.id !== id);
+    crmData.converted = crmData.converted.filter(x => x.id !== id);
+    showDuplicates(); // refresh duplicate view
+  } catch(e) { alert('Could not delete.'); }
+}
+
+// ── LINKED DRAFTS IN CRM ─────────────────────────────────────────────────────
+function getLinkedDrafts(contactName, company) {
+  if (!window._drafts || (!contactName && !company)) return [];
+  const name = (contactName||'').toLowerCase();
+  const comp = (company||'').toLowerCase();
+  return window._drafts.filter(d =>
+    (d.organizer && d.organizer.toLowerCase().includes(name) && name) ||
+    (d.retreatName && comp && d.retreatName.toLowerCase().includes(comp))
+  );
+}
+
+// ── CRM ──────────────────────────────────────────────────────────────────────
+function statusClass(s) {
+  if (!s) return '';
+  const m = {
+    'NOT GOOD FIT':'not-good','TERMINATED':'terminated','GHOSTED':'ghosted',
+    'Followed + Engaged':'followed','Reached out':'reached',
+    'WARM: Booked a call OR asked for help':'warm',
+    'HOT: Past client/strong conversation':'hot',
+    'QUALIFIED TO BUY':'qualified','SALE CLOSED':'closed',
+    'Face2Face conversation':'face2face','Rejected Ubuntu':'not-good',
+    'Responded':'responded','Phone call':'phone','Booked Venue':'booked',
+  };
+  return 'crm-status-' + (m[s] || 'reached');
+}
+
+function suitClass(s) {
+  if (!s) return '';
+  if (s.startsWith('1')) return 'crm-suit-1';
+  if (s.startsWith('2')) return 'crm-suit-2';
+  if (s.startsWith('3')) return 'crm-suit-3';
+  return 'crm-suit-4';
+}
+
+function crmSwitchTab(tab) {
+  crmTab = tab;
+  ['leads','converted'].forEach(t => {
+    const b = document.getElementById('crm-tab-'+t);
+    if (!b) return;
+    b.style.background = t === tab ? '#B8935A' : 'transparent';
+    b.style.color = t === tab ? '#fff' : '#B8935A';
+    b.style.borderColor = t === tab ? '#B8935A' : 'rgba(184,147,90,.35)';
+  });
+  crmCollapsed = {};
+  crmRender();
+}
+
+function crmSort(items) {
+  const s = document.getElementById('crm-sort')?.value || 'date';
+  return [...items].sort((a, b) => {
+    if (s === 'name')     return (a.name||'').localeCompare(b.name||'');
+    if (s === 'location') return (a.location||'').localeCompare(b.location||'');
+    return new Date(b.lastEdited||0) - new Date(a.lastEdited||0);
+  });
+}
+
+function groupKey(c, groupBy) {
+  if (groupBy === 'status') {
+    const s = Array.isArray(c.status) ? c.status[0] : c.status;
+    return s || 'No Status';
+  }
+  if (groupBy === 'source')   return c.source || 'No Source';
+  if (groupBy === 'location') return c.location || 'No Location';
+  if (groupBy === 'date') {
+    if (!c.lastEdited) return 'Unknown';
+    return new Date(c.lastEdited).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+  }
   return null;
 }
 
-function mapLead(page) {
-  const p = page.properties;
-  return {
-    id:           page.id,
-    lastEdited:   page.last_edited_time,
-    db:           'leads',
-    name:         getProp(p, 'Name',                  'title'),
-    company:      getProp(p, 'Company',               'text'),
-    email:        getProp(p, 'Email',                 'email'),
-    location:     getProp(p, 'Location',              'text'),
-    insta:        getProp(p, 'Insta',                 'text'),
-    website:      getProp(p, 'Website',               'text'),
-    linkedin:     getProp(p, 'Linkydinky',            'text'),
-    notes:        getProp(p, 'Notes',                 'text'),
-    status:       getProp(p, 'Instagram',             'select'),
-    suitability:  getProp(p, 'Suitability',           'select'),
-    reachedOutOn: getProp(p, 'Reached out on',        'multi_select'),
-    engagedFirst: getProp(p, 'Engaged first',         'date'),
-    engagedLast:  getProp(p, 'Engaged last',          'date'),
-    engageNext:   getProp(p, 'Engage Next',           'date'),
-    salesCall:    getProp(p, 'Sales Call Booked Date','date'),
-  };
+function buildGrid(items) {
+  const hRow = ['Name','Location','Source / Status','Added'].map(h =>
+    `<div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">${h}</div>`
+  ).join('');
+
+  const rows = items.map((c, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
+    const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+    const statusHtml = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}" style="font-size:7px;">${s}</span>`).join(' ');
+    const sourceBadge = c.source ? `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:7px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;text-transform:uppercase;font-weight:700;background:#F5ECD7;color:#5C3D2E;margin-right:4px;">${c.source}</span>` : '';
+    const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
+    const cell = `padding:8px 10px;cursor:pointer;border-bottom:1px solid #EDE3D4;`;
+    return `
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};">${c.name||'Unnamed'}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};">${c.location||'—'}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}background:${bg};">${sourceBadge}${statusHtml||'—'}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};">${date}</div>
+    `;
+  }).join('');
+
+  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid #EDE3D4;border-radius:4px;overflow:hidden;margin-bottom:8px;">${hRow}${rows}</div>`;
 }
 
-function mapConverted(page) {
-  const p = page.properties;
-  return {
-    id:           page.id,
-    lastEdited:   page.last_edited_time,
-    db:           'converted',
-    name:         getProp(p, 'Name',                         'title'),
-    company:      getProp(p, 'Company',                      'text'),
-    email:        getProp(p, 'Mail',                         'text'),
-    location:     getProp(p, 'Location',                     'text'),
-    insta:        getProp(p, 'Insta',                        'text'),
-    website:      getProp(p, 'Website',                      'text'),
-    whatsapp:     getProp(p, 'Whatsapp',                     'text'),
-    notes:        getProp(p, 'Notes',                        'text'),
-    contact:      getProp(p, "Who's in contact",             'text'),
-    status:       getProp(p, 'Status',                       'multi_select'),
-    suitability:  getProp(p, 'Suitability',                  'select'),
-    engageNext:   getProp(p, 'Engage Next',                  'date'),
-    salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
-  };
-}
+function crmRender() {
+  const list = document.getElementById('crm-list');
+  const q = (document.getElementById('crm-search')?.value || '').toLowerCase();
+  const groupBy = document.getElementById('crm-group')?.value || 'none';
+  const sourceFilter = document.getElementById('crm-source-filter')?.value || '';
 
-async function queryDB(dbId, mapper) {
-  const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
-      page_size: 100,
-    }),
+  let items = (crmData[crmTab] || []).filter(c => {
+    const matchQ = !q || (c.name||'').toLowerCase().includes(q) ||
+                         (c.company||'').toLowerCase().includes(q) ||
+                         (c.location||'').toLowerCase().includes(q);
+    const matchS = !sourceFilter || c.source === sourceFilter;
+    return matchQ && matchS;
   });
-  if (!resp.ok) throw new Error(`DB query failed: ${await resp.text()}`);
-  const data = await resp.json();
-  return data.results.map(mapper);
-}
+  items = crmSort(items);
 
-async function updatePage(pageId, properties) {
-  const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-    method: 'PATCH',
-    headers,
-    body: JSON.stringify({ properties }),
+  const countEl = document.getElementById('crm-count');
+  if (countEl) countEl.textContent = items.length + ' of ' + (crmData[crmTab]||[]).length;
+
+  if (items.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">${crmLoaded ? 'No results.' : 'Loading…'}</div>`;
+    return;
+  }
+
+  if (groupBy === 'none') {
+    list.innerHTML = buildGrid(items);
+    return;
+  }
+
+  // Grouped with collapsible sections
+  const groups = {};
+  items.forEach(c => {
+    const key = groupKey(c, groupBy);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
   });
-  if (!resp.ok) throw new Error(`Update failed: ${await resp.text()}`);
-  return await resp.json();
+
+  list.innerHTML = Object.entries(groups).map(([key, groupItems]) => {
+    const isCollapsed = !!crmCollapsed[key];
+    return `
+      <div style="margin-bottom:4px;">
+        <div onclick="toggleCrmGroup('${key.replace(/'/g,'\'')}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#221208;border-radius:${isCollapsed?'4px':'4px 4px 0 0'};cursor:pointer;user-select:none;">
+          <span style="font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F5ECD7;">${key}</span>
+          <span style="font-family:'Lora',serif;font-size:10px;color:#B8935A;">${groupItems.length} &nbsp; ${isCollapsed?'▸':'▾'}</span>
+        </div>
+        ${isCollapsed ? '' : buildGrid(groupItems)}
+      </div>`;
+  }).join('');
 }
 
-async function createLead(body) {
-  const resp = await fetch('https://api.notion.com/v1/pages', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      parent: { database_id: LEAD_DB },
-      properties: {
-        'Name':     { title:     [{ text: { content: body.name || '' } }] },
-        'Company':  { rich_text: [{ text: { content: body.company || '' } }] },
-        'Email':    { email: body.email || null },
-        'Location': { rich_text: [{ text: { content: body.location || '' } }] },
-        'Insta':    { rich_text: [{ text: { content: body.insta || '' } }] },
-        'Notes':    { rich_text: [{ text: { content: body.notes || '' } }] },
-        ...(body.status && { 'Instagram': { select: { name: body.status } } }),
-      },
-    }),
-  });
-  if (!resp.ok) throw new Error(`Create failed: ${await resp.text()}`);
-  return await resp.json();
+function toggleCrmGroup(key) {
+  crmCollapsed[key] = !crmCollapsed[key];
+  crmRender();
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+async function fetchCRM(force=false) {
+  const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load', forceRefresh: !!force }) });
+  const data = await r.json();
+  if (!data.leads) throw new Error(JSON.stringify(data));
+  return data;
+}
 
-  const { action } = req.body;
+async function loadCRM(force=false) {
+  if (!crmLoaded) {
+    $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
+    try {
+      crmData = await fetchCRM(false);
+      crmLoaded = true;
+      crmRender();
+    } catch(e) {
+      $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load CRM: ${e.message}</div>`;
+      return;
+    }
+  } else {
+    crmRender();
+  }
+  fetchCRM(force).then(data => {
+    crmData = data;
+    crmRender();
+    dbg('CRM refreshed: ' + (data.leads||[]).length + ' leads, ' + (data.converted||[]).length + ' converted');
+  }).catch(e => dbg('CRM bg refresh failed: ' + e.message));
+}
+
+function crmDetailHTML(c, editMode=false) {
+  const isLead = c.db === 'leads';
+  const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+  const leadStatuses = ['Followed + Engaged','Reached out','WARM: Booked a call OR asked for help','HOT: Past client/strong conversation','QUALIFIED TO BUY','SALE CLOSED','GHOSTED','TERMINATED','NOT GOOD FIT'];
+  const convStatuses = ['Face2Face conversation','Responded','Phone call','Booked Venue','Rejected Ubuntu'];
+  const statusOptions = isLead
+    ? leadStatuses.map(s => `<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')
+    : convStatuses.map(s => `<option value="${s}" ${statusArr.includes(s)?'selected':''}>${s}</option>`).join('');
+  const statusBadges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join(' ');
+
+  const showPromote = isLead && (c.status === 'Reached out' || c.status === 'WARM: Booked a call OR asked for help' || c.status === 'HOT: Past client/strong conversation' || c.status === 'QUALIFIED TO BUY' || c.status === 'SALE CLOSED');
+
+  if (editMode) {
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Edit Contact</div>
+        <button onclick="openCrmModal('${c.id}')" style="background:none;border:none;font-size:13px;cursor:pointer;color:#8B7355;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;">✕ Cancel</button>
+      </div>
+      <div class="fg"><label>Name</label><input type="text" id="edit-name" value="${c.name||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Company</label><input type="text" id="edit-company" value="${c.company||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Email</label><input type="text" id="edit-email" value="${c.email||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Instagram</label><input type="text" id="edit-insta" value="${c.insta||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>WhatsApp</label><input type="text" id="edit-whatsapp" value="${c.whatsapp||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Website</label><input type="text" id="edit-website" value="${c.website||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Location</label><input type="text" id="edit-location" value="${c.location||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <button class="ios-modal-close" style="margin-top:8px;" onclick="saveContactDetails('${c.id}','${c.db}')">Save Details</button>
+    `;
+  }
+
+  const fields = [
+    c.company    && ['Company', c.company],
+    c.email      && ['Email', `<a href="mailto:${c.email}" style="color:#B8935A;">${c.email}</a>`],
+    c.whatsapp   && ['WhatsApp', c.whatsapp],
+    c.insta      && ['Instagram', c.insta],
+    c.linkedin   && ['LinkedIn', c.linkedin],
+    c.website    && ['Website', `<a href="${(c.website||'').startsWith('http')?c.website:'https://'+c.website}" target="_blank" style="color:#B8935A;">${c.website}</a>`],
+    c.location   && ['Location', c.location],
+    c.contact    && ['Contact', c.contact],
+    c.engagedFirst && ['First contact', fmtD(c.engagedFirst)],
+    c.engagedLast  && ['Last engaged', fmtD(c.engagedLast)],
+    c.salesCall    && ['Sales call', fmtD(c.salesCall)],
+  ].filter(Boolean).map(([l,v]) => `<div class="crm-field"><span class="crm-field-label">${l}</span><span>${v}</span></div>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+      <div>
+        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">${c.name||'Unnamed'}</div>
+        <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-top:2px;">${isLead ? 'Lead Pipeline' : 'Converted Lead'}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="openCrmModalEdit('${c.id}')" style="background:none;border:1px solid #D4C4A8;border-radius:3px;padding:5px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:#8B7355;">✎ Edit</button>
+        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
+      </div>
+    </div>
+    ${fields || '<div style="color:#B8935A;font-family:Lora,serif;font-size:12px;font-style:italic;">No details available</div>'}
+    <div class="crm-section-hd">Status</div>
+    <div style="margin-bottom:8px;">${statusBadges || '—'}</div>
+    ${isLead
+      ? `<select class="crm-select" id="crm-status-sel">${statusOptions}</select>`
+      : `<select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`
+    }
+    <div class="crm-section-hd">Engage Next</div>
+    <input type="date" id="crm-engage-next" value="${c.engageNext||''}" style="width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;margin-bottom:8px;">
+    <div class="crm-section-hd">Notes</div>
+    <textarea class="crm-textarea" id="crm-notes-input">${c.notes||''}</textarea>
+    <button class="ios-modal-close" style="margin-top:14px;" onclick="saveCrmContact('${c.id}','${c.db}')">Save Changes</button>
+    ${showPromote ? `<button onclick="promoteLead('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3D6636;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Move to Converted</button>` : ''}
+    <button onclick="prefillOfferFromCRM('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3a3228;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Create Offer</button>
+    ${(() => {
+      const linked = getLinkedDrafts(c.name, c.company);
+      if (!linked.length) return '';
+      return `<div class="crm-section-hd">Linked Drafts (${linked.length})</div>` +
+        linked.map(d => `<div onclick="loadDraftById('${d.pageId}')" style="padding:8px 10px;border:1px solid #EDE3D4;border-radius:3px;margin-bottom:6px;cursor:pointer;background:#FDFAF5;font-family:'Lora',serif;font-size:11px;color:#1A1208;">
+          <span style="font-weight:600;">${d.organizer||'Unnamed'}${d.retreatName?' · '+d.retreatName:''}</span>
+          <span class="draft-status s-${d.status||'Draft'}" style="margin-left:6px;">${d.status||'Draft'}</span>
+          <div style="font-size:10px;color:#8B7355;margin-top:2px;">${d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates'} · USD ${d.totalUSD?Number(d.totalUSD).toLocaleString('en-US'):'—'}</div>
+        </div>`).join('');
+    })()}
+  `;
+}
+
+function openCrmModal(id) {
+  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
+  if (!c) return;
+  $('crm-modal-content').innerHTML = crmDetailHTML(c, false);
+  $('crm-modal').classList.add('open');
+}
+
+function openCrmModalEdit(id) {
+  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
+  if (!c) return;
+  $('crm-modal-content').innerHTML = crmDetailHTML(c, true);
+}
+
+async function saveContactDetails(id, db) {
+  const props = {};
+  const name = $('edit-name')?.value;
+  const company = $('edit-company')?.value;
+  const email = $('edit-email')?.value;
+  const insta = $('edit-insta')?.value;
+  const whatsapp = $('edit-whatsapp')?.value;
+  const website = $('edit-website')?.value;
+  const location = $('edit-location')?.value;
+
+  if (db === 'leads') {
+    if (name !== undefined)    props['Name']     = { title:     [{ text: { content: name } }] };
+    if (company !== undefined) props['Company']  = { rich_text: [{ text: { content: company } }] };
+    if (email !== undefined)   props['Email']    = { email: email || null };
+    if (insta !== undefined)   props['Insta']    = { rich_text: [{ text: { content: insta } }] };
+    if (website !== undefined) props['Website']  = { rich_text: [{ text: { content: website } }] };
+    if (location !== undefined)props['Location'] = { rich_text: [{ text: { content: location } }] };
+  } else {
+    if (name !== undefined)     props['Name']     = { title:     [{ text: { content: name } }] };
+    if (company !== undefined)  props['Company']  = { rich_text: [{ text: { content: company } }] };
+    if (email !== undefined)    props['Mail']     = { rich_text: [{ text: { content: email } }] };
+    if (insta !== undefined)    props['Insta']    = { rich_text: [{ text: { content: insta } }] };
+    if (whatsapp !== undefined) props['Whatsapp'] = { rich_text: [{ text: { content: whatsapp } }] };
+    if (website !== undefined)  props['Website']  = { rich_text: [{ text: { content: website } }] };
+    if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location } }] };
+  }
 
   try {
-    // ── LOAD ALL ──────────────────────────────────────────────────────────────
-    if (action === 'load') {
-      const [leads, converted] = await Promise.all([
-        queryDB(LEAD_DB, mapLead),
-        queryDB(CONV_DB, mapConverted),
-      ]);
-      return res.status(200).json({ leads, converted });
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'updateDetails', pageId: id, props }) });
+    // Update local cache
+    const arr = db === 'leads' ? crmData.leads : crmData.converted;
+    const item = arr.find(x => x.id === id);
+    if (item) {
+      if (name) item.name = name;
+      if (company) item.company = company;
+      if (email) item.email = email;
+      if (insta) item.insta = insta;
+      if (whatsapp) item.whatsapp = whatsapp;
+      if (website) item.website = website;
+      if (location) item.location = location;
     }
-
-    // ── UPDATE STATUS / NOTES ─────────────────────────────────────────────────
-    if (action === 'update') {
-      const { pageId, db, status, notes, engageNext } = req.body;
-      if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
-
-      const props = {};
-      if (notes !== undefined) {
-        props['Notes'] = { rich_text: [{ text: { content: notes } }] };
-      }
-      if (engageNext !== undefined) {
-        props['Engage Next'] = engageNext ? { date: { start: engageNext } } : { date: null };
-      }
-      if (status !== undefined) {
-        if (db === 'leads') {
-          props['Instagram'] = { select: { name: status } };
-        } else {
-          props['Status'] = { multi_select: status.map(s => ({ name: s })) };
-        }
-      }
-
-      await updatePage(pageId, props);
-      return res.status(200).json({ success: true });
-    }
-
-    // ── CREATE LEAD ───────────────────────────────────────────────────────────
-    if (action === 'create') {
-      const page = await createLead(req.body);
-      return res.status(200).json({ success: true, pageId: page.id });
-    }
-
-    return res.status(400).json({ error: `Unknown action: ${action}` });
-
-  } catch (err) {
-    console.error('[crm]', err.message);
-    return res.status(500).json({ error: err.message });
-  }
+    openCrmModal(id);
+    crmRender();
+  } catch(e) { alert('Could not save details.'); }
 }
+
+async function promoteLead(id) {
+  const c = [...(crmData.leads||[])].find(x => x.id === id);
+  if (!c || !confirm(`Move ${c.name || 'this lead'} to Converted Leads?`)) return;
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'promote', pageId: id, name: c.name, company: c.company,
+        email: c.email, insta: c.insta, website: c.website, location: c.location, notes: c.notes }) });
+    $('crm-modal').classList.remove('open');
+    crmData.leads = crmData.leads.filter(x => x.id !== id);
+    crmRender();
+    loadCRM(true);
+  } catch(e) { alert('Could not promote lead.'); }
+}
+
+function closeCrmModal(e) {
+  if (e.target === $('crm-modal')) $('crm-modal').classList.remove('open');
+}
+
+async function saveCrmContact(id, db) {
+  const sel = $('crm-status-sel');
+  const status = db === 'leads'
+    ? sel.value
+    : Array.from(sel.selectedOptions).map(o => o.value);
+  const notes = $('crm-notes-input').value;
+  const engageNext = $('crm-engage-next').value || null;
+
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'update', pageId:id, db, status, notes, engageNext }) });
+    // Update local data
+    const arr = db === 'leads' ? crmData.leads : crmData.converted;
+    const item = arr.find(x => x.id === id);
+    if (item) { item.status = status; item.notes = notes; item.engageNext = engageNext; }
+    $('crm-modal').classList.remove('open');
+    crmRender();
+  } catch(e) { alert('Could not save.'); }
+}
+
+function loadDraftById(pageId) {
+  if (!window._drafts) return;
+  const idx = window._drafts.findIndex(d => d.pageId === pageId);
+  if (idx >= 0) { loadDraftByIndex(idx); document.getElementById('crm-modal').classList.remove('open'); }
+}
+
+function prefillOfferFromCRM(id) {
+  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
+  if (!c) return;
+  $('crm-modal').classList.remove('open');
+  intentionalDraft = true;
+  currentPageId = null;
+  draftActive = false;
+  $('f-name').value = c.name || '';
+  $('f-company').value = c.company || '';
+  $('f-contractdate').value = todayStr();
+  $('f-validuntil').value = addDays(todayStr(), 7);
+  $('notion-status').value = 'Draft';
+  switchTab('edit');
+}
+
+function openNewLeadModal() {
+  ['nl-name','nl-company','nl-email','nl-insta','nl-location','nl-notes'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  $('new-lead-modal').classList.add('open');
+}
+
+function closeNewLeadModal(e) {
+  if (!e || e.target === $('new-lead-modal')) $('new-lead-modal').classList.remove('open');
+}
+
+async function saveNewLead() {
+  const name = $('nl-name').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'create',
+        name, company: $('nl-company').value,
+        email: $('nl-email').value,
+        insta: $('nl-insta').value,
+        whatsapp: $('nl-whatsapp')?.value||'',
+        location: $('nl-location').value,
+        notes: $('nl-notes').value,
+        source: $('nl-source').value,
+      })
+    });
+    $('new-lead-modal').classList.remove('open');
+    crmLoaded = false;
+    loadCRM();
+  } catch(e) { alert('Could not save lead.'); }
+}
+
+</script>
+
+<!-- CRM -->
+<div class="view" id="view-crm">
+  <div style="max-width:800px;margin:0 auto;">
+    <div class="view-label">CRM</div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;">
+      <button id="crm-tab-leads" onclick="crmSwitchTab('leads')" style="padding:6px 16px;border:1px solid #B8935A;border-radius:100px;background:#B8935A;color:#fff;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;">Leads</button>
+      <button id="crm-tab-converted" onclick="crmSwitchTab('converted')" style="padding:6px 16px;border:1px solid rgba(184,147,90,.35);border-radius:100px;background:transparent;color:#B8935A;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;">Converted</button>
+      <div id="crm-count" style="font-family:'Lora',serif;font-size:10px;color:#8B7355;font-style:italic;margin-left:6px;"></div>
+    </div>
+    <!-- Actions -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+      <button class="action-btn dark" style="flex:none;padding:7px 12px;font-size:8px;" onclick="openNewLeadModal()">+ New Lead</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 12px;font-size:8px;" onclick="loadCRM(true)">↻ Refresh</button>
+      <button class="action-btn dark" style="flex:none;padding:7px 12px;font-size:8px;" onclick="showDuplicates()">⊕ Dupes</button>
+    </div>
+    <!-- Filters -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <div style="flex:1;min-width:120px;position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#B8935A;font-size:14px;pointer-events:none;">🔍</span>
+        <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="width:100%;padding:7px 10px 7px 32px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;box-sizing:border-box;">
+      </div>
+      <select id="crm-source-filter" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="">All Sources</option>
+        <option value="Instagram">Instagram</option>
+        <option value="WhatsApp">WhatsApp</option>
+        <option value="Shala Rental">Shala Rental</option>
+        <option value="Email">Email</option>
+        <option value="In Person">In Person</option>
+        <option value="Other">Other</option>
+      </select>
+      <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="none">No grouping</option>
+        <option value="location">By Location</option>
+        <option value="status">By Status</option>
+        <option value="source">By Source</option>
+        <option value="date">By Month</option>
+      </select>
+      <select id="crm-sort" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;">
+        <option value="date">↓ Date</option>
+        <option value="name">A–Z Name</option>
+        <option value="location">A–Z Location</option>
+      </select>
+    </div>
+    <div id="crm-list"></div>
+  </div>
+</div>
+
+<!-- CRM DETAIL MODAL -->
+<div class="ios-modal" id="crm-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="ios-modal-box" style="max-height:85vh;overflow-y:auto;">
+    <div id="crm-modal-content"></div>
+  </div>
+</div>
+
+<!-- NEW LEAD MODAL -->
+<div class="ios-modal" id="new-lead-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="ios-modal-box">
+    <div class="ios-modal-title">New Lead</div>
+    <div class="fg"><label>Name</label><input type="text" id="nl-name"></div>
+    <div class="fg"><label>Company</label><input type="text" id="nl-company"></div>
+    <div class="fg"><label>Email</label><input type="email" id="nl-email"></div>
+    <div class="fg"><label>Instagram</label><input type="text" id="nl-insta"></div>
+    <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
+    <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
+    <div class="fg"><label>WhatsApp</label><input type="text" id="nl-whatsapp"></div>
+    <div class="fg"><label>Source (how you found them)</label>
+      <select id="nl-source" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;">
+        <option value="Instagram">📱 Instagram</option>
+        <option value="WhatsApp">💬 WhatsApp</option>
+        <option value="Shala Rental">🏛 Shala Rental</option>
+        <option value="Email">📧 Email</option>
+        <option value="In Person">🤝 In Person</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
+    <button onclick="document.getElementById('new-lead-modal').classList.remove('open')" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #D4C4A8;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#8B7355;">Cancel</button>
+  </div>
+</div>
+
+<!-- PHILOSOPHY -->
+<div class="view" id="view-philosophy" style="background:#221208;min-height:100vh;padding:0;">
+  <div style="max-width:680px;margin:0 auto;padding:48px 28px 80px;">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:56px;">
+      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:52px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:28px;display:block;margin-left:auto;margin-right:auto;">
+      <div style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:#B8935A;margin-bottom:16px;">Ubuntu Bali · Philosophy</div>
+      <div style="width:40px;height:1px;background:#B8935A;opacity:.4;margin:0 auto 28px;"></div>
+      <h1 style="font-family:'Libre Baskerville',serif;font-size:24px;font-weight:700;color:#F5ECD7;line-height:1.35;letter-spacing:.01em;">The Strength of the Circle</h1>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#B8935A;font-style:italic;margin-top:10px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
+    </div>
+
+    <!-- Intro -->
+    <p style="font-family:'Lora',serif;font-size:15px;color:#D4C4A8;line-height:1.9;margin-bottom:20px;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
+
+    <!-- Pull quote -->
+    <div style="border-left:3px solid #B8935A;padding:18px 24px;margin:36px 0;background:rgba(184,147,90,.07);border-radius:0 4px 4px 0;">
+      <p style="font-family:'Libre Baskerville',serif;font-size:18px;color:#F5ECD7;font-style:italic;line-height:1.5;letter-spacing:.01em;">"I am because we are."</p>
+      <p style="font-family:'Lora',serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#B8935A;margin-top:10px;">Ubuntu</p>
+    </div>
+
+    <!-- Section 1 -->
+    <div style="margin-bottom:40px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">The Illusion of the Individual</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">In the West, we often follow the Cartesian logic of "I think, therefore I am." It places the center of the universe squarely between our own ears. It suggests that our identity is a private project. But if you take a human being and strip away every relationship, every teacher who coached them, every parent who comforted them, and every colleague who challenged them, what is left?</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;">The truth is that none of us exists in a vacuum. A leader is not a leader without a team that chooses to follow. A speaker is not a speaker without an audience that chooses to listen. Our very humanity is a quality that is conferred upon us by others. Ubuntu reminds us that we do not find ourselves by looking inward. We find ourselves by looking at the people around us.</p>
+    </div>
+
+    <!-- Section 2 -->
+    <div style="margin-bottom:40px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">The Ecosystem of Humanity</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">Imagine a forest. We might point to a single, towering oak and marvel at its strength. But beneath the soil, that tree is part of a complex, invisible network of roots and fungi that share nutrients and warnings. If the forest dies, the tree dies, no matter how strong it thinks it is.</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:24px;">We are all one. We breathe the same air, we feel the same pain, and we live under the same sky. There is no such thing as a truly separate life. When we hurt someone else, we are essentially wounding the collective body that we all belong to. When we lift someone up, we are strengthening the air we all breathe.</p>
+
+      <!-- Three pillars -->
+      <p style="font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;margin-bottom:16px;">When we practice Ubuntu, we realize that:</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:4px;padding:16px 18px;">
+          <div style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:6px;">Your success is my success.</div>
+          <div style="font-family:'Lora',serif;font-size:13px;color:#B8935A;line-height:1.7;">If the team wins, the individual thrives.</div>
+        </div>
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:4px;padding:16px 18px;">
+          <div style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:6px;">Your suffering is my suffering.</div>
+          <div style="font-family:'Lora',serif;font-size:13px;color:#B8935A;line-height:1.7;">If a member of the community is marginalized, the integrity of the whole community is compromised.</div>
+        </div>
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:4px;padding:16px 18px;">
+          <div style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:6px;">Kindness is a survival strategy.</div>
+          <div style="font-family:'Lora',serif;font-size:13px;color:#B8935A;line-height:1.7;">Treating others with dignity is not just nice. It is the only way to sustain the environment that allows us to exist.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3 -->
+    <div style="margin-bottom:40px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">Leading with Ubuntu</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">In the world of business and leadership, we often prioritize <em>What</em> and <em>How</em>. We focus on the bottom line and the efficiency of the process. But Ubuntu asks us to focus on the <em>Who</em>. A company operating with the spirit of Ubuntu does not just see human resources. It sees a community of people whose lives are inextricably linked.</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;">When a leader says, "I am because we are," they are acknowledging that their authority is a gift from the people they serve. They realize that their job is not to be the smartest person in the room, but to create a room where everyone feels safe enough to be their best selves.</p>
+    </div>
+
+    <!-- Section 4 -->
+    <div style="margin-bottom:48px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:24px;height:1px;background:#B8935A;opacity:.5;"></div>
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#B8935A;">The Way Forward</h2>
+      </div>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">We do not need more self-help. We need <em>us</em>-help. The challenges we face today — from the loneliness epidemic to global instability — cannot be solved by individuals acting in isolation. They require us to rebuild our circles. They require us to acknowledge that my humanity is caught up, bound up, inextricably, in yours.</p>
+      <p style="font-family:'Lora',serif;font-size:14px;color:#C8B89A;line-height:1.9;">When we shift our perspective from <em>Me</em> to <em>We</em>, something incredible happens. The pressure to be perfect evaporates, replaced by the support of the collective. We stop competing for a bigger slice of the pie and start focusing on making a bigger pie for everyone.</p>
+    </div>
+
+    <!-- Closing quote -->
+    <div style="text-align:center;padding:36px 0;border-top:1px solid rgba(184,147,90,.2);">
+      <div style="font-family:'Libre Baskerville',serif;font-size:20px;color:#F5ECD7;font-style:italic;line-height:1.5;margin-bottom:14px;">"I am because we are."</div>
+      <div style="font-family:'Lora',serif;font-size:12px;color:#8B7355;line-height:1.7;">It is not just a philosophy.<br>It is a biological and social reality.<br>And the sooner we embrace it, the sooner we can start<br>building a world where everyone truly belongs.</div>
+      <div style="width:40px;height:1px;background:#B8935A;opacity:.3;margin:24px auto 0;"></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
