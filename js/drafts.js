@@ -1,12 +1,13 @@
 async function loadDrafts(){
   const list=$('drafts-list');
-  list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading drafts…</div>`;
+  if(!list) return;
+  list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;font-style:italic;">Loading drafts…</div>`;
   try{
     const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'load'})});
     if(!r.ok) throw new Error();
     const data=await r.json();
     if(!data.drafts||data.drafts.length===0){
-      list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">No drafts saved yet.</div>`;
+      list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;font-style:italic;">No drafts saved yet. Click + New Deal to start.</div>`;
       return;
     }
     window._drafts=data.drafts;
@@ -34,7 +35,8 @@ async function loadDrafts(){
       </div>`;
     }).join('');
   } catch(e){
-    list.innerHTML=`<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load drafts.</div>`;
+    dbg('loadDrafts error: ' + e.message);
+    list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;">Could not load drafts: ${e.message}</div>`;
   }
 }
 
@@ -153,19 +155,6 @@ function printOffer(){const w=window.open('','_blank');w.document.write(`<!DOCTY
 function printContract(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ubuntu Bali – Contract</title><link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>${CONTRACT_STYLES}</style></head><body>${buildContractHTML()}<script>window.onload=function(){window.print();}<\/script>
 </body></html>`);w.document.close();}
 
-// PWA Install
-let deferredPrompt=null;
-const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
-const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-if(!isStandalone){
-  if(isIOS){$('install-btn').style.display='block';$('install-btn').textContent='⊕ Add to Home Screen';}
-  else window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('install-btn').style.display='block';});
-}
-function handleInstall(){
-  if(isIOS) document.getElementById('ios-modal').classList.add('open');
-  else if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;$('install-btn').style.display='none';});}
-}
-function closeIosModal(e){if(e.target===document.getElementById('ios-modal'))document.getElementById('ios-modal').classList.remove('open');}
 
 // Service worker
 let pendingSW = null;
@@ -191,71 +180,7 @@ function applyUpdate(){
   window.location.reload(true);
 }
 
-// Init
-$('f-contractdate').value=todayStr();
-$('f-validuntil').value=addDays(todayStr(),7);
-// Start on drafts view
-switchDealTab('drafts');
-// CRM tab visual state set on first open
 
-function startAutosave(){
-  if(autosaveOn) return;
-  autosaveOn=true;
-  const status=$('autosave-status');
-  status.style.display='inline';
-  autosaveInterval=setInterval(async()=>{
-    await saveToNotion(true);
-    status.textContent='saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  },15000);
-}
-
-function markDraftActive(){
-  if(!intentionalDraft) return;
-  if(!draftActive){
-    draftActive=true;
-    startAutosave();
-  }
-}
-
-function newDraft(){
-  // Reset form
-  currentPageId=null;
-  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'];
-  ids.forEach(id=>{const el=$(id);if(el)el.value='';});
-  $('f-contractdate').value=todayStr();
-  $('f-validuntil').value=addDays(todayStr(),7);
-  $('f-offervalid').value='';
-  $('notion-status').value='Draft';
-  draftActive=false;
-  intentionalDraft=true;
-  switchDealTab('edit');
-  // reset autosave for new draft
-  autosaveOn=false;
-  clearInterval(autosaveInterval);
-  autosaveInterval=null;
-  $('autosave-status').textContent='';
-}
-
-// Live IDR rate
-(async()=>{
-  const dot=$('idr-dot'), info=$('idr-info');
-  try{
-    const r=await fetch('/api/exchange-rate');
-    const d=await r.json();
-    $('f-idrrate').value=d.rate;
-    const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    if(d.fallback){
-      dot.className='idr-dot fallback';
-      info.textContent=`⚠ Fallback rate · ${now}`;
-    } else {
-      dot.className='idr-dot live';
-      info.textContent=`Live · ExchangeRate-API · ${now}`;
-    }
-  } catch{
-    dot.className='idr-dot error';
-    info.textContent='Could not fetch — using default rate';
-  }
-})();
 
 
 // Global error capture → debug panel
