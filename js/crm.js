@@ -1,478 +1,169 @@
-// ── DUPLICATES ───────────────────────────────────────────────────────────────
-function findDuplicates() {
-  const all = [...(crmData.leads||[]), ...(crmData.converted||[])];
-  const groups = {};
-  all.forEach(c => {
-    const key = (c.name||'').toLowerCase().trim().replace(/\s+/g,' ');
-    if (!key || key === 'new lead') return;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(c);
-  });
-  return Object.values(groups).filter(g => g.length > 1);
-}
+// api/crm.js
+// Handles read/update for Lead Pipeline and Converted Leads databases
 
-function showDuplicates() {
-  const dups = findDuplicates();
-  const modal = document.getElementById('crm-modal');
-  const content = document.getElementById('crm-modal-content');
+const LEAD_DB    = 'a0b622d3e574829593bf0106312fbd3b';
+const CONV_DB    = '325622d3e57481bbbaaedeb47e377f2c';
 
-  if (dups.length === 0) {
-    content.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates</div>
-        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
-      </div>
-      <div style="font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;padding:20px 0;text-align:center;">No duplicates found 🎉</div>`;
-    modal.classList.add('open');
-    return;
-  }
+const headers = {
+  'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
+  'Notion-Version': '2022-06-28',
+  'Content-Type': 'application/json',
+};
 
-  content.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates (${dups.length})</div>
-      <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
-    </div>
-    <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-bottom:14px;">Same name found in multiple entries. Review and merge or delete.</div>
-    ${dups.map((group, gi) => `
-      <div style="border:1px solid #EDE3D4;border-radius:4px;margin-bottom:12px;overflow:hidden;">
-        <div style="background:#F5ECD7;padding:8px 12px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;font-weight:700;">${group[0].name}</div>
-        ${group.map(c => `
-          <div style="padding:10px 12px;border-top:1px solid #EDE3D4;display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <div style="font-family:'Lora',serif;font-size:12px;color:#1A1208;">${c.db === 'leads' ? '📋 Lead Pipeline' : '✓ Converted'} · ${c.location||'No location'}</div>
-              <div style="font-family:'Lora',serif;font-size:10px;color:#8B7355;margin-top:2px;">${c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
-            </div>
-            <div style="display:flex;gap:6px;">
-              <button onclick="openCrmModal('${c.id}');document.getElementById('crm-modal').classList.add('open')" style="padding:5px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8B7355;">View</button>
-              <button onclick="deleteDupConfirm('${c.id}','${c.name}',${gi})" style="padding:5px 10px;border:1px solid #F5D6D6;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8A1A1A;">Delete</button>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `).join('')}`;
-  modal.classList.add('open');
-}
-
-async function deleteDupConfirm(id, name, groupIndex) {
-  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-  try {
-    await fetch('/api/crm', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({action:'delete', pageId: id})
-    });
-    // Remove from local data
-    crmData.leads = crmData.leads.filter(x => x.id !== id);
-    crmData.converted = crmData.converted.filter(x => x.id !== id);
-    showDuplicates(); // refresh duplicate view
-  } catch(e) { alert('Could not delete.'); }
-}
-
-// ── LINKED DRAFTS IN CRM ─────────────────────────────────────────────────────
-function getLinkedDrafts(contactName, company) {
-  if (!window._drafts || (!contactName && !company)) return [];
-  const name = (contactName||'').toLowerCase();
-  const comp = (company||'').toLowerCase();
-  return window._drafts.filter(d =>
-    (d.organizer && d.organizer.toLowerCase().includes(name) && name) ||
-    (d.retreatName && comp && d.retreatName.toLowerCase().includes(comp))
-  );
-}
-
-// ── CRM ──────────────────────────────────────────────────────────────────────
-function statusClass(s) {
-  if (!s) return '';
-  const m = {
-    'NOT GOOD FIT':'not-good','TERMINATED':'terminated','GHOSTED':'ghosted',
-    'Followed + Engaged':'followed','Reached out':'reached',
-    'WARM: Booked a call OR asked for help':'warm',
-    'HOT: Past client/strong conversation':'hot',
-    'QUALIFIED TO BUY':'qualified','SALE CLOSED':'closed',
-    'Face2Face conversation':'face2face','Rejected Ubuntu':'not-good',
-    'Responded':'responded','Phone call':'phone','Booked Venue':'booked',
-  };
-  return 'crm-status-' + (m[s] || 'reached');
-}
-
-function suitClass(s) {
-  if (!s) return '';
-  if (s.startsWith('1')) return 'crm-suit-1';
-  if (s.startsWith('2')) return 'crm-suit-2';
-  if (s.startsWith('3')) return 'crm-suit-3';
-  return 'crm-suit-4';
-}
-
-function crmSwitchTab(tab) {
-  crmTab = tab;
-  ['leads','converted'].forEach(t => {
-    const b = document.getElementById('crm-tab-'+t);
-    if (!b) return;
-    b.style.background = t === tab ? '#B8935A' : 'transparent';
-    b.style.color = t === tab ? '#fff' : '#B8935A';
-    b.style.borderColor = t === tab ? '#B8935A' : 'rgba(184,147,90,.35)';
-  });
-  crmCollapsed = {};
-  crmRender();
-}
-
-function crmSort(items) {
-  const g = document.getElementById('crm-group')?.value || 'none';
-  return [...items].sort((a, b) => {
-    if (g === 'none_name')     return (a.name||'').localeCompare(b.name||'');
-    if (g === 'none_location') return (a.location||'').localeCompare(b.location||'');
-    return new Date(b.lastEdited||0) - new Date(a.lastEdited||0); // default date desc
-  });
-}
-
-function groupKey(c, groupBy) {
-  if (groupBy === 'status') {
-    const s = Array.isArray(c.status) ? c.status[0] : c.status;
-    return s || 'No Status';
-  }
-  if (groupBy === 'source')   return c.source || 'No Source';
-  if (groupBy === 'location') return c.location || 'No Location';
-  if (groupBy === 'date') {
-    if (!c.lastEdited) return 'Unknown';
-    return new Date(c.lastEdited).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
-  }
+function getProp(props, name, type) {
+  const p = props[name];
+  if (!p) return null;
+  if (type === 'title')        return p.title?.map(t => t.plain_text).join('') || null;
+  if (type === 'text')         return p.rich_text?.map(t => t.plain_text).join('') || null;
+  if (type === 'email')        return p.email || null;
+  if (type === 'select')       return p.select?.name || null;
+  if (type === 'multi_select') return p.multi_select?.map(s => s.name) || [];
+  if (type === 'date')         return p.date?.start || null;
+  if (type === 'url')          return p.url || null;
+  if (type === 'phone')        return p.phone_number || null;
   return null;
 }
 
-function buildGrid(items) {
-  const hRow = ['Name','Location','Source / Status','Added'].map(h =>
-    `<div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:var(--bg2);border-bottom:1px solid var(--border);">${h}</div>`
-  ).join('');
-
-  const rows = items.map((c, i) => {
-    const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
-    const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-    const statusHtml = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}" style="font-size:7px;">${s}</span>`).join(' ');
-    const srcColors = {'Instagram':'#E3F2FD','WhatsApp':'#E8F5E9','Shala Rental':'#FFF3E0'};
-    const srcTextColors = {'Instagram':'#1565C0','WhatsApp':'#2E7D32','Shala Rental':'#E65100'};
-    const sourceBadge = c.source ? `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:7px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;text-transform:uppercase;font-weight:700;background:${srcColors[c.source]||'#F5ECD7'};color:${srcTextColors[c.source]||'#5C3D2E'};margin-right:4px;">${c.source}</span>` : '';
-    const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
-    const cell = `padding:8px 10px;cursor:pointer;border-bottom:1px solid #EDE3D4;`;
-    return `
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};">${c.name||'Unnamed'}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};">${c.location||'—'}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}background:${bg};">${sourceBadge}${statusHtml||'—'}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};">${date}</div>
-    `;
-  }).join('');
-
-  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;box-shadow:var(--shadow);">${hRow}${rows}</div>`;
+function mapLead(page) {
+  const p = page.properties;
+  return {
+    id:           page.id,
+    lastEdited:   page.last_edited_time,
+    db:           'leads',
+    name:         getProp(p, 'Name',                  'title'),
+    company:      getProp(p, 'Company',               'text'),
+    email:        getProp(p, 'Email',                 'email'),
+    location:     getProp(p, 'Location',              'text'),
+    insta:        getProp(p, 'Insta',                 'text'),
+    website:      getProp(p, 'Website',               'text'),
+    linkedin:     getProp(p, 'Linkydinky',            'text'),
+    notes:        getProp(p, 'Notes',                 'text'),
+    status:       getProp(p, 'Instagram',             'select'),
+    suitability:  getProp(p, 'Suitability',           'select'),
+    reachedOutOn: getProp(p, 'Reached out on',        'multi_select'),
+    engagedFirst: getProp(p, 'Engaged first',         'date'),
+    engagedLast:  getProp(p, 'Engaged last',          'date'),
+    engageNext:   getProp(p, 'Engage Next',           'date'),
+    salesCall:    getProp(p, 'Sales Call Booked Date','date'),
+  };
 }
 
-function crmRender() {
-  const list = document.getElementById('crm-list');
-  if (!list) return; // view not in DOM yet
-  const q = (document.getElementById('crm-search')?.value || '').toLowerCase();
-  const groupRaw = document.getElementById('crm-group')?.value || 'none';
-  const groupBy = groupRaw.startsWith('none') ? 'none' : groupRaw;
-  const sourceFilter = document.getElementById('crm-source-filter')?.value || '';
+function mapConverted(page) {
+  const p = page.properties;
+  return {
+    id:           page.id,
+    lastEdited:   page.last_edited_time,
+    db:           'converted',
+    name:         getProp(p, 'Name',                         'title'),
+    company:      getProp(p, 'Company',                      'text'),
+    email:        getProp(p, 'Mail',                         'text'),
+    location:     getProp(p, 'Location',                     'text'),
+    insta:        getProp(p, 'Insta',                        'text'),
+    website:      getProp(p, 'Website',                      'text'),
+    whatsapp:     getProp(p, 'Whatsapp',                     'text'),
+    notes:        getProp(p, 'Notes',                        'text'),
+    contact:      getProp(p, "Who's in contact",             'text'),
+    status:       getProp(p, 'Status',                       'multi_select'),
+    suitability:  getProp(p, 'Suitability',                  'select'),
+    engageNext:   getProp(p, 'Engage Next',                  'date'),
+    salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
+  };
+}
 
-  let items = (crmData[crmTab] || []).filter(c => {
-    const matchQ = !q || (c.name||'').toLowerCase().includes(q) ||
-                         (c.company||'').toLowerCase().includes(q) ||
-                         (c.location||'').toLowerCase().includes(q);
-    const matchS = !sourceFilter || c.source === sourceFilter;
-    return matchQ && matchS;
+async function queryDB(dbId, mapper) {
+  const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
+      page_size: 100,
+    }),
   });
-  items = crmSort(items);
+  if (!resp.ok) throw new Error(`DB query failed: ${await resp.text()}`);
+  const data = await resp.json();
+  return data.results.map(mapper);
+}
 
-  const countEl = document.getElementById('crm-count');
-  if (countEl) countEl.textContent = items.length + ' of ' + (crmData[crmTab]||[]).length;
-
-  if (items.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">${crmLoaded ? 'No results.' : 'Loading…'}</div>`;
-    return;
-  }
-
-  if (groupBy === 'none') {
-    list.innerHTML = buildGrid(items);
-    return;
-  }
-
-  // Grouped with collapsible sections
-  const groups = {};
-  items.forEach(c => {
-    const key = groupKey(c, groupBy);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(c);
+async function updatePage(pageId, properties) {
+  const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ properties }),
   });
-
-  list.innerHTML = Object.entries(groups).map(([key, groupItems]) => {
-    const isCollapsed = !!crmCollapsed[key];
-    return `
-      <div style="margin-bottom:4px;">
-        <div onclick="toggleCrmGroup('${key.replace(/'/g,'\'')}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--dark);border-radius:${isCollapsed?'4px':'4px 4px 0 0'};cursor:pointer;user-select:none;">
-          <span style="font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F5ECD7;">${key}</span>
-          <span style="font-family:'Lora',serif;font-size:10px;color:#B8935A;">${groupItems.length} &nbsp; ${isCollapsed?'▸':'▾'}</span>
-        </div>
-        ${isCollapsed ? '' : buildGrid(groupItems)}
-      </div>`;
-  }).join('');
+  if (!resp.ok) throw new Error(`Update failed: ${await resp.text()}`);
+  return await resp.json();
 }
 
-function toggleCrmGroup(key) {
-  crmCollapsed[key] = !crmCollapsed[key];
-  crmRender();
+async function createLead(body) {
+  const resp = await fetch('https://api.notion.com/v1/pages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      parent: { database_id: LEAD_DB },
+      properties: {
+        'Name':     { title:     [{ text: { content: body.name || '' } }] },
+        'Company':  { rich_text: [{ text: { content: body.company || '' } }] },
+        'Email':    { email: body.email || null },
+        'Location': { rich_text: [{ text: { content: body.location || '' } }] },
+        'Insta':    { rich_text: [{ text: { content: body.insta || '' } }] },
+        'Notes':    { rich_text: [{ text: { content: body.notes || '' } }] },
+        ...(body.status && { 'Instagram': { select: { name: body.status } } }),
+      },
+    }),
+  });
+  if (!resp.ok) throw new Error(`Create failed: ${await resp.text()}`);
+  return await resp.json();
 }
 
-async function fetchCRM(force=false) {
-  const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load', forceRefresh: !!force }) });
-  const data = await r.json();
-  if (!data.leads) throw new Error(JSON.stringify(data));
-  return data;
-}
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-async function loadCRM(force=false) {
-  if (!crmLoaded) {
-    $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">Loading…</div>`;
-    try {
-      crmData = await fetchCRM(false);
-      crmLoaded = true;
-      crmRender();
-    } catch(e) {
-      $('crm-list').innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B3A2E;">Could not load CRM: ${e.message}</div>`;
-      return;
+  const { action } = req.body;
+
+  try {
+    // ── LOAD ALL ──────────────────────────────────────────────────────────────
+    if (action === 'load') {
+      const [leads, converted] = await Promise.all([
+        queryDB(LEAD_DB, mapLead),
+        queryDB(CONV_DB, mapConverted),
+      ]);
+      return res.status(200).json({ leads, converted });
     }
-  } else {
-    crmRender();
-  }
-  fetchCRM(force).then(data => {
-    crmData = data;
-    crmRender();
-    const c = data._counts||{}; dbg(`CRM: ${(data.leads||[]).length} leads total (instagram:${c.instagram||0} whatsapp:${c.whatsapp||0} shala:${c.shala||0}) + ${(data.converted||[]).length} converted`);
-  }).catch(e => dbg('CRM bg refresh failed: ' + e.message));
-}
 
-function crmDetailHTML(c, editMode=false) {
-  const isLead = c.db === 'leads';
-  const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-  const leadStatuses = ['Followed + Engaged','Reached out','WARM: Booked a call OR asked for help','HOT: Past client/strong conversation','QUALIFIED TO BUY','SALE CLOSED','GHOSTED','TERMINATED','NOT GOOD FIT'];
-  const convStatuses = ['Face2Face conversation','Responded','Phone call','Booked Venue','Rejected Ubuntu'];
-  const statusOptions = isLead
-    ? leadStatuses.map(s => `<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')
-    : convStatuses.map(s => `<option value="${s}" ${statusArr.includes(s)?'selected':''}>${s}</option>`).join('');
-  const statusBadges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join(' ');
+    // ── UPDATE STATUS / NOTES ─────────────────────────────────────────────────
+    if (action === 'update') {
+      const { pageId, db, status, notes, engageNext } = req.body;
+      if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
 
-  const showPromote = isLead && (c.status === 'Reached out' || c.status === 'WARM: Booked a call OR asked for help' || c.status === 'HOT: Past client/strong conversation' || c.status === 'QUALIFIED TO BUY' || c.status === 'SALE CLOSED');
+      const props = {};
+      if (notes !== undefined) {
+        props['Notes'] = { rich_text: [{ text: { content: notes } }] };
+      }
+      if (engageNext !== undefined) {
+        props['Engage Next'] = engageNext ? { date: { start: engageNext } } : { date: null };
+      }
+      if (status !== undefined) {
+        if (db === 'leads') {
+          props['Instagram'] = { select: { name: status } };
+        } else {
+          props['Status'] = { multi_select: status.map(s => ({ name: s })) };
+        }
+      }
 
-  if (editMode) {
-    return `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Edit Contact</div>
-        <button onclick="openCrmModal('${c.id}')" style="background:none;border:none;font-size:13px;cursor:pointer;color:#8B7355;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;">✕ Cancel</button>
-      </div>
-      <div class="fg"><label>Name</label><input type="text" id="edit-name" value="${c.name||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Company</label><input type="text" id="edit-company" value="${c.company||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Email</label><input type="text" id="edit-email" value="${c.email||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Instagram</label><input type="text" id="edit-insta" value="${c.insta||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>WhatsApp</label><input type="text" id="edit-whatsapp" value="${c.whatsapp||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Website</label><input type="text" id="edit-website" value="${c.website||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Location</label><input type="text" id="edit-location" value="${c.location||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <button class="ios-modal-close" style="margin-top:8px;" onclick="saveContactDetails('${c.id}','${c.db}')">Save Details</button>
-    `;
-  }
-
-  const fields = [
-    c.company    && ['Company', c.company],
-    c.email      && ['Email', `<a href="mailto:${c.email}" style="color:#B8935A;">${c.email}</a>`],
-    c.whatsapp   && ['WhatsApp', c.whatsapp],
-    c.insta      && ['Instagram', c.insta],
-    c.linkedin   && ['LinkedIn', c.linkedin],
-    c.website    && ['Website', `<a href="${(c.website||'').startsWith('http')?c.website:'https://'+c.website}" target="_blank" style="color:#B8935A;">${c.website}</a>`],
-    c.location   && ['Location', c.location],
-    c.contact    && ['Contact', c.contact],
-    c.reachedOutOn && c.reachedOutOn.length > 0 && ['Reached out on', c.reachedOutOn.map(r=>`<span class="crm-badge crm-status-reached" style="font-size:7px;">${r}</span>`).join(' ')],
-    c.engagedFirst && ['First contact', fmtD(c.engagedFirst)],
-    c.engagedLast  && ['Last engaged', fmtD(c.engagedLast)],
-    c.salesCall    && ['Sales call', fmtD(c.salesCall)],
-  ].filter(Boolean).map(([l,v]) => `<div class="crm-field"><span class="crm-field-label">${l}</span><span>${v}</span></div>`).join('');
-
-  return `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-      <div>
-        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">${c.name||'Unnamed'}</div>
-        <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-top:2px;">${isLead ? 'Lead Pipeline' : 'Converted Lead'}</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="openCrmModalEdit('${c.id}')" style="background:none;border:1px solid #D4C4A8;border-radius:3px;padding:5px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:#8B7355;">✎ Edit</button>
-        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
-      </div>
-    </div>
-    ${fields || '<div style="color:#B8935A;font-family:Lora,serif;font-size:12px;font-style:italic;">No details available</div>'}
-    <div class="crm-section-hd">Status</div>
-    <div style="margin-bottom:8px;">${statusBadges || '—'}</div>
-    ${isLead
-      ? `<select class="crm-select" id="crm-status-sel">${statusOptions}</select>`
-      : `<select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`
+      await updatePage(pageId, props);
+      return res.status(200).json({ success: true });
     }
-    <div class="crm-section-hd">Engage Next</div>
-    <input type="date" id="crm-engage-next" value="${c.engageNext||''}" style="width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;margin-bottom:8px;">
-    <div class="crm-section-hd">Notes</div>
-    <textarea class="crm-textarea" id="crm-notes-input">${c.notes||''}</textarea>
-    <button class="ios-modal-close" style="margin-top:14px;" onclick="saveCrmContact('${c.id}','${c.db}')">Save Changes</button>
-    ${showPromote ? `<button onclick="promoteLead('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3D6636;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Move to Converted</button>` : ''}
-    <button onclick="prefillOfferFromCRM('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3a3228;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Create Offer</button>
-    ${(() => {
-      const linked = getLinkedDrafts(c.name, c.company);
-      if (!linked.length) return '';
-      return `<div class="crm-section-hd">Linked Drafts (${linked.length})</div>` +
-        linked.map(d => `<div onclick="loadDraftById('${d.pageId}')" style="padding:8px 10px;border:1px solid #EDE3D4;border-radius:3px;margin-bottom:6px;cursor:pointer;background:var(--bg);font-family:'Lora',serif;font-size:11px;color:#1A1208;">
-          <span style="font-weight:600;">${d.organizer||'Unnamed'}${d.retreatName?' · '+d.retreatName:''}</span>
-          <span class="draft-status s-${d.status||'Draft'}" style="margin-left:6px;">${d.status||'Draft'}</span>
-          <div style="font-size:10px;color:#8B7355;margin-top:2px;">${d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates'} · USD ${d.totalUSD?Number(d.totalUSD).toLocaleString('en-US'):'—'}</div>
-        </div>`).join('');
-    })()}
-  `;
-}
 
-function openCrmModal(id) {
-  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
-  if (!c) return;
-  $('crm-modal-content').innerHTML = crmDetailHTML(c, false);
-  $('crm-modal').classList.add('open');
-}
-
-function openCrmModalEdit(id) {
-  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
-  if (!c) return;
-  $('crm-modal-content').innerHTML = crmDetailHTML(c, true);
-}
-
-async function saveContactDetails(id, db) {
-  const props = {};
-  const name = $('edit-name')?.value;
-  const company = $('edit-company')?.value;
-  const email = $('edit-email')?.value;
-  const insta = $('edit-insta')?.value;
-  const whatsapp = $('edit-whatsapp')?.value;
-  const website = $('edit-website')?.value;
-  const location = $('edit-location')?.value;
-
-  if (db === 'leads') {
-    if (name !== undefined)    props['Name']     = { title:     [{ text: { content: name } }] };
-    if (company !== undefined) props['Company']  = { rich_text: [{ text: { content: company } }] };
-    if (email !== undefined)   props['Email']    = { email: email || null };
-    if (insta !== undefined)   props['Insta']    = { rich_text: [{ text: { content: insta } }] };
-    if (website !== undefined) props['Website']  = { rich_text: [{ text: { content: website } }] };
-    if (location !== undefined)props['Location'] = { rich_text: [{ text: { content: location } }] };
-  } else {
-    if (name !== undefined)     props['Name']     = { title:     [{ text: { content: name } }] };
-    if (company !== undefined)  props['Company']  = { rich_text: [{ text: { content: company } }] };
-    if (email !== undefined)    props['Mail']     = { rich_text: [{ text: { content: email } }] };
-    if (insta !== undefined)    props['Insta']    = { rich_text: [{ text: { content: insta } }] };
-    if (whatsapp !== undefined) props['Whatsapp'] = { rich_text: [{ text: { content: whatsapp } }] };
-    if (website !== undefined)  props['Website']  = { rich_text: [{ text: { content: website } }] };
-    if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location } }] };
-  }
-
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'updateDetails', pageId: id, props }) });
-    // Update local cache
-    const arr = db === 'leads' ? crmData.leads : crmData.converted;
-    const item = arr.find(x => x.id === id);
-    if (item) {
-      if (name) item.name = name;
-      if (company) item.company = company;
-      if (email) item.email = email;
-      if (insta) item.insta = insta;
-      if (whatsapp) item.whatsapp = whatsapp;
-      if (website) item.website = website;
-      if (location) item.location = location;
+    // ── CREATE LEAD ───────────────────────────────────────────────────────────
+    if (action === 'create') {
+      const page = await createLead(req.body);
+      return res.status(200).json({ success: true, pageId: page.id });
     }
-    openCrmModal(id);
-    crmRender();
-  } catch(e) { alert('Could not save details.'); }
-}
 
-async function promoteLead(id) {
-  const c = [...(crmData.leads||[])].find(x => x.id === id);
-  if (!c || !confirm(`Move ${c.name || 'this lead'} to Converted Leads?`)) return;
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'promote', pageId: id, name: c.name, company: c.company,
-        email: c.email, insta: c.insta, website: c.website, location: c.location, notes: c.notes }) });
-    $('crm-modal').classList.remove('open');
-    crmData.leads = crmData.leads.filter(x => x.id !== id);
-    crmRender();
-    loadCRM(true);
-  } catch(e) { alert('Could not promote lead.'); }
-}
+    return res.status(400).json({ error: `Unknown action: ${action}` });
 
-function closeCrmModal(e) {
-  if (e.target === $('crm-modal')) $('crm-modal').classList.remove('open');
-}
-
-async function saveCrmContact(id, db) {
-  const sel = $('crm-status-sel');
-  const status = db === 'leads'
-    ? sel.value
-    : Array.from(sel.selectedOptions).map(o => o.value);
-  const notes = $('crm-notes-input').value;
-  const engageNext = $('crm-engage-next').value || null;
-
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'update', pageId:id, db, status, notes, engageNext }) });
-    // Update local data
-    const arr = db === 'leads' ? crmData.leads : crmData.converted;
-    const item = arr.find(x => x.id === id);
-    if (item) { item.status = status; item.notes = notes; item.engageNext = engageNext; }
-    $('crm-modal').classList.remove('open');
-    crmRender();
-  } catch(e) { alert('Could not save.'); }
-}
-
-function loadDraftById(pageId) {
-  if (!window._drafts) return;
-  const idx = window._drafts.findIndex(d => d.pageId === pageId);
-  if (idx >= 0) { loadDraftByIndex(idx); document.getElementById('crm-modal').classList.remove('open'); }
-}
-
-function prefillOfferFromCRM(id) {
-  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
-  if (!c) return;
-  $('crm-modal').classList.remove('open');
-  intentionalDraft = true;
-  currentPageId = null;
-  draftActive = false;
-  $('f-name').value = c.name || '';
-  $('f-company').value = c.company || '';
-  $('f-contractdate').value = todayStr();
-  $('f-validuntil').value = addDays(todayStr(), 7);
-  $('notion-status').value = 'Draft';
-  switchTab('deal');switchDealTab('edit');
-}
-
-function openNewLeadModal() {
-  ['nl-name','nl-company','nl-email','nl-insta','nl-location','nl-notes'].forEach(id => { const el=$(id); if(el) el.value=''; });
-  $('new-lead-modal').classList.add('open');
-}
-
-function closeNewLeadModal(e) {
-  if (!e || e.target === $('new-lead-modal')) $('new-lead-modal').classList.remove('open');
-}
-
-async function saveNewLead() {
-  const name = $('nl-name').value.trim();
-  if (!name) { alert('Name is required.'); return; }
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        action: 'create',
-        name, company: $('nl-company').value,
-        email: $('nl-email').value,
-        insta: $('nl-insta').value,
-        whatsapp: $('nl-whatsapp')?.value||'',
-        location: $('nl-location').value,
-        notes: $('nl-notes').value,
-        source: $('nl-source').value,
-      })
-    });
-    $('new-lead-modal').classList.remove('open');
-    crmLoaded = false;
-    loadCRM();
-  } catch(e) { alert('Could not save lead.'); }
+  } catch (err) {
+    console.error('[crm]', err.message);
+    return res.status(500).json({ error: err.message });
+  }
 }
