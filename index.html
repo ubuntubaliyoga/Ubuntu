@@ -551,6 +551,10 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Biz Dev
       </button>
+      <button class="nav-tab" data-tab="tutorials" onclick="switchTab('tutorials')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Tutorials
+      </button>
     </div>
     <div class="nav-right">
       <button id="update-btn" onclick="applyUpdate()" style="display:none;padding:7px 16px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;animation:pulse 2s infinite;">↑ Update</button>
@@ -885,6 +889,91 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="bizdev-empty-title">Coming Soon</div>
     <div class="bizdev-empty-sub">Lead generation tools, outreach templates,<br>and pipeline analytics will live here.</div>
   </div>
+</div>
+
+<!-- TUTORIALS VIEW -->
+<div class="view" id="view-tutorials">
+  <div class="view-hero">
+    <div class="view-hero-title">Tutorials</div>
+    <div class="view-hero-sub">Learn how to run and grow Ubuntu Bali</div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:12px;">
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:0;">
+      This section walks you and the team through everything — from how to find and qualify a lead, 
+      to running Ubuntu Flow, to closing a retreat booking. Six modules, designed to get anyone 
+      up to speed fast.
+    </p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px;">
+    <!-- Module 1 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Intro to Business Dev</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">The philosophy behind Ubuntu's growth strategy and how to approach retreat leaders.</div>
+      </div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
+    </div>
+
+    <!-- Module 2 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Ubuntu Flow</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">How to use this app — creating deals, managing leads, generating offers and contracts.</div>
+      </div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
+    </div>
+
+    <!-- Module 3 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Tech</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Tools we use — Notion, WhatsApp, Instagram, email. How they connect and fit together.</div>
+      </div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
+    </div>
+
+    <!-- Module 4 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">4</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Lead Generation</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Where to find retreat leaders, how to qualify them, and how to add them to the CRM.</div>
+      </div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
+    </div>
+
+    <!-- Module 5 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">5</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Outreach</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Scripts, templates, and timing for reaching out on Instagram, WhatsApp and email.</div>
+      </div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
+    </div>
+
+    <!-- Module 6 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">6</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Sale</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">How to run a discovery call, send the offer, follow up, and close the booking.</div>
+      </div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
+    </div>
+  </div>
+
+  <!-- 3-col responsive fix -->
+  <style>
+    @media(max-width:600px){
+      #view-tutorials .view-grid{grid-template-columns:1fr 1fr !important;}
+    }
+  </style>
 </div>
 
 <!-- PHILOSOPHY VIEW -->
