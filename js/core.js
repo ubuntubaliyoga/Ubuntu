@@ -134,10 +134,10 @@ if('serviceWorker' in navigator){
 }
 function applyUpdate(){window.location.reload(true);}
 
-// Init
+// Init — defer until all scripts loaded
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
-switchTab('deal');
+window.addEventListener('load', ()=>switchTab('deal'));
 
 // IDR rate
 (async()=>{
