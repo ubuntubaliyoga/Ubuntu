@@ -38,8 +38,9 @@ function mapInstagram(page) {
     linkedin:    getProp(p, 'Linkydinky',            'text'),
     notes:       getProp(p, 'Notes',                 'text'),
     status:      getProp(p, 'Instagram',             'select'),
-    suitability: getProp(p, 'Suitability',           'select'),
-    engagedFirst:getProp(p, 'Engaged first',         'date'),
+    suitability:  getProp(p, 'Suitability',           'select'),
+    reachedOutOn: getProp(p, 'Reached out on',        'multi_select'),
+    engagedFirst: getProp(p, 'Engaged first',         'date'),
     engagedLast: getProp(p, 'Engaged last',          'date'),
     engageNext:  getProp(p, 'Engage Next',           'date'),
     salesCall:   getProp(p, 'Sales Call Booked Date','date'),
@@ -161,7 +162,8 @@ export default async function handler(req, res) {
       ]);
       // Merge all lead sources into one list
       const leads = [...instagram, ...shala, ...whatsapp];
-      return res.status(200).json({ leads, converted });
+      console.log(`[crm] instagram:${instagram.length} shala:${shala.length} whatsapp:${whatsapp.length} converted:${converted.length}`);
+      return res.status(200).json({ leads, converted, _counts: {instagram: instagram.length, shala: shala.length, whatsapp: whatsapp.length, converted: converted.length} });
     }
 
     if (action === 'update') {
