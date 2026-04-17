@@ -1,0 +1,232 @@
+function pricing(){
+  const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
+  const pkgRate=parseFloat($('f-pkgrate')?.value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
+  const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
+  const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80;
+  const parvDiscPct=parseFloat($('f-parvati-disc')?.value)||0; const parvDisc=parvDiscPct>0?parvOrig*(1-parvDiscPct/100):parvOrig;
+  const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($('f-buddha-orig').value)||80;
+  const buddDiscPct=parseFloat($('f-buddha-disc')?.value)||0; const buddDisc=buddDiscPct>0?buddOrig*(1-buddDiscPct/100):buddOrig;
+  const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
+  const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
+  const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
+  const earlyAmt=discPct>0?stdSub*(discPct/100):0;
+  const roomDiscAmt=discRooms>0&&discRoomPct>0?roomRate*(discRoomPct/100)*discRooms:0;
+  const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight*1.15;
+  const nights=parseInt($('f-nights').value)||7, totalEx=perNight*nights, totalIn=perNightTax*nights;
+  return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,parvDiscPct,buddOn,buddOrig,buddDisc,buddDiscPct,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
+}
+
+function payments(total,checkin,depositPct){
+  const d=depositPct>0?depositPct/100:0.5, rem=1-d;
+  return{
+    dep:{pct:Math.round(d*100)+'%',amt:total*d,due:fmtDS(addDays(todayStr(),2))},
+    p2:{pct:Math.round(rem*0.6*100)+'%',amt:total*rem*0.6,due:checkin?fmtDS(addMonths(checkin,-3)):'___________'},
+    p3:{pct:Math.round(rem*0.4*100)+'%',amt:total*rem*0.4,due:checkin?fmtDS(checkin):'___________'},
+  };
+}
+
+function getFormState(){
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note'];
+  const s={};
+  ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
+  s['f-parvati-on']=$('f-parvati-on').checked;
+  s['f-buddha-on']=$('f-buddha-on').checked;
+  s['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  return s;
+}
+
+function setFormState(s){
+  Object.entries(s).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=val;else el.value=val;});
+  const r=document.querySelector(`input[name="price-display"][value="${s['price-display']||'both'}"]`);
+  if(r)r.checked=true;
+  ['parvati','buddha'].forEach(n=>$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked));
+}
+
+function buildOfferHTML(){
+  const name=$('f-name').value||'', company=$('f-company').value, address=$('f-address').value;
+  const intro=$('f-intro').value.trim(), guests=parseInt($('f-guests').value)||10, facilitators=parseInt($('f-facilitators').value)||0;
+  const retreatName=$('f-retreatname').value||'Healing Retreat', noteText=$('f-note').value.trim();
+  const offerValid=$('f-offervalid').value, depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
+  const pd=document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  const showDaily=pd==='daily'||pd==='both', showTotal=pd==='total'||pd==='both';
+  const P=pricing(), totalPeople=guests+facilitators, days=P.nights+1;
+  const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
+  const depositAmt=depositPct>0?P.totalEx*(depositPct/100):0;
+  const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+  const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
+  const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+  const vLbl=(orig,disc,pct)=>pct>0?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)} (${pct}% off)`:`USD ${fmtN(disc)}`;
+  const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
+  const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
+  const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
+  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
+  const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
+  const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
+  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Total Investment</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl. tax &amp; service</td></tr>`:'';
+  const divBlock=showDaily&&showTotal?`<tr class="pt-divider"><td colspan="3"><div class="pt-divline">&nbsp;</div></td></tr>`:'';
+  const totalBlock=showTotal?`<tr class="pt-grand"><td class="col-item">Total for ${P.nights} Nights</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
+  const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
+  const validLine=hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
+  const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (USD ${fmtN(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
+  const datesLine=fmtD(checkin)&&fmtD(checkout)?`<div class="e-header-dates">Check-in: ${fmtD(checkin)} &nbsp;·&nbsp; Check-out: ${fmtD(checkout)}</div>`:'';
+  return`<div class="e-header">
+    <img class="e-logo" src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
+    <div class="e-header-label">Retreat Hosting Offer</div>
+    <div class="e-header-line"></div>
+    <div class="e-header-date">${monthStr}</div>${datesLine}
+  </div>
+  <div class="e-body">
+    ${company||address?`<p>${company||''}${address?'<br>'+address:''}</p>`:''}
+    ${name?`<p>Dear ${name},</p>`:''}
+    ${introPara}
+    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} Kindly open the attached brochure for pictures of the full property.${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
+  </div>
+  ${ebBadge}
+  <div class="e-package">
+    <div class="e-pkg-hd"><div class="e-pkg-hd-label">Package</div>
+    <div class="e-pkg-hd-title">${retreatName} &nbsp;·&nbsp; ${P.nights} Nights, ${days} Days &nbsp;·&nbsp; ${totalPeople} People</div></div>
+    <div class="e-pkg-body"><table class="ptable">
+      <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate</td><td class="col-sub">Subtotal</td></tr>
+      ${baleRow}${parvRow}${buddRow}${pkgRow}
+      <tr class="pt-subtotal"><td class="col-item">Standard Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
+      ${ebRow}${rdRow}${dailyBlock}${divBlock}${totalBlock}
+    </table></div>
+  </div>
+  <div class="e-note">${notePara}${validLine}${depositLine}</div>
+  <div class="e-included"><div class="e-included-label">What's Included</div>
+    <table><tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>2 organic meals per day</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Tea &amp; afternoon snack</td></tr>
+    <tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Shala of your choice + cleaning</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Full staff support</td></tr>
+    <tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Dedicated contact person</td><td></td></tr></table>
+  </div>
+  <div class="e-also"><div class="e-also-label">Also of Interest</div>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Ayurvedic or Balinese menus available on request.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Day trips and activities around Bali can be arranged.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Massages, rituals, and photography available.</p>
+    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Airport pick-up available on request.</p>
+  </div>
+  <div class="e-closing"><p>For any further questions, please don't hesitate to reach out.</p><p>Warmly,<br><strong>Kevin</strong></p></div>
+  <div class="e-footer-band"><div class="e-footer-tagline">I am, because we are.</div>
+  <div class="e-footer-contact">Ubuntu Bali &nbsp;·&nbsp; namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</div></div>`;
+}
+
+function buildContractHTML(){
+  const name=$('f-name').value||'___________', company=$('f-company').value||'___________';
+  const address=$('f-address').value||'___________', phone=$('f-phone').value||'___________';
+  const website=$('f-website').value||'___________', contactTitle=$('f-title').value||'___________';
+  const retreatName=$('f-retreatname').value||'___________';
+  const guests=parseInt($('f-guests').value)||10, facilitators=parseInt($('f-facilitators').value)||0;
+  const totalPeople=guests+facilitators, checkin=$('f-checkin').value, checkout=$('f-checkout').value;
+  const contractDate=$('f-contractdate').value||todayStr(), validUntil=$('f-validuntil').value||addDays(contractDate,7);
+  const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
+  const P=pricing(), nights=P.nights, days=nights+1, idrTotal=P.totalIn*idrRate;
+  const PMT=payments(P.totalIn,checkin,depositPct);
+  const BANK={Currency:'IDR','Account Holder':'PT PURUSA YOGA BALI',Bank:'PT Bank Permata, Tbk','Account Number':'4122048077','BIC / SWIFT':'BBBAIDJAXXX','Bank Address':'Jalan Subak Sari No. 1, Badung, Bali'};
+  const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
+  const bR=P.bales>0?`<tr><td>Accommodation — ${P.bales} Gladak${P.bales>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.bales*P.roomRate*nights,2)}</td></tr>`:'';
+  const pR=P.parvOn?`<tr><td>Parvati Villa × ${nights} nights × USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc*nights,2)}</td></tr>`:'';
+  const buR=P.buddOn?`<tr><td>Buddha Villa × ${nights} nights × USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc*nights,2)}</td></tr>`:'';
+  const pkR=P.pkgCount>0?`<tr><td>Retreat Package — ${P.pkgCount} people × ${nights} nights × USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgSub*nights,2)}</td></tr>`:'';
+  const txR=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(P.totalIn-P.totalEx,2)}</td></tr>`;
+  const ebR=P.discPct>0?`<tr><td><strong>${P.discPct}% Early Bird Discount</strong></td><td></td><td><strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong></td></tr>`:'';
+  const rdR=P.discRooms>0&&P.discRoomPct>0?`<tr><td><strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong></td><td></td><td><strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong></td></tr>`:'';
+  const totR=`<tr style="background:#F5ECD7;"><td colspan="2">Total incl. tax &amp; service</td><td>USD ${fmtN(P.totalIn,2)}</td></tr>`;
+  const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td colspan="2" style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;">IDR for transaction (rate: 1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue)</td><td style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
+  return`<div class="contract-doc">
+  <div class="c-hd">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
+    <div class="c-hd-title">Retreat Booking Confirmation & Agreement</div>
+    <div class="c-hd-sub">PT Purusa Yoga Bali · Operating as Ubuntu Bali</div>
+  </div>
+  <div style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-bottom:12px;color:#5C3D2E;">BETWEEN</div>
+  <div class="c-parties">
+    <div class="c-party"><div class="c-party-title">Retreat Organizer</div>
+      <p>Company Name: ${company}</p><p>Contact Person: ${name}</p><p>Address: ${address}</p><p>Phone: ${phone}</p><p>Website: ${website}</p></div>
+    <div class="c-party"><div class="c-party-title">Venue Holder</div>
+      <p>Company: PT Purusa Yoga Bali (Ubuntu Bali)</p><p>Director: Witri Utari</p><p>Contract: Andréa Drottholm</p><p>Phone: +62 812 3862 0082</p><p>Email: namaste@ubuntubali.com</p></div>
+  </div>
+  <div class="c-datebar">Date: ${fmtDS(contractDate)} &nbsp;|&nbsp; Check-in: ${fmtDS(checkin)} &nbsp;|&nbsp; Check-out: ${fmtDS(checkout)}</div>
+  <div class="c-validity"><strong style="font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;">Contract Validity: </strong>This contract offer is valid until <strong>${fmtDS(validUntil)}</strong>. If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.</div>
+  <div class="c-sec"><div class="c-sec-hd">A) Purpose of Agreement</div>
+    <p>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
+    <p>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">B) Pricing & Inclusions</div>
+    <p>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
+    <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
+    <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
+    <table class="c-table"><thead><tr><th>ITEM</th><th>RATE</th><th>SUBTOTAL</th></tr></thead>
+    <tbody>${bR}${pR}${buR}${pkR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
+    <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
+    <p><strong>What's Included:</strong></p>
+    <ul><li>2 organic plant-based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
+    <p>The package price is fixed for ${totalPeople} guests. Should the group exceed ${totalPeople} people, the room rate remains the same — only meals would be added for each additional guest.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">C) Payments & Bank Details</div>
+    <p>Payments must be made to the following account:</p>
+    <table class="bank-table">${Object.entries(BANK).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>
+    <p>All bank and transfer fees are the responsibility of the Retreat Organizer.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">D) Payment Schedule</div>
+    <p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p>
+    <table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (USD)</th><th>Due Date</th></tr></thead>
+    <tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>USD ${fmtN(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr>
+    <tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>USD ${fmtN(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr>
+    <tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>USD ${fmtN(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table>
+    <p>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">E) Cancellation & Refund Policy</div>
+    <p><strong>Standard Bookings:</strong> Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees.</p>
+    <table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead>
+    <tbody>${CANCEL.map(([p,r])=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table>
+    <p><strong>Short-Notice Bookings:</strong> Deposits are non-refundable except in cases of force majeure.</p>
+    <p><strong>Rescheduling:</strong></p>
+    <ul><li>One reschedule permitted within 12 months, subject to availability and a 10% administrative fee</li><li>Requests must be made at least 3 months prior to retreat start</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">F) Liability, Insurance & Indemnification</div>
+    <ul><li>All participants must carry adequate travel and health insurance covering yoga, wellness activities, and medical evacuation</li><li>Retreat Organizer must communicate health restrictions to Ubuntu Bali in writing at least 30 days prior</li><li>Ubuntu Bali shall not be held liable for personal injury, loss, or theft except in cases of gross negligence</li><li>Ubuntu Bali's maximum liability is limited to 50% of the total contract value</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">G) Property Use & Conduct</div>
+    <ul><li>Quiet hours: 9:30pm – 7:00am</li><li>No smoking, alcohol, drugs, or intoxicants on the premises</li><li>Yoga Shala must be left tidied, fans and lights switched off</li><li>Participant-caused property damage will be charged to the Retreat Organizer</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">H) Meals</div>
+    <p>Two organic plant-based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">I) Swimming Pool</div>
+    <p>Available to all registered retreat participants. All users must shower before entering.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">J) Wi-Fi</div>
+    <p>Provided across the property in common areas, subject to local service availability.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">K) Photography & Media</div>
+    <p>Ubuntu Bali may photograph or film during the retreat for promotional use, subject to retreat leader permission. Participants will not be identified by name without written consent.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">L) Force Majeure</div>
+    <p>In the event of circumstances beyond reasonable control, Ubuntu Bali shall provide immediate notice and offer: (a) reschedule within 18 months, (b) 100% credit valid 24 months, or (c) pro-rata refund minus 5% admin fee.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">M) Dispute Resolution</div>
+    <ul><li>Informal Resolution (7 days): Written notice</li><li>Management Discussion (14 days): In-person or video meeting</li><li>Mediation (30 days, optional): Neutral third party</li><li>Legal Action: Only after above steps attempted</li></ul></div>
+  <div class="c-sec"><div class="c-sec-hd">N) Ubuntu Bali Cancellation</div>
+    <p>Ubuntu Bali may cancel with 60 days written notice. Retreat Organizer receives 100% refund and priority rebooking within 18 months. Short-notice cancellation (&lt;60 days): full refund plus 5% credit.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">O) Termination</div>
+    <p>Either party may terminate for material breach with 14 days written notice.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">P) Governing Law</div>
+    <p>Governed by the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p></div>
+  <div class="c-sec"><div class="c-sec-hd">Q) Entire Agreement</div>
+    <p>This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.</p></div>
+  <div class="c-sigs"><div class="c-sigs-title">Signatures</div>
+    <div class="c-sigs-grid">
+      <div><div class="c-sig-party">For Ubuntu Bali</div>
+        <p style="font-size:12px;margin-bottom:3px;">Name: Andréa Drottholm</p>
+        <p style="font-size:12px;margin-bottom:3px;">Title: Contract Representative</p>
+        <p style="font-size:12px;margin-bottom:16px;">Date: ${fmtDS(contractDate)}</p>
+        <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
+        <div class="c-sig-line"></div>
+        <div class="c-sig-note">Tari, as representative of Andréa Drottholm</div></div>
+      <div><div class="c-sig-party">For Retreat Organizer</div>
+        <p style="font-size:12px;margin-bottom:3px;">Name: ${name}</p>
+        <p style="font-size:12px;margin-bottom:3px;">Title: ${contactTitle}</p>
+        <p style="font-size:12px;margin-bottom:16px;">Date: ___________</p>
+        <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
+        <div class="c-sig-line"></div>
+        <div class="c-sig-note">${name}</div></div>
+    </div>
+  </div>
+</div>`;
+}
+
+function renderOffer(){$('offer-output').innerHTML=buildOfferHTML();}
+function renderContract(){$('contract-output').innerHTML=buildContractHTML();}
+function render(){}
