@@ -138,7 +138,7 @@ function groupKey(c, groupBy) {
 
 function buildGrid(items) {
   const hRow = ['Name','Location','Source / Status','Added'].map(h =>
-    `<div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:#F5ECD7;border-bottom:1px solid #EDE3D4;">${h}</div>`
+    `<div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:var(--bg2);border-bottom:1px solid var(--border);">${h}</div>`
   ).join('');
 
   const rows = items.map((c, i) => {
@@ -158,7 +158,7 @@ function buildGrid(items) {
     `;
   }).join('');
 
-  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid #EDE3D4;border-radius:4px;overflow:hidden;margin-bottom:8px;">${hRow}${rows}</div>`;
+  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;box-shadow:var(--shadow);">${hRow}${rows}</div>`;
 }
 
 function crmRender() {
@@ -203,7 +203,7 @@ function crmRender() {
     const isCollapsed = !!crmCollapsed[key];
     return `
       <div style="margin-bottom:4px;">
-        <div onclick="toggleCrmGroup('${key.replace(/'/g,'\'')}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#221208;border-radius:${isCollapsed?'4px':'4px 4px 0 0'};cursor:pointer;user-select:none;">
+        <div onclick="toggleCrmGroup('${key.replace(/'/g,'\'')}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--dark);border-radius:${isCollapsed?'4px':'4px 4px 0 0'};cursor:pointer;user-select:none;">
           <span style="font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F5ECD7;">${key}</span>
           <span style="font-family:'Lora',serif;font-size:10px;color:#B8935A;">${groupItems.length} &nbsp; ${isCollapsed?'▸':'▾'}</span>
         </div>
@@ -263,13 +263,13 @@ function crmDetailHTML(c, editMode=false) {
         <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Edit Contact</div>
         <button onclick="openCrmModal('${c.id}')" style="background:none;border:none;font-size:13px;cursor:pointer;color:#8B7355;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;">✕ Cancel</button>
       </div>
-      <div class="fg"><label>Name</label><input type="text" id="edit-name" value="${c.name||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
-      <div class="fg"><label>Company</label><input type="text" id="edit-company" value="${c.company||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
-      <div class="fg"><label>Email</label><input type="text" id="edit-email" value="${c.email||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
-      <div class="fg"><label>Instagram</label><input type="text" id="edit-insta" value="${c.insta||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
-      <div class="fg"><label>WhatsApp</label><input type="text" id="edit-whatsapp" value="${c.whatsapp||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
-      <div class="fg"><label>Website</label><input type="text" id="edit-website" value="${c.website||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
-      <div class="fg"><label>Location</label><input type="text" id="edit-location" value="${c.location||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;"></div>
+      <div class="fg"><label>Name</label><input type="text" id="edit-name" value="${c.name||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Company</label><input type="text" id="edit-company" value="${c.company||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Email</label><input type="text" id="edit-email" value="${c.email||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Instagram</label><input type="text" id="edit-insta" value="${c.insta||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>WhatsApp</label><input type="text" id="edit-whatsapp" value="${c.whatsapp||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Website</label><input type="text" id="edit-website" value="${c.website||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Location</label><input type="text" id="edit-location" value="${c.location||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
       <button class="ios-modal-close" style="margin-top:8px;" onclick="saveContactDetails('${c.id}','${c.db}')">Save Details</button>
     `;
   }
@@ -308,7 +308,7 @@ function crmDetailHTML(c, editMode=false) {
       : `<select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`
     }
     <div class="crm-section-hd">Engage Next</div>
-    <input type="date" id="crm-engage-next" value="${c.engageNext||''}" style="width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;margin-bottom:8px;">
+    <input type="date" id="crm-engage-next" value="${c.engageNext||''}" style="width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;margin-bottom:8px;">
     <div class="crm-section-hd">Notes</div>
     <textarea class="crm-textarea" id="crm-notes-input">${c.notes||''}</textarea>
     <button class="ios-modal-close" style="margin-top:14px;" onclick="saveCrmContact('${c.id}','${c.db}')">Save Changes</button>
@@ -318,7 +318,7 @@ function crmDetailHTML(c, editMode=false) {
       const linked = getLinkedDrafts(c.name, c.company);
       if (!linked.length) return '';
       return `<div class="crm-section-hd">Linked Drafts (${linked.length})</div>` +
-        linked.map(d => `<div onclick="loadDraftById('${d.pageId}')" style="padding:8px 10px;border:1px solid #EDE3D4;border-radius:3px;margin-bottom:6px;cursor:pointer;background:#FDFAF5;font-family:'Lora',serif;font-size:11px;color:#1A1208;">
+        linked.map(d => `<div onclick="loadDraftById('${d.pageId}')" style="padding:8px 10px;border:1px solid #EDE3D4;border-radius:3px;margin-bottom:6px;cursor:pointer;background:var(--bg);font-family:'Lora',serif;font-size:11px;color:#1A1208;">
           <span style="font-weight:600;">${d.organizer||'Unnamed'}${d.retreatName?' · '+d.retreatName:''}</span>
           <span class="draft-status s-${d.status||'Draft'}" style="margin-left:6px;">${d.status||'Draft'}</span>
           <div style="font-size:10px;color:#8B7355;margin-top:2px;">${d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates'} · USD ${d.totalUSD?Number(d.totalUSD).toLocaleString('en-US'):'—'}</div>
