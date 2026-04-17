@@ -45,7 +45,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   display:flex;align-items:center;gap:12px;
   flex-shrink:0;margin-right:8px;
 }
-.nav-logo{height:28px;filter:brightness(0) invert(1);opacity:.9;}
+.nav-logo{height:56px;filter:brightness(0) invert(1);opacity:.9;}
 .nav-brand-text{
   display:flex;flex-direction:column;line-height:1;
 }
@@ -489,7 +489,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 </head>
 <body>
 
-<div id="debug-panel"><div id="debug-log"></div></div>
+<div id="debug-panel" style="display:none;"><div id="debug-log"></div></div>
 
 <!-- IOS INSTALL MODAL -->
 <div class="ios-modal" id="ios-modal" onclick="if(event.target===this)this.classList.remove('open')">
