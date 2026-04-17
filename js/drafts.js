@@ -47,7 +47,7 @@ function loadDraftByIndex(i){
     draftActive=true;
     intentionalDraft=true;
     startAutosave();
-    switchTab('edit');
+    switchDealTab('edit');
   } catch(e){alert('Could not load this draft.');}
 }
 
@@ -195,7 +195,7 @@ function applyUpdate(){
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
 // Start on drafts view
-switchTab('drafts');
+switchDealTab('drafts');
 // CRM tab visual state set on first open
 
 function startAutosave(){
@@ -228,7 +228,7 @@ function newDraft(){
   $('notion-status').value='Draft';
   draftActive=false;
   intentionalDraft=true;
-  switchTab('edit');
+  switchDealTab('edit');
   // reset autosave for new draft
   autosaveOn=false;
   clearInterval(autosaveInterval);
