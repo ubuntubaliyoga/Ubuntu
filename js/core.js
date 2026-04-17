@@ -100,6 +100,7 @@ function newDraft(){
   draftActive=false;intentionalDraft=true;
   autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
   const s=$('autosave-status');if(s)s.textContent='';
+  if(typeof extraServices!=='undefined'){extraServices=[];renderExtraServices();}
   switchDealTab('edit');
 }
 
@@ -154,3 +155,12 @@ window.addEventListener('load', ()=>switchTab('deal'));
     if(info)info.textContent='Could not fetch — using default rate';
   }
 })();
+
+function toggleMoreDetails(btn) {
+  const details = btn.nextElementSibling;
+  const open = details.style.display !== 'none';
+  details.style.display = open ? 'none' : 'block';
+  btn.textContent = open
+    ? btn.textContent.replace('− ', '+ ')
+    : btn.textContent.replace('+ ', '− ');
+}
