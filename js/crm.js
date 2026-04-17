@@ -443,7 +443,7 @@ function prefillOfferFromCRM(id) {
   $('f-contractdate').value = todayStr();
   $('f-validuntil').value = addDays(todayStr(), 7);
   $('notion-status').value = 'Draft';
-  switchTab('edit');
+  switchTab('deal');switchDealTab('edit');
 }
 
 function openNewLeadModal() {
