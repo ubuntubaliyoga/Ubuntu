@@ -1129,7 +1129,9 @@ function buildGrid(items) {
     const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
     const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
     const statusHtml = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}" style="font-size:7px;">${s}</span>`).join(' ');
-    const sourceBadge = c.source ? `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:7px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;text-transform:uppercase;font-weight:700;background:#F5ECD7;color:#5C3D2E;margin-right:4px;">${c.source}</span>` : '';
+    const srcColors = {'Instagram':'#E3F2FD','WhatsApp':'#E8F5E9','Shala Rental':'#FFF3E0'};
+    const srcTextColors = {'Instagram':'#1565C0','WhatsApp':'#2E7D32','Shala Rental':'#E65100'};
+    const sourceBadge = c.source ? `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:7px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;text-transform:uppercase;font-weight:700;background:${srcColors[c.source]||'#F5ECD7'};color:${srcTextColors[c.source]||'#5C3D2E'};margin-right:4px;">${c.source}</span>` : '';
     const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
     const cell = `padding:8px 10px;cursor:pointer;border-bottom:1px solid #EDE3D4;`;
     return `
@@ -1223,7 +1225,7 @@ async function loadCRM(force=false) {
   fetchCRM(force).then(data => {
     crmData = data;
     crmRender();
-    dbg('CRM refreshed: ' + (data.leads||[]).length + ' leads, ' + (data.converted||[]).length + ' converted');
+    const c = data._counts||{}; dbg(`CRM: ${(data.leads||[]).length} leads total (instagram:${c.instagram||0} whatsapp:${c.whatsapp||0} shala:${c.shala||0}) + ${(data.converted||[]).length} converted`);
   }).catch(e => dbg('CRM bg refresh failed: ' + e.message));
 }
 
@@ -1265,6 +1267,7 @@ function crmDetailHTML(c, editMode=false) {
     c.website    && ['Website', `<a href="${(c.website||'').startsWith('http')?c.website:'https://'+c.website}" target="_blank" style="color:#B8935A;">${c.website}</a>`],
     c.location   && ['Location', c.location],
     c.contact    && ['Contact', c.contact],
+    c.reachedOutOn && c.reachedOutOn.length > 0 && ['Reached out on', c.reachedOutOn.map(r=>`<span class="crm-badge crm-status-reached" style="font-size:7px;">${r}</span>`).join(' ')],
     c.engagedFirst && ['First contact', fmtD(c.engagedFirst)],
     c.engagedLast  && ['Last engaged', fmtD(c.engagedLast)],
     c.salesCall    && ['Sales call', fmtD(c.salesCall)],
@@ -1482,14 +1485,11 @@ async function saveNewLead() {
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#B8935A;font-size:14px;pointer-events:none;">🔍</span>
         <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()" style="width:100%;padding:7px 10px 7px 32px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:#FDFAF5;outline:none;box-sizing:border-box;">
       </div>
-      <select id="crm-source-filter" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;" title="Filter by source">
-        <option value="">All Sources</option>
+      <select id="crm-source-filter" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;" title="Filter by channel">
+        <option value="">All Channels</option>
         <option value="Instagram">📱 Instagram</option>
         <option value="WhatsApp">💬 WhatsApp</option>
         <option value="Shala Rental">🏛 Shala Rental</option>
-        <option value="Email">📧 Email</option>
-        <option value="In Person">🤝 In Person</option>
-        <option value="Other">Other</option>
       </select>
       <select id="crm-group" onchange="crmRender()" style="padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:#FDFAF5;outline:none;color:#5C3D2E;" title="Group by">
         <option value="none">↕ Sort: Date</option>
