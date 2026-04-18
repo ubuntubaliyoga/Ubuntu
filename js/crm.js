@@ -223,6 +223,12 @@ function crmRender() {
     return;
   }
 
+  // Pipeline view
+  if (crmView === 'pipeline') {
+    renderPipeline(items);
+    return;
+  }
+
   if (groupBy === 'none') {
     list.innerHTML = buildGrid(items);
     return;
@@ -341,12 +347,18 @@ function crmDetailHTML(c, editMode=false) {
       </div>
     </div>
     ${fields || '<div style="color:#B8935A;font-family:Lora,serif;font-size:12px;font-style:italic;">No details available</div>'}
-    <div class="crm-section-hd">Status</div>
-    <div style="margin-bottom:8px;">${statusBadges || '—'}</div>
-    ${isLead
-      ? `<select class="crm-select" id="crm-status-sel">${statusOptions}</select>`
-      : `<select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`
-    }
+    ${isLead ? reachedOutHTML(c) : `<div class="crm-section-hd">Status</div><div style="margin-bottom:8px;">${statusBadges || '—'}</div><select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`}
+    ${isLead ? `<div class="crm-section-hd">Pipeline Stage</div>
+    <select class="crm-select" id="crm-status-sel">
+      <option value="Followed + Engaged" ${c.status==='Followed + Engaged'?'selected':''}>🌱 Cold Lead</option>
+      <option value="Reached out" ${c.status==='Reached out'?'selected':''}>📬 Contacted</option>
+      <option value="WARM: Booked a call OR asked for help" ${c.status==='WARM: Booked a call OR asked for help'?'selected':''}>🔥 Warm</option>
+      <option value="HOT: Past client/strong conversation" ${c.status==='HOT: Past client/strong conversation'?'selected':''}>⚡ Hot</option>
+      <option value="QUALIFIED TO BUY" ${c.status==='QUALIFIED TO BUY'?'selected':''}>✅ Qualified</option>
+      <option value="SALE CLOSED" ${c.status==='SALE CLOSED'?'selected':''}>🎉 Sale Closed</option>
+      <option value="GHOSTED" ${c.status==='GHOSTED'?'selected':''}>👻 Ghosted</option>
+      <option value="NOT GOOD FIT" ${c.status==='NOT GOOD FIT'?'selected':''}>✗ Not a Fit</option>
+    </select>` : ''}
     <div class="crm-section-hd">Engage Next</div>
     <input type="date" id="crm-engage-next" value="${c.engageNext||''}" style="width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;margin-bottom:8px;">
     <div class="crm-section-hd">Notes</div>
@@ -515,4 +527,202 @@ async function saveNewLead() {
     crmLoaded = false;
     loadCRM();
   } catch(e) { alert('Could not save lead.'); }
+}
+// ── PIPELINE VIEW ─────────────────────────────────────────────────────────────
+let crmView = 'list'; // 'list' | 'pipeline'
+let dragItem = null;
+
+// Pipeline stages with Ubuntu branding colors
+const PIPELINE_STAGES = [
+  { key: 'cold',      label: 'Cold Lead',       color: '#8B7355', bg: '#F5ECD7', statuses: ['Followed + Engaged', null, undefined, ''] },
+  { key: 'contacted', label: 'Contacted',        color: '#1565C0', bg: '#E3F2FD', statuses: ['Reached out', 'WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY'] },
+  { key: 'closed',    label: 'Sale Closed',      color: '#2E7D32', bg: '#E8F5E9', statuses: ['SALE CLOSED'] },
+  { key: 'dead',      label: 'Not a Fit',        color: '#757575', bg: '#F5F5F5', statuses: ['GHOSTED', 'TERMINATED', 'NOT GOOD FIT'] },
+];
+
+// Map source/db → default "Reached out on" value
+function inferReachedOutOn(c) {
+  if (c.source === 'Instagram') return ['Instagram'];
+  if (c.source === 'WhatsApp' || c.source === 'Shala Rental') return ['WhatsApp'];
+  return c.reachedOutOn || [];
+}
+
+function getStageForLead(c) {
+  const s = Array.isArray(c.status) ? c.status[0] : c.status;
+  for (const stage of PIPELINE_STAGES) {
+    if (stage.statuses.includes(s)) return stage.key;
+  }
+  return 'cold'; // default
+}
+
+function getStatusForStage(stageKey) {
+  const stage = PIPELINE_STAGES.find(s => s.key === stageKey);
+  return stage ? stage.statuses.find(s => s) || null : null;
+}
+
+function setCrmView(view) {
+  crmView = view;
+  document.getElementById('crm-view-list')?.classList.toggle('active', view === 'list');
+  document.getElementById('crm-view-pipeline')?.classList.toggle('active', view === 'pipeline');
+  // Show/hide filters (only relevant for list)
+  const filters = document.querySelector('#view-crm [style*="crm-source-filter"]')?.parentElement;
+  crmRender();
+}
+
+function renderPipeline(items) {
+  const list = document.getElementById('crm-list');
+  if (!list) return;
+
+  const total = items.length;
+  const closedCount = items.filter(c => {
+    const s = Array.isArray(c.status) ? c.status[0] : c.status;
+    return s === 'SALE CLOSED';
+  }).length;
+
+  // Stats bar
+  let html = `<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;display:flex;flex-direction:column;gap:2px;">
+      <div style="font-size:22px;font-weight:700;color:var(--dark);font-family:'Cormorant Garamond',serif;">${total}</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Active Leads</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;display:flex;flex-direction:column;gap:2px;">
+      <div style="font-size:22px;font-weight:700;color:#2E7D32;font-family:'Cormorant Garamond',serif;">${closedCount}</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Sales Closed</div>
+    </div>
+  </div>`;
+
+  // Kanban columns
+  html += `<div class="pipeline-wrap">`;
+
+  PIPELINE_STAGES.forEach(stage => {
+    const stageItems = items.filter(c => getStageForLead(c) === stage.key);
+
+    const cards = stageItems.map(c => {
+      const reached = inferReachedOutOn(c);
+      const reachedTags = reached.map(r =>
+        `<span style="font-size:8px;padding:1px 6px;border-radius:100px;background:var(--bg2);color:var(--muted);font-weight:600;">${r}</span>`
+      ).join('');
+      return `<div class="pipeline-card"
+        draggable="true"
+        data-id="${c.id}"
+        data-source="${c.source||''}"
+        data-db="${c.db||''}"
+        ondragstart="onDragStart(event,'${c.id}')"
+        ondragend="onDragEnd(event)"
+        onclick="openCrmModal('${c.id}')">
+        <div class="pipeline-card-name">${c.name||'Unnamed'}</div>
+        <div class="pipeline-card-sub">${cleanLocation(c.location)}</div>
+        ${reached.length ? `<div class="pipeline-card-tags">${reachedTags}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    html += `<div class="pipeline-col">
+      <div class="pipeline-col-header" style="background:${stage.bg};color:${stage.color};">
+        <span>${stage.label}</span>
+        <span class="col-count">${stageItems.length}</span>
+      </div>
+      <div class="pipeline-cards"
+        data-stage="${stage.key}"
+        ondragover="onDragOver(event)"
+        ondragleave="onDragLeave(event)"
+        ondrop="onDrop(event,'${stage.key}')">
+        ${cards}
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  list.innerHTML = html;
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────────────────────
+function onDragStart(e, id) {
+  dragItem = id;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.pipeline-cards').forEach(c => c.classList.remove('drag-over'));
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+async function onDrop(e, stageKey) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragItem) return;
+
+  const lead = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === dragItem);
+  if (!lead) return;
+
+  const newStatus = getStatusForStage(stageKey);
+  if (!newStatus) return;
+
+  // Optimistic update
+  if (Array.isArray(lead.status)) lead.status = [newStatus];
+  else lead.status = newStatus;
+  crmRender();
+
+  // Save to Notion
+  try {
+    await fetch('/api/crm', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        action: 'update',
+        pageId: lead.id,
+        db: lead.db,
+        source: lead.source,
+        status: newStatus,
+      })
+    });
+    dbg(`Moved ${lead.name} → ${stageKey}`);
+  } catch(err) {
+    dbg('Pipeline drag save failed: ' + err.message);
+  }
+  dragItem = null;
+}
+
+// ── REACHED OUT ON (replaces status in modal) ─────────────────────────────────
+const REACHED_OUT_OPTIONS = ['Instagram', 'WhatsApp', 'Email', 'LinkedIn', 'Cold Call'];
+
+function reachedOutHTML(c) {
+  const current = inferReachedOutOn(c);
+  return `<div class="crm-section-hd">Reached Out On</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+    ${REACHED_OUT_OPTIONS.map(opt => {
+      const active = current.includes(opt);
+      return `<button onclick="toggleReachedOut('${c.id}','${c.source||''}','${opt}',this)"
+        style="padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .15s;background:${active?'var(--gold)':'transparent'};color:${active?'var(--dark)':'var(--muted)'};"
+        data-active="${active}">${opt}</button>`;
+    }).join('')}
+  </div>`;
+}
+
+function toggleReachedOut(id, source, opt, btn) {
+  const isActive = btn.dataset.active === 'true';
+  btn.dataset.active = !isActive;
+  btn.style.background = !isActive ? 'var(--gold)' : 'transparent';
+  btn.style.color = !isActive ? 'var(--dark)' : 'var(--muted)';
+
+  // Collect all currently active options
+  const allBtns = btn.closest('[style*="flex-wrap"]').querySelectorAll('button');
+  const selected = Array.from(allBtns).filter(b => b.dataset.active === 'true').map(b => b.textContent.trim());
+
+  // Save to Notion
+  fetch('/api/crm', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action: 'updateReachedOut', pageId: id, reachedOutOn: selected })
+  }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
