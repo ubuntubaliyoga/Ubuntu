@@ -1,95 +1,64 @@
-// ── DUPLICATES ───────────────────────────────────────────────────────────────
-function findDuplicates() {
-  const all = [...(crmData.leads||[]), ...(crmData.converted||[])];
-  const groups = {};
-  all.forEach(c => {
-    const key = (c.name||'').toLowerCase().trim().replace(/\s+/g,' ');
-    if (!key || key === 'new lead') return;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(c);
-  });
-  return Object.values(groups).filter(g => g.length > 1);
+// js/crm.js — FRONTEND — deploy to /js/crm.js on GitHub
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let crmView = 'list'; // 'list' | 'pipeline'
+let crmCollapsed = {};
+let dragItemId = null;
+
+const REACHED_OUT_OPTIONS = ['Instagram', 'WhatsApp', 'Email', 'LinkedIn', 'Cold Call'];
+
+// Pipeline stages — 3 columns as requested
+const STAGES = [
+  { key: 'cold',     label: '🌱 Cold Lead',   color: '#8B7355', bg: '#F5ECD7', border: '#D4B483',
+    statuses: ['Followed + Engaged', 'Reached out', null, undefined, ''] },
+  { key: 'warm',     label: '🤝 Converted Lead', color: '#1565C0', bg: '#E3F2FD', border: '#90CAF9',
+    statuses: ['WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY'] },
+  { key: 'closed',   label: '🎉 Sale Closed', color: '#2E7D32', bg: '#E8F5E9', border: '#A5D6A7',
+    statuses: ['SALE CLOSED'] },
+];
+
+const DEAD_STATUSES = ['GHOSTED', 'TERMINATED', 'NOT GOOD FIT'];
+
+// Map source db → default reached out on
+function inferReachedOutOn(c) {
+  if (c.reachedOutOn && c.reachedOutOn.length) return c.reachedOutOn;
+  if (c.source === 'Instagram')    return ['Instagram'];
+  if (c.source === 'WhatsApp')     return ['WhatsApp'];
+  if (c.source === 'Shala Rental') return ['WhatsApp'];
+  return [];
 }
 
-function showDuplicates() {
-  const dups = findDuplicates();
-  const modal = document.getElementById('crm-modal');
-  const content = document.getElementById('crm-modal-content');
-
-  if (dups.length === 0) {
-    content.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates</div>
-        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
-      </div>
-      <div style="font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;padding:20px 0;text-align:center;">No duplicates found 🎉</div>`;
-    modal.classList.add('open');
-    return;
+function getStage(c) {
+  const s = Array.isArray(c.status) ? c.status[0] : c.status;
+  for (const stage of STAGES) {
+    if (stage.statuses.includes(s)) return stage.key;
   }
-
-  content.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Duplicates (${dups.length})</div>
-      <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
-    </div>
-    <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-bottom:14px;">Same name found in multiple entries. Review and merge or delete.</div>
-    ${dups.map((group, gi) => `
-      <div style="border:1px solid #EDE3D4;border-radius:4px;margin-bottom:12px;overflow:hidden;">
-        <div style="background:#F5ECD7;padding:8px 12px;font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#5C3D2E;font-weight:700;">${group[0].name}</div>
-        ${group.map(c => `
-          <div style="padding:10px 12px;border-top:1px solid #EDE3D4;display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <div style="font-family:'Lora',serif;font-size:12px;color:#1A1208;">${c.db === 'leads' ? '📋 Lead Pipeline' : '✓ Converted'} · ${c.location||'No location'}</div>
-              <div style="font-family:'Lora',serif;font-size:10px;color:#8B7355;margin-top:2px;">${c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
-            </div>
-            <div style="display:flex;gap:6px;">
-              <button onclick="openCrmModal('${c.id}');document.getElementById('crm-modal').classList.add('open')" style="padding:5px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8B7355;">View</button>
-              <button onclick="deleteDupConfirm('${c.id}','${c.name}',${gi})" style="padding:5px 10px;border:1px solid #F5D6D6;border-radius:3px;font-family:'Libre Baskerville',serif;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:transparent;color:#8A1A1A;">Delete</button>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `).join('')}`;
-  modal.classList.add('open');
+  if (DEAD_STATUSES.includes(s)) return 'dead';
+  return 'cold';
 }
 
-async function deleteDupConfirm(id, name, groupIndex) {
-  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-  try {
-    await fetch('/api/crm', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({action:'delete', pageId: id})
-    });
-    // Remove from local data
-    crmData.leads = crmData.leads.filter(x => x.id !== id);
-    crmData.converted = crmData.converted.filter(x => x.id !== id);
-    showDuplicates(); // refresh duplicate view
-  } catch(e) { alert('Could not delete.'); }
+function getNotionStatusForStage(key) {
+  const map = {
+    cold:   'Followed + Engaged',
+    warm:   'Reached out',
+    closed: 'SALE CLOSED',
+  };
+  return map[key] || 'Followed + Engaged';
 }
 
-// ── LINKED DRAFTS IN CRM ─────────────────────────────────────────────────────
-function getLinkedDrafts(contactName, company) {
-  if (!window._drafts || (!contactName && !company)) return [];
-  const name = (contactName||'').toLowerCase();
-  const comp = (company||'').toLowerCase();
-  return window._drafts.filter(d =>
-    (d.organizer && d.organizer.toLowerCase().includes(name) && name) ||
-    (d.retreatName && comp && d.retreatName.toLowerCase().includes(comp))
-  );
-}
-
-// ── CRM ──────────────────────────────────────────────────────────────────────
+// ── HELPERS ───────────────────────────────────────────────────────────────────
 function statusClass(s) {
   if (!s) return '';
-  const m = {
-    'NOT GOOD FIT':'not-good','TERMINATED':'terminated','GHOSTED':'ghosted',
-    'Followed + Engaged':'followed','Reached out':'reached',
-    'WARM: Booked a call OR asked for help':'warm',
-    'HOT: Past client/strong conversation':'hot',
-    'QUALIFIED TO BUY':'qualified','SALE CLOSED':'closed',
-    'Face2Face conversation':'face2face','Rejected Ubuntu':'not-good',
-    'Responded':'responded','Phone call':'phone','Booked Venue':'booked',
-  };
-  return 'crm-status-' + (m[s] || 'reached');
+  const sl = (Array.isArray(s) ? s[0] : s || '').toLowerCase();
+  if (sl.includes('not good') || sl.includes('terminated')) return 'crm-status-not-good';
+  if (sl.includes('ghosted'))   return 'crm-status-ghosted';
+  if (sl.includes('followed'))  return 'crm-status-followed';
+  if (sl.includes('reached'))   return 'crm-status-reached';
+  if (sl.includes('warm') || sl.includes('booked')) return 'crm-status-warm';
+  if (sl.includes('hot') || sl.includes('qualified')) return 'crm-status-hot';
+  if (sl.includes('sale') || sl.includes('closed'))   return 'crm-status-closed';
+  if (sl.includes('responded'))  return 'crm-status-responded';
+  return 'crm-status-followed';
 }
 
 function suitClass(s) {
@@ -97,162 +66,114 @@ function suitClass(s) {
   if (s.startsWith('1')) return 'crm-suit-1';
   if (s.startsWith('2')) return 'crm-suit-2';
   if (s.startsWith('3')) return 'crm-suit-3';
-  return 'crm-suit-4';
-}
-
-function crmSwitchTab(tab) {
-  crmTab = tab;
-  ['leads','converted'].forEach(t => {
-    const b = document.getElementById('crm-tab-'+t);
-    if (!b) return;
-    b.style.background = t === tab ? '#B8935A' : 'transparent';
-    b.style.color = t === tab ? '#fff' : '#B8935A';
-    b.style.borderColor = t === tab ? '#B8935A' : 'rgba(184,147,90,.35)';
-  });
-  crmCollapsed = {};
-  crmRender();
-}
-
-function crmSort(items) {
-  const g = document.getElementById('crm-group')?.value || 'none';
-  return [...items].sort((a, b) => {
-    if (g === 'none_name')     return (a.name||'').localeCompare(b.name||'');
-    if (g === 'none_location') return (a.location||'').localeCompare(b.location||'');
-    return new Date(b.lastEdited||0) - new Date(a.lastEdited||0); // default date desc
-  });
-}
-
-function groupKey(c, groupBy) {
-  if (groupBy === 'status') {
-    const s = Array.isArray(c.status) ? c.status[0] : c.status;
-    return s || 'No Status';
-  }
-  if (groupBy === 'source')   return c.source || 'No Source';
-  if (groupBy === 'location') return cleanLocation(c.location) || 'No Location';
-  if (groupBy === 'date') {
-    if (!c.lastEdited) return 'Unknown';
-    return new Date(c.lastEdited).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
-  }
-  return null;
+  if (s.startsWith('4')) return 'crm-suit-4';
+  return '';
 }
 
 function cleanLocation(loc) {
   if (!loc) return '—';
-  // Strip Google Maps URLs, keep just the readable part
-  if (loc.includes('maps.google.com') || loc.includes('http')) {
-    const match = loc.match(/[?&]q=([^&]+)/);
-    if (match) return decodeURIComponent(match[1]).replace(/\+/g, ' ');
+  if (loc.includes('maps.google.com') || loc.startsWith('http')) {
+    const m = loc.match(/[?&]q=([^&]+)/);
+    if (m) return decodeURIComponent(m[1]).replace(/\+/g, ' ');
     return '—';
   }
   return loc;
 }
 
-function buildGrid(items) {
-  if (!items.length) return '';
+const srcColor = { Instagram:'#1565C0', WhatsApp:'#2E7D32', 'Shala Rental':'#E65100' };
+const srcBg    = { Instagram:'#E3F2FD', WhatsApp:'#E8F5E9', 'Shala Rental':'#FFF3E0' };
 
-  // Mobile: card view
-  const isMobile = window.innerWidth < 600;
-
-  if (isMobile) {
-    return items.map(c => {
-      const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-      const status = statusArr[0] || null;
-      const srcColor = {'Instagram':'#1565C0','WhatsApp':'#2E7D32','Shala Rental':'#E65100'}[c.source] || '#5C3D2E';
-      const srcBg = {'Instagram':'#E3F2FD','WhatsApp':'#E8F5E9','Shala Rental':'#FFF3E0'}[c.source] || '#F5ECD7';
-      return `<div onclick="openCrmModal('${c.id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name||'Unnamed'}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${cleanLocation(c.location)}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-          ${c.source ? `<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:${srcBg};color:${srcColor};">${c.source}</span>` : ''}
-          ${status ? `<span class="crm-badge ${statusClass(status)}" style="font-size:8px;">${status.length > 20 ? status.split(':')[0].trim() : status}</span>` : ''}
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // Desktop: clean 3-column grid
-  const hRow = ['Name', 'Location', 'Source · Status'].map((h,i) =>
-    `<div style="padding:8px 12px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:var(--bg2);border-bottom:1px solid var(--border);${i===2?'text-align:right;':''}">${h}</div>`
-  ).join('');
-
-  const rows = items.map((c, i) => {
-    const bg = i % 2 === 0 ? 'var(--surface)' : 'var(--bg)';
-    const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-    const status = statusArr[0] || null;
-    const srcColor = {'Instagram':'#1565C0','WhatsApp':'#2E7D32','Shala Rental':'#E65100'}[c.source] || '#5C3D2E';
-    const srcBg = {'Instagram':'#E3F2FD','WhatsApp':'#E8F5E9','Shala Rental':'#FFF3E0'}[c.source] || '#F5ECD7';
-    const cell = `padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'DM Sans',sans-serif;`;
-    const shortStatus = status ? (status.length > 18 ? status.split(':')[0].trim() : status) : null;
-    return `
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-size:13px;font-weight:500;color:var(--text);background:${bg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name||'Unnamed'}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-size:12px;color:var(--muted);background:${bg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cleanLocation(c.location)}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}background:${bg};text-align:right;">
-        ${c.source ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:${srcBg};color:${srcColor};margin-left:4px;">${c.source}</span>` : ''}
-        ${shortStatus ? `<span class="crm-badge ${statusClass(status)}" style="font-size:8px;margin-left:4px;">${shortStatus}</span>` : ''}
-      </div>`;
-  }).join('');
-
-  return `<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;">${hRow}${rows}</div>`;
+// ── TAB / VIEW ────────────────────────────────────────────────────────────────
+function crmSwitchTab(tab) {
+  crmTab = tab;
+  ['leads','converted'].forEach(t => {
+    document.getElementById('crm-tab-'+t)?.classList.toggle('active', t === tab);
+  });
+  crmRender();
 }
 
+function setCrmView(view) {
+  crmView = view;
+  document.getElementById('crm-view-list')?.classList.toggle('active', view === 'list');
+  document.getElementById('crm-view-pipeline')?.classList.toggle('active', view === 'pipeline');
+  crmRender();
+}
 
+// ── SORT / GROUP ──────────────────────────────────────────────────────────────
+function crmSort(items) {
+  const g = document.getElementById('crm-group')?.value || 'none';
+  if (g === 'none_name')     return [...items].sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  if (g === 'none_location') return [...items].sort((a,b) => cleanLocation(a.location).localeCompare(cleanLocation(b.location)));
+  return [...items].sort((a,b) => new Date(b.lastEdited||0) - new Date(a.lastEdited||0));
+}
+
+function groupKey(c, groupBy) {
+  if (groupBy === 'source')   return c.source || 'No Source';
+  if (groupBy === 'location') return cleanLocation(c.location) || 'No Location';
+  if (groupBy === 'status') {
+    const s = Array.isArray(c.status) ? c.status[0] : c.status;
+    return s || 'No Status';
+  }
+  if (groupBy === 'date') {
+    const d = c.lastEdited ? new Date(c.lastEdited) : null;
+    return d ? d.toLocaleDateString('en-GB',{month:'long',year:'numeric'}) : 'Unknown';
+  }
+  return '';
+}
+
+// ── MAIN RENDER ───────────────────────────────────────────────────────────────
 function crmRender() {
   const list = document.getElementById('crm-list');
-  if (!list) return; // view not in DOM yet
-  const q = (document.getElementById('crm-search')?.value || '').toLowerCase();
-  const groupRaw = document.getElementById('crm-group')?.value || 'none';
-  const groupBy = groupRaw.startsWith('none') ? 'none' : groupRaw;
-  const sourceFilter = document.getElementById('crm-source-filter')?.value || '';
+  if (!list) return;
 
-  let items = (crmData[crmTab] || []).filter(c => {
-    const matchQ = !q || (c.name||'').toLowerCase().includes(q) ||
-                         (c.company||'').toLowerCase().includes(q) ||
-                         (c.location||'').toLowerCase().includes(q);
-    const matchS = !sourceFilter || c.source === sourceFilter;
-    return matchQ && matchS;
+  const search  = (document.getElementById('crm-search')?.value || '').toLowerCase();
+  const srcFilt = document.getElementById('crm-source-filter')?.value || '';
+  const groupBy = (document.getElementById('crm-group')?.value || 'none').replace('none_name','none').replace('none_location','none');
+  const realGroup = document.getElementById('crm-group')?.value || 'none';
+
+  const raw = crmTab === 'converted' ? (crmData.converted || []) : (crmData.leads || []);
+  let items = raw.filter(c => {
+    if (search && !((c.name||'') + (c.location||'') + (c.company||'')).toLowerCase().includes(search)) return false;
+    if (srcFilt && c.source !== srcFilt) return false;
+    return true;
   });
-  items = crmSort(items);
 
+  // Count
   const countEl = document.getElementById('crm-count');
-  if (countEl) countEl.textContent = items.length + ' of ' + (crmData[crmTab]||[]).length;
-
-  if (items.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:40px 0;font-family:'Lora',serif;font-size:13px;color:#8B7355;font-style:italic;">${crmLoaded ? 'No results.' : 'Loading…'}</div>`;
-    return;
-  }
+  if (countEl) countEl.textContent = `${items.length} of ${raw.length}`;
 
   // Pipeline view
-  if (crmView === 'pipeline') {
+  if (crmView === 'pipeline' && crmTab === 'leads') {
     renderPipeline(items);
     return;
   }
 
-  if (groupBy === 'none') {
-    list.innerHTML = buildGrid(items);
+  items = crmSort(items);
+
+  // Grouped
+  const needsGroup = realGroup.startsWith('location') || realGroup.startsWith('status') || realGroup.startsWith('source') || realGroup.startsWith('date');
+  if (needsGroup) {
+    const groups = {};
+    items.forEach(c => {
+      const k = groupKey(c, realGroup);
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(c);
+    });
+    list.innerHTML = Object.entries(groups).map(([key, grpItems]) => {
+      const collapsed = crmCollapsed[key];
+      return `<div style="margin-bottom:12px;">
+        <div onclick="toggleCrmGroup('${key.replace(/'/g,"\\'")}')"
+          style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--dark);border-radius:var(--radius-sm);cursor:pointer;margin-bottom:6px;">
+          <span style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F5ECD7;">${key}</span>
+          <span style="font-size:10px;color:var(--gold);">${grpItems.length} ${collapsed?'▸':'▾'}</span>
+        </div>
+        ${collapsed ? '' : buildGrid(grpItems)}
+      </div>`;
+    }).join('');
     return;
   }
 
-  // Grouped with collapsible sections
-  const groups = {};
-  items.forEach(c => {
-    const key = groupKey(c, groupBy);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(c);
-  });
-
-  list.innerHTML = Object.entries(groups).map(([key, groupItems]) => {
-    const isCollapsed = !!crmCollapsed[key];
-    return `
-      <div style="margin-bottom:4px;">
-        <div onclick="toggleCrmGroup('${key.replace(/'/g,'\'')}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--dark);border-radius:${isCollapsed?'4px':'4px 4px 0 0'};cursor:pointer;user-select:none;">
-          <span style="font-family:'Libre Baskerville',serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F5ECD7;">${key}</span>
-          <span style="font-family:'Lora',serif;font-size:10px;color:#B8935A;">${groupItems.length} &nbsp; ${isCollapsed?'▸':'▾'}</span>
-        </div>
-        ${isCollapsed ? '' : buildGrid(groupItems)}
-      </div>`;
-  }).join('');
+  list.innerHTML = buildGrid(items);
 }
 
 function toggleCrmGroup(key) {
@@ -260,373 +181,107 @@ function toggleCrmGroup(key) {
   crmRender();
 }
 
-async function fetchCRM(force=false) {
-  const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'load', forceRefresh: !!force }) });
-  const data = await r.json();
-  if (!data.leads) throw new Error(JSON.stringify(data));
-  return data;
-}
+// ── LIST GRID ─────────────────────────────────────────────────────────────────
+function buildGrid(items) {
+  if (!items.length) return '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px;font-style:italic;">No leads found.</div>';
 
-async function loadCRM(force=false) {
-  if (!crmLoaded || force) {
-    const list = $('crm-list');
-    if (list) list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px;font-style:italic;">Loading…</div>`;
-    const btn = document.getElementById('crm-refresh-btn');
-    if (btn) { btn.textContent = '↻ Loading…'; btn.disabled = true; }
-    try {
-      crmData = await fetchCRM(force);
-      crmLoaded = true;
-      const c = crmData._counts||{};
-      dbg(`CRM loaded: ${(crmData.leads||[]).length} leads (ig:${c.instagram||0} wa:${c.whatsapp||0} shala:${c.shala||0}) + ${(crmData.converted||[]).length} converted`);
-      crmSwitchTab(crmTab);
-      crmRender();
-    } catch(e) {
-      if (list) list.innerHTML = `<div style="text-align:center;padding:40px 0;color:#B71C1C;font-size:13px;">Could not load CRM: ${e.message}</div>`;
-      dbg('CRM load failed: ' + e.message);
-    } finally {
-      if (btn) { btn.textContent = '↻ Refresh'; btn.disabled = false; }
-    }
-  } else {
-    crmRender();
-  }
-}
+  const isMobile = window.innerWidth < 640;
 
-function crmDetailHTML(c, editMode=false) {
-  const isLead = c.db === 'leads';
-  const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-  const leadStatuses = ['Followed + Engaged','Reached out','WARM: Booked a call OR asked for help','HOT: Past client/strong conversation','QUALIFIED TO BUY','SALE CLOSED','GHOSTED','TERMINATED','NOT GOOD FIT'];
-  const convStatuses = ['Face2Face conversation','Responded','Phone call','Booked Venue','Rejected Ubuntu'];
-  const statusOptions = isLead
-    ? leadStatuses.map(s => `<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')
-    : convStatuses.map(s => `<option value="${s}" ${statusArr.includes(s)?'selected':''}>${s}</option>`).join('');
-  const statusBadges = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}">${s}</span>`).join(' ');
-
-  const showPromote = isLead && (c.status === 'Reached out' || c.status === 'WARM: Booked a call OR asked for help' || c.status === 'HOT: Past client/strong conversation' || c.status === 'QUALIFIED TO BUY' || c.status === 'SALE CLOSED');
-
-  if (editMode) {
-    return `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">Edit Contact</div>
-        <button onclick="openCrmModal('${c.id}')" style="background:none;border:none;font-size:13px;cursor:pointer;color:#8B7355;font-family:'Libre Baskerville',serif;letter-spacing:.08em;text-transform:uppercase;">✕ Cancel</button>
-      </div>
-      <div class="fg"><label>Name</label><input type="text" id="edit-name" value="${c.name||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Company</label><input type="text" id="edit-company" value="${c.company||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Email</label><input type="text" id="edit-email" value="${c.email||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Instagram</label><input type="text" id="edit-insta" value="${c.insta||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>WhatsApp</label><input type="text" id="edit-whatsapp" value="${c.whatsapp||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Website</label><input type="text" id="edit-website" value="${c.website||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <div class="fg"><label>Location</label><input type="text" id="edit-location" value="${c.location||''}" style="width:100%;padding:8px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;"></div>
-      <button class="ios-modal-close" style="margin-top:8px;" onclick="saveContactDetails('${c.id}','${c.db}')">Save Details</button>
-    `;
+  if (isMobile) {
+    return items.map(c => {
+      const reached = inferReachedOutOn(c);
+      return `<div onclick="openCrmModal('${c.id}')"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:6px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name||'Unnamed'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${cleanLocation(c.location)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
+          ${reached.map(r => `<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:${srcBg[c.source]||'#F5ECD7'};color:${srcColor[c.source]||'#5C3D2E'};">${r}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
   }
 
-  const fields = [
-    c.company    && ['Company', c.company],
-    c.email      && ['Email', `<a href="mailto:${c.email}" style="color:#B8935A;">${c.email}</a>`],
-    c.whatsapp   && ['WhatsApp', c.whatsapp],
-    c.insta      && ['Instagram', c.insta],
-    c.linkedin   && ['LinkedIn', c.linkedin],
-    c.website    && ['Website', `<a href="${(c.website||'').startsWith('http')?c.website:'https://'+c.website}" target="_blank" style="color:#B8935A;">${c.website}</a>`],
-    c.location   && ['Location', c.location],
-    c.contact    && ['Contact', c.contact],
-    c.reachedOutOn && c.reachedOutOn.length > 0 && ['Reached out on', c.reachedOutOn.map(r=>`<span class="crm-badge crm-status-reached" style="font-size:7px;">${r}</span>`).join(' ')],
-    c.engagedFirst && ['First contact', fmtD(c.engagedFirst)],
-    c.engagedLast  && ['Last engaged', fmtD(c.engagedLast)],
-    c.salesCall    && ['Sales call', fmtD(c.salesCall)],
-  ].filter(Boolean).map(([l,v]) => `<div class="crm-field"><span class="crm-field-label">${l}</span><span>${v}</span></div>`).join('');
+  // Desktop: compact rows
+  const header = `<div style="display:grid;grid-template-columns:2fr 1.5fr 1fr;border-bottom:2px solid var(--border);padding:6px 12px;margin-bottom:2px;">
+    ${['NAME','LOCATION','REACHED OUT · STAGE'].map((h,i) => `<div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--gold);${i===2?'text-align:right;':''}">${h}</div>`).join('')}
+  </div>`;
 
-  return `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-      <div>
-        <div style="font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:#221208;">${c.name||'Unnamed'}</div>
-        <div style="font-family:'Lora',serif;font-size:11px;color:#8B7355;margin-top:2px;">${isLead ? 'Lead Pipeline' : 'Converted Lead'}</div>
+  const rows = items.map((c,i) => {
+    const bg = i%2===0 ? 'var(--surface)' : 'var(--bg)';
+    const reached = inferReachedOutOn(c);
+    const stage = STAGES.find(s => s.key === getStage(c));
+    return `<div onclick="openCrmModal('${c.id}')"
+      style="display:grid;grid-template-columns:2fr 1.5fr 1fr;padding:9px 12px;background:${bg};cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;"
+      onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='${bg}'">
+      <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;">${c.name||'Unnamed'}</div>
+      <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;">${cleanLocation(c.location)}</div>
+      <div style="display:flex;gap:3px;justify-content:flex-end;flex-wrap:wrap;align-items:center;">
+        ${reached.slice(0,2).map(r => `<span style="font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;background:${srcBg[c.source]||'#F5ECD7'};color:${srcColor[c.source]||'#5C3D2E'};">${r}</span>`).join('')}
+        ${stage ? `<span style="font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;background:${stage.bg};color:${stage.color};border:1px solid ${stage.border};">${stage.label.replace(/^\S+\s/,'')}</span>` : ''}
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="openCrmModalEdit('${c.id}')" style="background:none;border:1px solid #D4C4A8;border-radius:3px;padding:5px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:#8B7355;">✎ Edit</button>
-        <button onclick="document.getElementById('crm-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8B7355;">✕</button>
-      </div>
-    </div>
-    ${fields || '<div style="color:#B8935A;font-family:Lora,serif;font-size:12px;font-style:italic;">No details available</div>'}
-    ${isLead ? reachedOutHTML(c) : `<div class="crm-section-hd">Status</div><div style="margin-bottom:8px;">${statusBadges || '—'}</div><select class="crm-select" id="crm-status-sel" multiple size="3">${statusOptions}</select>`}
-    ${isLead ? `<div class="crm-section-hd">Pipeline Stage</div>
-    <select class="crm-select" id="crm-status-sel">
-      <option value="Followed + Engaged" ${c.status==='Followed + Engaged'?'selected':''}>🌱 Cold Lead</option>
-      <option value="Reached out" ${c.status==='Reached out'?'selected':''}>📬 Contacted</option>
-      <option value="WARM: Booked a call OR asked for help" ${c.status==='WARM: Booked a call OR asked for help'?'selected':''}>🔥 Warm</option>
-      <option value="HOT: Past client/strong conversation" ${c.status==='HOT: Past client/strong conversation'?'selected':''}>⚡ Hot</option>
-      <option value="QUALIFIED TO BUY" ${c.status==='QUALIFIED TO BUY'?'selected':''}>✅ Qualified</option>
-      <option value="SALE CLOSED" ${c.status==='SALE CLOSED'?'selected':''}>🎉 Sale Closed</option>
-      <option value="GHOSTED" ${c.status==='GHOSTED'?'selected':''}>👻 Ghosted</option>
-      <option value="NOT GOOD FIT" ${c.status==='NOT GOOD FIT'?'selected':''}>✗ Not a Fit</option>
-    </select>` : ''}
-    <div class="crm-section-hd">Engage Next</div>
-    <input type="date" id="crm-engage-next" value="${c.engageNext||''}" style="width:100%;padding:7px 10px;border:1px solid #D4C4A8;border-radius:3px;font-family:'Lora',serif;font-size:13px;background:var(--bg);outline:none;margin-bottom:8px;">
-    <div class="crm-section-hd">Notes</div>
-    <textarea class="crm-textarea" id="crm-notes-input">${c.notes||''}</textarea>
-    <button class="ios-modal-close" style="margin-top:14px;" onclick="saveCrmContact('${c.id}','${c.db}')">Save Changes</button>
-    ${showPromote ? `<button onclick="promoteLead('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3D6636;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Move to Converted</button>` : ''}
-    <button onclick="prefillOfferFromCRM('${c.id}')" style="width:100%;margin-top:8px;padding:10px;background:#3a3228;color:#fff;border:none;border-radius:4px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">→ Create Offer</button>
-    ${(() => {
-      const linked = getLinkedDrafts(c.name, c.company);
-      if (!linked.length) return '';
-      return `<div class="crm-section-hd">Linked Drafts (${linked.length})</div>` +
-        linked.map(d => `<div onclick="loadDraftById('${d.pageId}')" style="padding:8px 10px;border:1px solid #EDE3D4;border-radius:3px;margin-bottom:6px;cursor:pointer;background:var(--bg);font-family:'Lora',serif;font-size:11px;color:#1A1208;">
-          <span style="font-weight:600;">${d.organizer||'Unnamed'}${d.retreatName?' · '+d.retreatName:''}</span>
-          <span class="draft-status s-${d.status||'Draft'}" style="margin-left:6px;">${d.status||'Draft'}</span>
-          <div style="font-size:10px;color:#8B7355;margin-top:2px;">${d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates'} · USD ${d.totalUSD?Number(d.totalUSD).toLocaleString('en-US'):'—'}</div>
-        </div>`).join('');
-    })()}
-  `;
+    </div>`;
+  }).join('');
+
+  return `<div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">${header}${rows}</div>`;
 }
 
-function openCrmModal(id) {
-  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
-  if (!c) return;
-  $('crm-modal-content').innerHTML = crmDetailHTML(c, false);
-  $('crm-modal').classList.add('open');
-}
-
-function openCrmModalEdit(id) {
-  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
-  if (!c) return;
-  $('crm-modal-content').innerHTML = crmDetailHTML(c, true);
-}
-
-async function saveContactDetails(id, db) {
-  const props = {};
-  const name = $('edit-name')?.value;
-  const company = $('edit-company')?.value;
-  const email = $('edit-email')?.value;
-  const insta = $('edit-insta')?.value;
-  const whatsapp = $('edit-whatsapp')?.value;
-  const website = $('edit-website')?.value;
-  const location = $('edit-location')?.value;
-
-  if (db === 'leads') {
-    if (name !== undefined)    props['Name']     = { title:     [{ text: { content: name } }] };
-    if (company !== undefined) props['Company']  = { rich_text: [{ text: { content: company } }] };
-    if (email !== undefined)   props['Email']    = { email: email || null };
-    if (insta !== undefined)   props['Insta']    = { rich_text: [{ text: { content: insta } }] };
-    if (website !== undefined) props['Website']  = { rich_text: [{ text: { content: website } }] };
-    if (location !== undefined)props['Location'] = { rich_text: [{ text: { content: location } }] };
-  } else {
-    if (name !== undefined)     props['Name']     = { title:     [{ text: { content: name } }] };
-    if (company !== undefined)  props['Company']  = { rich_text: [{ text: { content: company } }] };
-    if (email !== undefined)    props['Mail']     = { rich_text: [{ text: { content: email } }] };
-    if (insta !== undefined)    props['Insta']    = { rich_text: [{ text: { content: insta } }] };
-    if (whatsapp !== undefined) props['Whatsapp'] = { rich_text: [{ text: { content: whatsapp } }] };
-    if (website !== undefined)  props['Website']  = { rich_text: [{ text: { content: website } }] };
-    if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location } }] };
-  }
-
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'updateDetails', pageId: id, props }) });
-    // Update local cache
-    const arr = db === 'leads' ? crmData.leads : crmData.converted;
-    const item = arr.find(x => x.id === id);
-    if (item) {
-      if (name) item.name = name;
-      if (company) item.company = company;
-      if (email) item.email = email;
-      if (insta) item.insta = insta;
-      if (whatsapp) item.whatsapp = whatsapp;
-      if (website) item.website = website;
-      if (location) item.location = location;
-    }
-    openCrmModal(id);
-    crmRender();
-  } catch(e) { alert('Could not save details.'); }
-}
-
-async function promoteLead(id) {
-  const c = [...(crmData.leads||[])].find(x => x.id === id);
-  if (!c || !confirm(`Move ${c.name || 'this lead'} to Converted Leads?`)) return;
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'promote', pageId: id, name: c.name, company: c.company,
-        email: c.email, insta: c.insta, website: c.website, location: c.location, notes: c.notes }) });
-    $('crm-modal').classList.remove('open');
-    crmData.leads = crmData.leads.filter(x => x.id !== id);
-    crmRender();
-    loadCRM(true);
-  } catch(e) { alert('Could not promote lead.'); }
-}
-
-function closeCrmModal(e) {
-  if (e.target === $('crm-modal')) $('crm-modal').classList.remove('open');
-}
-
-async function saveCrmContact(id, db) {
-  const sel = $('crm-status-sel');
-  const status = db === 'leads'
-    ? sel.value
-    : Array.from(sel.selectedOptions).map(o => o.value);
-  const notes = $('crm-notes-input').value;
-  const engageNext = $('crm-engage-next').value || null;
-
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'update', pageId:id, db, status, notes, engageNext }) });
-    // Update local data
-    const arr = db === 'leads' ? crmData.leads : crmData.converted;
-    const item = arr.find(x => x.id === id);
-    if (item) { item.status = status; item.notes = notes; item.engageNext = engageNext; }
-    $('crm-modal').classList.remove('open');
-    crmRender();
-  } catch(e) { alert('Could not save.'); }
-}
-
-function loadDraftById(pageId) {
-  if (!window._drafts) return;
-  const idx = window._drafts.findIndex(d => d.pageId === pageId);
-  if (idx >= 0) { loadDraftByIndex(idx); document.getElementById('crm-modal').classList.remove('open'); }
-}
-
-function prefillOfferFromCRM(id) {
-  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
-  if (!c) return;
-  $('crm-modal').classList.remove('open');
-  intentionalDraft = true;
-  currentPageId = null;
-  draftActive = false;
-  $('f-name').value = c.name || '';
-  $('f-company').value = c.company || '';
-  $('f-contractdate').value = todayStr();
-  $('f-validuntil').value = addDays(todayStr(), 7);
-  $('notion-status').value = 'Draft';
-  switchTab('deal');switchDealTab('edit');
-}
-
-function openNewLeadModal() {
-  ['nl-name','nl-company','nl-email','nl-insta','nl-location','nl-notes'].forEach(id => { const el=$(id); if(el) el.value=''; });
-  $('new-lead-modal').classList.add('open');
-}
-
-function closeNewLeadModal(e) {
-  if (!e || e.target === $('new-lead-modal')) $('new-lead-modal').classList.remove('open');
-}
-
-async function saveNewLead() {
-  const name = $('nl-name').value.trim();
-  if (!name) { alert('Name is required.'); return; }
-  try {
-    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        action: 'create',
-        name, company: $('nl-company').value,
-        email: $('nl-email').value,
-        insta: $('nl-insta').value,
-        whatsapp: $('nl-whatsapp')?.value||'',
-        location: $('nl-location').value,
-        notes: $('nl-notes').value,
-        source: $('nl-source').value,
-      })
-    });
-    $('new-lead-modal').classList.remove('open');
-    crmLoaded = false;
-    loadCRM();
-  } catch(e) { alert('Could not save lead.'); }
-}
 // ── PIPELINE VIEW ─────────────────────────────────────────────────────────────
-let crmView = 'list'; // 'list' | 'pipeline'
-let dragItem = null;
-
-// Pipeline stages with Ubuntu branding colors
-const PIPELINE_STAGES = [
-  { key: 'cold',      label: 'Cold Lead',       color: '#8B7355', bg: '#F5ECD7', statuses: ['Followed + Engaged', null, undefined, ''] },
-  { key: 'contacted', label: 'Contacted',        color: '#1565C0', bg: '#E3F2FD', statuses: ['Reached out', 'WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY'] },
-  { key: 'closed',    label: 'Sale Closed',      color: '#2E7D32', bg: '#E8F5E9', statuses: ['SALE CLOSED'] },
-  { key: 'dead',      label: 'Not a Fit',        color: '#757575', bg: '#F5F5F5', statuses: ['GHOSTED', 'TERMINATED', 'NOT GOOD FIT'] },
-];
-
-// Map source/db → default "Reached out on" value
-function inferReachedOutOn(c) {
-  if (c.source === 'Instagram') return ['Instagram'];
-  if (c.source === 'WhatsApp' || c.source === 'Shala Rental') return ['WhatsApp'];
-  return c.reachedOutOn || [];
-}
-
-function getStageForLead(c) {
-  const s = Array.isArray(c.status) ? c.status[0] : c.status;
-  for (const stage of PIPELINE_STAGES) {
-    if (stage.statuses.includes(s)) return stage.key;
-  }
-  return 'cold'; // default
-}
-
-function getStatusForStage(stageKey) {
-  const stage = PIPELINE_STAGES.find(s => s.key === stageKey);
-  return stage ? stage.statuses.find(s => s) || null : null;
-}
-
-function setCrmView(view) {
-  crmView = view;
-  document.getElementById('crm-view-list')?.classList.toggle('active', view === 'list');
-  document.getElementById('crm-view-pipeline')?.classList.toggle('active', view === 'pipeline');
-  // Show/hide filters (only relevant for list)
-  const filters = document.querySelector('#view-crm [style*="crm-source-filter"]')?.parentElement;
-  crmRender();
-}
-
 function renderPipeline(items) {
   const list = document.getElementById('crm-list');
   if (!list) return;
 
-  const total = items.length;
-  const closedCount = items.filter(c => {
-    const s = Array.isArray(c.status) ? c.status[0] : c.status;
-    return s === 'SALE CLOSED';
-  }).length;
+  const closedCount = items.filter(c => getStage(c) === 'closed').length;
+  const activeCount = items.filter(c => getStage(c) !== 'dead').length;
 
-  // Stats bar
-  let html = `<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;display:flex;flex-direction:column;gap:2px;">
-      <div style="font-size:22px;font-weight:700;color:var(--dark);font-family:'Cormorant Garamond',serif;">${total}</div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Active Leads</div>
+  let html = `
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 18px;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--dark);">${activeCount}</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Active Leads</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 18px;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:#2E7D32;">${closedCount}</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Sales Closed</div>
+      </div>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;display:flex;flex-direction:column;gap:2px;">
-      <div style="font-size:22px;font-weight:700;color:#2E7D32;font-family:'Cormorant Garamond',serif;">${closedCount}</div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Sales Closed</div>
-    </div>
-  </div>`;
+    <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;">`;
 
-  // Kanban columns
-  html += `<div class="pipeline-wrap">`;
+  STAGES.forEach(stage => {
+    const stageItems = crmSort(items.filter(c => getStage(c) === stage.key));
 
-  PIPELINE_STAGES.forEach(stage => {
-    const stageItems = items.filter(c => getStageForLead(c) === stage.key);
-
-    const cards = stageItems.map(c => {
+    // Compact list rows inside column
+    const rows = stageItems.map(c => {
       const reached = inferReachedOutOn(c);
-      const reachedTags = reached.map(r =>
-        `<span style="font-size:8px;padding:1px 6px;border-radius:100px;background:var(--bg2);color:var(--muted);font-weight:600;">${r}</span>`
-      ).join('');
-      return `<div class="pipeline-card"
+      return `<div
         draggable="true"
         data-id="${c.id}"
-        data-source="${c.source||''}"
-        data-db="${c.db||''}"
-        ondragstart="onDragStart(event,'${c.id}')"
-        ondragend="onDragEnd(event)"
-        onclick="openCrmModal('${c.id}')">
-        <div class="pipeline-card-name">${c.name||'Unnamed'}</div>
-        <div class="pipeline-card-sub">${cleanLocation(c.location)}</div>
-        ${reached.length ? `<div class="pipeline-card-tags">${reachedTags}</div>` : ''}
+        ondragstart="pipelineDragStart(event,'${c.id}')"
+        ondragend="pipelineDragEnd(event)"
+        onclick="openCrmModal('${c.id}')"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;cursor:grab;transition:all .15s;user-select:none;margin-bottom:4px;"
+        onmouseover="this.style.borderColor='var(--gold-lt)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;">${c.name||'Unnamed'}</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">${cleanLocation(c.location)}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;">
+          ${reached.map(r => `<span style="font-size:8px;font-weight:700;padding:1px 6px;border-radius:100px;background:var(--bg2);color:var(--muted);">${r}</span>`).join('')}
+        </div>
       </div>`;
     }).join('');
 
-    html += `<div class="pipeline-col">
-      <div class="pipeline-col-header" style="background:${stage.bg};color:${stage.color};">
-        <span>${stage.label}</span>
-        <span class="col-count">${stageItems.length}</span>
+    html += `<div style="flex:0 0 200px;display:flex;flex-direction:column;">
+      <div style="padding:8px 10px;border-radius:var(--radius-sm) var(--radius-sm) 0 0;background:${stage.bg};border:1px solid ${stage.border};border-bottom:none;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;font-weight:700;color:${stage.color};">${stage.label}</span>
+        <span style="font-size:10px;font-weight:600;color:${stage.color};opacity:.7;">${stageItems.length}</span>
       </div>
-      <div class="pipeline-cards"
+      <div
         data-stage="${stage.key}"
-        ondragover="onDragOver(event)"
-        ondragleave="onDragLeave(event)"
-        ondrop="onDrop(event,'${stage.key}')">
-        ${cards}
+        ondragover="pipelineDragOver(event)"
+        ondragleave="pipelineDragLeave(event)"
+        ondrop="pipelineDrop(event,'${stage.key}')"
+        style="flex:1;min-height:80px;border:1px solid ${stage.border};border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:6px;background:${stage.bg}22;transition:background .15s;">
+        ${rows}
       </div>
     </div>`;
   });
@@ -636,93 +291,378 @@ function renderPipeline(items) {
 }
 
 // ── DRAG & DROP ───────────────────────────────────────────────────────────────
-function onDragStart(e, id) {
-  dragItem = id;
-  e.currentTarget.classList.add('dragging');
+function pipelineDragStart(e, id) {
+  dragItemId = id;
+  e.currentTarget.style.opacity = '0.4';
   e.dataTransfer.effectAllowed = 'move';
 }
-
-function onDragEnd(e) {
-  e.currentTarget.classList.remove('dragging');
-  document.querySelectorAll('.pipeline-cards').forEach(c => c.classList.remove('drag-over'));
+function pipelineDragEnd(e) {
+  e.currentTarget.style.opacity = '1';
+  document.querySelectorAll('[data-stage]').forEach(col => {
+    col.style.background = '';
+    col.style.border = '';
+  });
 }
-
-function onDragOver(e) {
+function pipelineDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  e.currentTarget.classList.add('drag-over');
+  e.currentTarget.style.background = 'rgba(184,147,90,.12)';
 }
-
-function onDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
+function pipelineDragLeave(e) {
+  e.currentTarget.style.background = '';
 }
-
-async function onDrop(e, stageKey) {
+async function pipelineDrop(e, stageKey) {
   e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  if (!dragItem) return;
+  e.currentTarget.style.background = '';
+  if (!dragItemId) return;
 
-  const lead = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === dragItem);
+  const lead = (crmData.leads||[]).find(x => x.id === dragItemId);
   if (!lead) return;
+  if (getStage(lead) === stageKey) return; // no-op
 
-  const newStatus = getStatusForStage(stageKey);
-  if (!newStatus) return;
+  const newStatus = getNotionStatusForStage(stageKey);
 
   // Optimistic update
-  if (Array.isArray(lead.status)) lead.status = [newStatus];
-  else lead.status = newStatus;
+  lead.status = newStatus;
   crmRender();
 
-  // Save to Notion
   try {
     await fetch('/api/crm', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        action: 'update',
-        pageId: lead.id,
-        db: lead.db,
-        source: lead.source,
-        status: newStatus,
-      })
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'update', pageId:lead.id, db:lead.db, source:lead.source, status:newStatus })
     });
-    dbg(`Moved ${lead.name} → ${stageKey}`);
+    dbg(`✓ ${lead.name} → ${stageKey}`);
   } catch(err) {
-    dbg('Pipeline drag save failed: ' + err.message);
+    dbg('Drag save failed: ' + err.message);
   }
-  dragItem = null;
+  dragItemId = null;
 }
 
-// ── REACHED OUT ON (replaces status in modal) ─────────────────────────────────
-const REACHED_OUT_OPTIONS = ['Instagram', 'WhatsApp', 'Email', 'LinkedIn', 'Cold Call'];
-
-function reachedOutHTML(c) {
-  const current = inferReachedOutOn(c);
-  return `<div class="crm-section-hd">Reached Out On</div>
-  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
-    ${REACHED_OUT_OPTIONS.map(opt => {
-      const active = current.includes(opt);
-      return `<button onclick="toggleReachedOut('${c.id}','${c.source||''}','${opt}',this)"
-        style="padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .15s;background:${active?'var(--gold)':'transparent'};color:${active?'var(--dark)':'var(--muted)'};"
-        data-active="${active}">${opt}</button>`;
-    }).join('')}
-  </div>`;
+// ── FETCH ─────────────────────────────────────────────────────────────────────
+async function fetchCRM(force=false) {
+  const r = await fetch('/api/crm', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'load', forceRefresh: force })
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
 }
 
+async function loadCRM(force=false) {
+  if (!crmLoaded || force) {
+    const list = document.getElementById('crm-list');
+    if (list) list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px;font-style:italic;">Loading…</div>`;
+    const btn = document.getElementById('crm-refresh-btn');
+    if (btn) { btn.textContent = '↻ Loading…'; btn.disabled = true; }
+    try {
+      crmData = await fetchCRM(force);
+      crmLoaded = true;
+      const c = crmData._counts||{};
+      dbg(`CRM: ${(crmData.leads||[]).length} leads (ig:${c.instagram||0} wa:${c.whatsapp||0} shala:${c.shala||0}) + ${(crmData.converted||[]).length} converted`);
+      crmSwitchTab(crmTab);
+      crmRender();
+    } catch(e) {
+      if (list) list.innerHTML = `<div style="text-align:center;padding:40px 0;color:#B71C1C;font-size:13px;">Could not load: ${e.message}</div>`;
+      dbg('CRM load failed: ' + e.message);
+    } finally {
+      if (btn) { btn.textContent = '↻ Refresh'; btn.disabled = false; }
+    }
+  } else {
+    crmRender();
+  }
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openCrmModal(id) {
+  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('crm-modal-content').innerHTML = crmDetailHTML(c);
+  document.getElementById('crm-modal').classList.add('open');
+}
+
+function openCrmModalEdit(id) {
+  const c = [...(crmData.leads||[]), ...(crmData.converted||[])].find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('crm-modal-content').innerHTML = crmDetailHTML(c, true);
+  document.getElementById('crm-modal').classList.add('open');
+}
+
+function closeCrmModal(e) {
+  if (!e || e.target === document.getElementById('crm-modal'))
+    document.getElementById('crm-modal').classList.remove('open');
+}
+
+function crmDetailHTML(c, editMode=false) {
+  const isLead = c.db === 'leads';
+  const reached = inferReachedOutOn(c);
+  const stage = STAGES.find(s => s.key === getStage(c));
+
+  if (editMode) {
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--dark);">${c.name||'Unnamed'}</div>
+        <button onclick="closeCrmModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+      </div>
+      <div class="crm-section-hd">Details</div>
+      <div class="fg"><label>Name</label><input id="ce-name" class="fg input" type="text" value="${c.name||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Company</label><input id="ce-company" type="text" value="${c.company||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Location</label><input id="ce-location" type="text" value="${cleanLocation(c.location)}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Email</label><input id="ce-email" type="text" value="${c.email||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Instagram</label><input id="ce-insta" type="text" value="${c.insta||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Website</label><input id="ce-website" type="text" value="${c.website||''}" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;"></div>
+      <div class="fg"><label>Notes</label><textarea id="ce-notes" rows="3" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;">${c.notes||''}</textarea></div>
+      <button onclick="saveContactDetails('${c.id}','${c.db}')" class="ios-modal-close" style="margin-top:8px;">Save Changes</button>
+      <button onclick="openCrmModal('${c.id}')" style="width:100%;margin-top:8px;padding:11px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--muted);">Cancel</button>`;
+  }
+
+  // View mode
+  const fields = [
+    c.company    && ['Company',  c.company],
+    c.email      && ['Email',    `<a href="mailto:${c.email}" style="color:var(--gold);">${c.email}</a>`],
+    c.insta      && ['Instagram', c.insta],
+    c.website    && ['Website',  `<a href="${c.website}" target="_blank" style="color:var(--gold);">${c.website}</a>`],
+    c.linkedin   && ['LinkedIn', c.linkedin],
+    c.whatsapp   && ['WhatsApp', c.whatsapp],
+    c.engagedFirst && ['First contact', fmtD(c.engagedFirst)],
+    c.engagedLast  && ['Last contact',  fmtD(c.engagedLast)],
+    c.engageNext   && ['Engage next',   fmtD(c.engageNext)],
+    c.suitability  && ['Suitability',   `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>`],
+  ].filter(Boolean);
+
+  const convStatuses = ['Face2Face conversation','Responded','Phone call','Booked Venue','Rejected Ubuntu'];
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--dark);line-height:1.2;">${c.name||'Unnamed'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;">${cleanLocation(c.location)}</div>
+      </div>
+      <button onclick="closeCrmModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);flex-shrink:0;margin-left:8px;">✕</button>
+    </div>
+
+    ${stage ? `<div style="margin:10px 0;"><span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${stage.bg};color:${stage.color};border:1px solid ${stage.border};">${stage.label}</span></div>` : ''}
+
+    <div class="crm-section-hd">Reached Out On</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+      ${REACHED_OUT_OPTIONS.map(opt => {
+        const active = reached.includes(opt);
+        return `<button
+          data-active="${active}"
+          onclick="toggleReachedOut('${c.id}','${c.source||''}','${opt}',this)"
+          style="padding:5px 13px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .15s;background:${active?'var(--gold)':'transparent'};color:${active?'var(--dark)':'var(--muted)'};">${opt}</button>`;
+      }).join('')}
+    </div>
+
+    ${isLead ? `
+    <div class="crm-section-hd">Pipeline Stage</div>
+    <select class="crm-select" id="crm-stage-sel" onchange="savePipelineStage('${c.id}','${c.source||''}',this.value)">
+      <option value="Followed + Engaged" ${(!c.status||c.status==='Followed + Engaged')?'selected':''}>🌱 Cold Lead</option>
+      <option value="Reached out" ${c.status==='Reached out'?'selected':''}>📬 Reached Out</option>
+      <option value="WARM: Booked a call OR asked for help" ${c.status==='WARM: Booked a call OR asked for help'?'selected':''}>🔥 Warm — Call Booked</option>
+      <option value="HOT: Past client/strong conversation" ${c.status==='HOT: Past client/strong conversation'?'selected':''}>⚡ Hot</option>
+      <option value="QUALIFIED TO BUY" ${c.status==='QUALIFIED TO BUY'?'selected':''}>✅ Qualified</option>
+      <option value="SALE CLOSED" ${c.status==='SALE CLOSED'?'selected':''}>🎉 Sale Closed</option>
+      <option value="GHOSTED" ${c.status==='GHOSTED'?'selected':''}>👻 Ghosted</option>
+      <option value="NOT GOOD FIT" ${c.status==='NOT GOOD FIT'?'selected':''}>✗ Not a Fit</option>
+    </select>` : `
+    <div class="crm-section-hd">Status</div>
+    <select class="crm-select" id="crm-stage-sel" multiple size="3" onchange="savePipelineStage('${c.id}','${c.source||''}',Array.from(this.selectedOptions).map(o=>o.value))">
+      ${convStatuses.map(s=>`<option value="${s}" ${(Array.isArray(c.status)?c.status:[c.status]).includes(s)?'selected':''}>${s}</option>`).join('')}
+    </select>`}
+
+    ${fields.length ? `<div class="crm-section-hd">Info</div>${fields.map(([label,val])=>`<div class="crm-field"><div class="crm-field-label">${label}</div><div style="font-size:13px;">${val}</div></div>`).join('')}` : ''}
+
+    ${c.notes ? `<div class="crm-section-hd">Notes</div><div style="font-size:13px;line-height:1.7;color:var(--text);">${c.notes}</div>` : ''}
+
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;">
+      <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;">✎ Edit</button>
+      ${isLead ? `<button onclick="promoteLead('${c.id}')" class="pill-btn dark" style="flex:1;">→ Convert</button>` : ''}
+      <button onclick="if(confirm('Delete this lead?'))deleteLead('${c.id}')" class="pill-btn" style="color:#B71C1C;border-color:#FDECEA;">🗑</button>
+    </div>`;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
 function toggleReachedOut(id, source, opt, btn) {
   const isActive = btn.dataset.active === 'true';
-  btn.dataset.active = !isActive;
+  btn.dataset.active = String(!isActive);
   btn.style.background = !isActive ? 'var(--gold)' : 'transparent';
   btn.style.color = !isActive ? 'var(--dark)' : 'var(--muted)';
-
-  // Collect all currently active options
   const allBtns = btn.closest('[style*="flex-wrap"]').querySelectorAll('button');
   const selected = Array.from(allBtns).filter(b => b.dataset.active === 'true').map(b => b.textContent.trim());
-
-  // Save to Notion
-  fetch('/api/crm', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ action: 'updateReachedOut', pageId: id, reachedOutOn: selected })
+  // Update local cache
+  const lead = [...(crmData.leads||[]),...(crmData.converted||[])].find(x=>x.id===id);
+  if (lead) lead.reachedOutOn = selected;
+  fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'updateReachedOut', pageId:id, reachedOutOn:selected })
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
+}
+
+async function savePipelineStage(id, source, status) {
+  const lead = [...(crmData.leads||[]),...(crmData.converted||[])].find(x=>x.id===id);
+  if (lead) lead.status = status;
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'update', pageId:id, source, status })
+    });
+    dbg(`Stage saved: ${status}`);
+  } catch(e) { dbg('Stage save failed: ' + e.message); }
+}
+
+async function saveContactDetails(id, db) {
+  const props = {
+    name:     document.getElementById('ce-name')?.value,
+    company:  document.getElementById('ce-company')?.value,
+    location: document.getElementById('ce-location')?.value,
+    email:    document.getElementById('ce-email')?.value,
+    insta:    document.getElementById('ce-insta')?.value,
+    website:  document.getElementById('ce-website')?.value,
+    notes:    document.getElementById('ce-notes')?.value,
+  };
+  // Update local cache
+  const lead = [...(crmData.leads||[]),...(crmData.converted||[])].find(x=>x.id===id);
+  if (lead) Object.assign(lead, props);
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'updateDetails', pageId:id, props:{
+        'Name':     { title:     [{ text:{content: props.name||'' } }] },
+        'Company':  { rich_text: [{ text:{content: props.company||'' } }] },
+        'Location': { rich_text: [{ text:{content: props.location||'' } }] },
+        'Notes':    { rich_text: [{ text:{content: props.notes||'' } }] },
+      }})
+    });
+    dbg('Contact saved');
+    openCrmModal(id);
+  } catch(e) { dbg('Save failed: ' + e.message); }
+}
+
+async function promoteLead(id) {
+  const c = (crmData.leads||[]).find(x=>x.id===id);
+  if (!c || !confirm(`Move ${c.name} to Converted?`)) return;
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'promote', pageId:id, name:c.name, company:c.company,
+        email:c.email, insta:c.insta, website:c.website, location:c.location, notes:c.notes })
+    });
+    crmData.leads = (crmData.leads||[]).filter(x=>x.id!==id);
+    document.getElementById('crm-modal').classList.remove('open');
+    crmRender();
+    dbg(`Promoted: ${c.name}`);
+  } catch(e) { dbg('Promote failed: ' + e.message); }
+}
+
+async function deleteLead(id) {
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'delete', pageId:id })
+    });
+    crmData.leads = (crmData.leads||[]).filter(x=>x.id!==id);
+    crmData.converted = (crmData.converted||[]).filter(x=>x.id!==id);
+    document.getElementById('crm-modal').classList.remove('open');
+    crmRender();
+  } catch(e) { dbg('Delete failed: ' + e.message); }
+}
+
+// ── NEW LEAD ──────────────────────────────────────────────────────────────────
+function openNewLeadModal() {
+  ['nl-name','nl-company','nl-email','nl-insta','nl-whatsapp','nl-location','nl-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('new-lead-modal').classList.add('open');
+}
+
+function closeNewLeadModal(e) {
+  if (!e || e.target === document.getElementById('new-lead-modal'))
+    document.getElementById('new-lead-modal').classList.remove('open');
+}
+
+async function saveNewLead() {
+  const name = document.getElementById('nl-name')?.value;
+  if (!name) { alert('Name is required'); return; }
+  const source = document.getElementById('nl-source')?.value || 'Instagram';
+  try {
+    const r = await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'create', name, source,
+        company:  document.getElementById('nl-company')?.value,
+        email:    document.getElementById('nl-email')?.value,
+        insta:    document.getElementById('nl-insta')?.value,
+        whatsapp: document.getElementById('nl-whatsapp')?.value,
+        location: document.getElementById('nl-location')?.value,
+        notes:    document.getElementById('nl-notes')?.value,
+      })
+    });
+    const d = await r.json();
+    document.getElementById('new-lead-modal').classList.remove('open');
+    loadCRM(true);
+  } catch(e) { dbg('Create failed: ' + e.message); }
+}
+
+// ── DUPLICATES ────────────────────────────────────────────────────────────────
+function findDuplicates() {
+  const leads = crmData.leads || [];
+  const groups = {};
+  leads.forEach(c => {
+    const key = (c.name||'').toLowerCase().trim();
+    if (!key) return;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
+  });
+  return Object.values(groups).filter(g => g.length > 1);
+}
+
+function showDuplicates() {
+  const dups = findDuplicates();
+  const list = document.getElementById('crm-list');
+  if (!dups.length) { list.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px;">No duplicates found ✓</div>'; return; }
+  list.innerHTML = dups.map((group, gi) =>
+    `<div style="background:var(--surface);border:1px solid #FDECEA;border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:#B71C1C;margin-bottom:10px;letter-spacing:.08em;">DUPLICATE: ${group[0].name}</div>
+      ${group.map((c,i) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);">
+        <div>
+          <div style="font-size:12px;font-weight:500;">${c.name} <span style="font-size:10px;color:var(--muted);">(${c.source})</span></div>
+          <div style="font-size:11px;color:var(--muted);">${cleanLocation(c.location)}</div>
+        </div>
+        ${i > 0 ? `<button onclick="deleteDupConfirm('${c.id}','${c.name}',${gi})" style="padding:4px 12px;border-radius:100px;border:1px solid #FDECEA;background:transparent;color:#B71C1C;font-size:10px;font-weight:700;cursor:pointer;">Delete</button>` : '<span style="font-size:10px;color:#2E7D32;font-weight:600;">Keep</span>'}
+      </div>`).join('')}
+    </div>`
+  ).join('');
+}
+
+async function deleteDupConfirm(id, name, groupIndex) {
+  if (!confirm(`Delete duplicate: ${name}?`)) return;
+  try {
+    await fetch('/api/crm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'delete', pageId:id })
+    });
+    crmData.leads = (crmData.leads||[]).filter(x => x.id !== id);
+    showDuplicates();
+  } catch(e) { dbg('Delete dup failed: ' + e.message); }
+}
+
+// ── LINKED DRAFTS ─────────────────────────────────────────────────────────────
+function getLinkedDrafts(name, company) {
+  return (window._drafts||[]).filter(d =>
+    (name && (d.organizer||'').toLowerCase().includes(name.toLowerCase())) ||
+    (company && (d.company||'').toLowerCase().includes((company||'').toLowerCase()))
+  );
+}
+
+function loadDraftById(pageId) {
+  const draft = (window._drafts||[]).find(d => d.pageId === pageId);
+  if (!draft) return;
+  if (typeof setFormState === 'function') setFormState(JSON.parse(draft.formState));
+  switchTab('deal');
+  switchDealTab('edit');
+}
+
+function prefillOfferFromCRM(id) {
+  const c = [...(crmData.leads||[]),...(crmData.converted||[])].find(x=>x.id===id);
+  if (!c) return;
+  const n = document.getElementById('f-name'); if(n) n.value = c.name||'';
+  const co = document.getElementById('f-company'); if(co) co.value = c.company||'';
+  const em = document.getElementById('f-website'); if(em) em.value = c.website||'';
+  switchTab('deal');
+  switchDealTab('edit');
 }
