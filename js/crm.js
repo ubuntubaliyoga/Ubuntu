@@ -128,7 +128,7 @@ function groupKey(c, groupBy) {
     return s || 'No Status';
   }
   if (groupBy === 'source')   return c.source || 'No Source';
-  if (groupBy === 'location') return c.location || 'No Location';
+  if (groupBy === 'location') return cleanLocation(c.location) || 'No Location';
   if (groupBy === 'date') {
     if (!c.lastEdited) return 'Unknown';
     return new Date(c.lastEdited).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
@@ -136,30 +136,67 @@ function groupKey(c, groupBy) {
   return null;
 }
 
+function cleanLocation(loc) {
+  if (!loc) return '—';
+  // Strip Google Maps URLs, keep just the readable part
+  if (loc.includes('maps.google.com') || loc.includes('http')) {
+    const match = loc.match(/[?&]q=([^&]+)/);
+    if (match) return decodeURIComponent(match[1]).replace(/\+/g, ' ');
+    return '—';
+  }
+  return loc;
+}
+
 function buildGrid(items) {
-  const hRow = ['Name','Location','Source / Status','Added'].map(h =>
-    `<div style="padding:6px 10px;font-family:'Libre Baskerville',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#B8935A;background:var(--bg2);border-bottom:1px solid var(--border);">${h}</div>`
+  if (!items.length) return '';
+
+  // Mobile: card view
+  const isMobile = window.innerWidth < 600;
+
+  if (isMobile) {
+    return items.map(c => {
+      const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
+      const status = statusArr[0] || null;
+      const srcColor = {'Instagram':'#1565C0','WhatsApp':'#2E7D32','Shala Rental':'#E65100'}[c.source] || '#5C3D2E';
+      const srcBg = {'Instagram':'#E3F2FD','WhatsApp':'#E8F5E9','Shala Rental':'#FFF3E0'}[c.source] || '#F5ECD7';
+      return `<div onclick="openCrmModal('${c.id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name||'Unnamed'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${cleanLocation(c.location)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+          ${c.source ? `<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:${srcBg};color:${srcColor};">${c.source}</span>` : ''}
+          ${status ? `<span class="crm-badge ${statusClass(status)}" style="font-size:8px;">${status.length > 20 ? status.split(':')[0].trim() : status}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Desktop: clean 3-column grid
+  const hRow = ['Name', 'Location', 'Source · Status'].map((h,i) =>
+    `<div style="padding:8px 12px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:var(--bg2);border-bottom:1px solid var(--border);${i===2?'text-align:right;':''}">${h}</div>`
   ).join('');
 
   const rows = items.map((c, i) => {
-    const bg = i % 2 === 0 ? '#fff' : '#FDFAF5';
+    const bg = i % 2 === 0 ? 'var(--surface)' : 'var(--bg)';
     const statusArr = Array.isArray(c.status) ? c.status : (c.status ? [c.status] : []);
-    const statusHtml = statusArr.map(s => `<span class="crm-badge ${statusClass(s)}" style="font-size:7px;">${s}</span>`).join(' ');
-    const srcColors = {'Instagram':'#E3F2FD','WhatsApp':'#E8F5E9','Shala Rental':'#FFF3E0'};
-    const srcTextColors = {'Instagram':'#1565C0','WhatsApp':'#2E7D32','Shala Rental':'#E65100'};
-    const sourceBadge = c.source ? `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:7px;font-family:'Libre Baskerville',serif;letter-spacing:.06em;text-transform:uppercase;font-weight:700;background:${srcColors[c.source]||'#F5ECD7'};color:${srcTextColors[c.source]||'#5C3D2E'};margin-right:4px;">${c.source}</span>` : '';
-    const date = c.lastEdited ? new Date(c.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
-    const cell = `padding:8px 10px;cursor:pointer;border-bottom:1px solid #EDE3D4;`;
+    const status = statusArr[0] || null;
+    const srcColor = {'Instagram':'#1565C0','WhatsApp':'#2E7D32','Shala Rental':'#E65100'}[c.source] || '#5C3D2E';
+    const srcBg = {'Instagram':'#E3F2FD','WhatsApp':'#E8F5E9','Shala Rental':'#FFF3E0'}[c.source] || '#F5ECD7';
+    const cell = `padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'DM Sans',sans-serif;`;
+    const shortStatus = status ? (status.length > 18 ? status.split(':')[0].trim() : status) : null;
     return `
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:12px;color:#1A1208;background:${bg};">${c.name||'Unnamed'}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:11px;color:#8B7355;background:${bg};">${c.location||'—'}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}background:${bg};">${sourceBadge}${statusHtml||'—'}</div>
-      <div onclick="openCrmModal('${c.id}')" style="${cell}font-family:'Lora',serif;font-size:10px;color:#B8935A;background:${bg};">${date}</div>
-    `;
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-size:13px;font-weight:500;color:var(--text);background:${bg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name||'Unnamed'}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}font-size:12px;color:var(--muted);background:${bg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cleanLocation(c.location)}</div>
+      <div onclick="openCrmModal('${c.id}')" style="${cell}background:${bg};text-align:right;">
+        ${c.source ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:${srcBg};color:${srcColor};margin-left:4px;">${c.source}</span>` : ''}
+        ${shortStatus ? `<span class="crm-badge ${statusClass(status)}" style="font-size:8px;margin-left:4px;">${shortStatus}</span>` : ''}
+      </div>`;
   }).join('');
 
-  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;box-shadow:var(--shadow);">${hRow}${rows}</div>`;
+  return `<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;">${hRow}${rows}</div>`;
 }
+
 
 function crmRender() {
   const list = document.getElementById('crm-list');
