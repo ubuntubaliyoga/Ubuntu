@@ -496,6 +496,22 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .fg input,.fg select,.fg textarea{font-size:16px !important;} /* prevent iOS zoom */
 }
 
+
+/* ── KANBAN PIPELINE ── */
+.pipeline-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;scrollbar-width:thin;}
+.pipeline-col{flex:0 0 240px;display:flex;flex-direction:column;gap:8px;}
+.pipeline-col-header{padding:10px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;}
+.pipeline-col-header .col-count{font-size:10px;font-weight:600;opacity:.7;}
+.pipeline-cards{display:flex;flex-direction:column;gap:6px;min-height:60px;padding:4px 0;border-radius:var(--radius-sm);transition:background .15s;}
+.pipeline-cards.drag-over{background:rgba(184,147,90,.08);border:2px dashed var(--gold);}
+.pipeline-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:grab;transition:all .15s;user-select:none;}
+.pipeline-card:active{cursor:grabbing;opacity:.8;transform:scale(.98);}
+.pipeline-card:hover{border-color:var(--gold-lt);box-shadow:var(--shadow);}
+.pipeline-card.dragging{opacity:.4;}
+.pipeline-card-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pipeline-card-sub{font-size:10px;color:var(--muted);}
+.pipeline-card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 /* ── RESPONSIVE ── */
 @media(max-width:600px){
@@ -1074,7 +1090,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="fg"><label>WhatsApp</label><input type="text" id="nl-whatsapp"></div>
     <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
     <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
-    <div class="fg"><label>Source</label> 
+    <div class="fg"><label>Source</label>
       <select id="nl-source" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;">
         <option value="Instagram">📱 Instagram</option>
         <option value="WhatsApp">💬 WhatsApp</option>
