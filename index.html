@@ -484,6 +484,18 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .more-details{animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 
+
+/* ── CRM MOBILE ── */
+@media(max-width:600px){
+  .ios-modal-box{padding:20px 16px 32px;}
+  #view-crm .view-hero-title{font-size:28px;}
+  #view-crm > .view-hero{margin-bottom:16px;}
+  /* Stack filter controls */
+  #view-crm [style*="display:flex"][style*="gap:8px"]{flex-wrap:wrap;}
+  #crm-search{font-size:16px !important;} /* prevent iOS zoom */
+  .fg input,.fg select,.fg textarea{font-size:16px !important;} /* prevent iOS zoom */
+}
+
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 /* ── RESPONSIVE ── */
 @media(max-width:600px){
@@ -833,48 +845,52 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- CRM VIEW -->
 <div class="view" id="view-crm">
-  <div class="view-hero">
-    <div class="view-hero-title">CRM</div>
-    <div class="view-hero-sub">Leads &amp; converted clients</div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div class="view-hero-title">CRM</div>
+      <div class="view-hero-sub">Leads &amp; converted clients</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <button class="pill-btn dark" onclick="openNewLeadModal()">+ New Lead</button>
+      <button class="pill-btn" id="crm-refresh-btn" onclick="loadCRM(true)">↻ Refresh</button>
+      <button class="pill-btn" onclick="showDuplicates()">⊕ Dupes</button>
+    </div>
   </div>
-  <!-- Tabs -->
-  <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+
+  <!-- Tabs + count -->
+  <div style="display:flex;gap:6px;margin-bottom:16px;align-items:center;">
     <button id="crm-tab-leads" class="pill-btn active" onclick="crmSwitchTab('leads')">Leads</button>
     <button id="crm-tab-converted" class="pill-btn" onclick="crmSwitchTab('converted')">Converted</button>
     <div style="flex:1;"></div>
-    <div id="crm-count" style="font-size:11px;color:var(--muted);"></div>
+    <div id="crm-count" style="font-size:11px;color:var(--muted);font-weight:500;"></div>
   </div>
-  <!-- Actions -->
-  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
-    <button class="pill-btn dark" onclick="openNewLeadModal()">+ New Lead</button>
-    <button class="pill-btn" id="crm-refresh-btn" onclick="loadCRM(true)">↻ Refresh</button>
-    <button class="pill-btn" onclick="showDuplicates()">⊕ Dupes</button>
-  </div>
-  <!-- Filters -->
-  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+
+  <!-- Search + filters in one row -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
     <div style="flex:1;min-width:160px;position:relative;">
       <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:13px;pointer-events:none;">🔍</span>
-      <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()"
+      <input id="crm-search" type="text" placeholder="Search name, company, location…" oninput="crmRender()"
         style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--surface);outline:none;box-sizing:border-box;">
     </div>
     <select id="crm-source-filter" onchange="crmRender()"
-      style="padding:9px 16px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;">
-      <option value="">All Channels</option>
+      style="padding:9px 14px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;">
+      <option value="">All Sources</option>
       <option value="Instagram">📱 Instagram</option>
       <option value="WhatsApp">💬 WhatsApp</option>
       <option value="Shala Rental">🏛 Shala Rental</option>
     </select>
     <select id="crm-group" onchange="crmRender()"
-      style="padding:9px 16px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;">
-      <option value="none">↕ Sort: Date</option>
-      <option value="none_name">↕ Sort: Name</option>
-      <option value="none_location">↕ Sort: Location</option>
-      <option value="location">⊞ Group: Location</option>
-      <option value="status">⊞ Group: Status</option>
-      <option value="source">⊞ Group: Source</option>
-      <option value="date">⊞ Group: Month</option>
+      style="padding:9px 14px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;">
+      <option value="none">↕ Date</option>
+      <option value="none_name">↕ Name</option>
+      <option value="none_location">↕ Location</option>
+      <option value="location">⊞ By Location</option>
+      <option value="status">⊞ By Status</option>
+      <option value="source">⊞ By Source</option>
+      <option value="date">⊞ By Month</option>
     </select>
   </div>
+
   <div id="crm-list"></div>
 </div>
 
