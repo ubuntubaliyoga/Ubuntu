@@ -873,10 +873,13 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
   </div>
 
-  <!-- Tabs + count -->
-  <div style="display:flex;gap:6px;margin-bottom:16px;align-items:center;">
+  <!-- Tabs + view toggle + count -->
+  <div style="display:flex;gap:6px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
     <button id="crm-tab-leads" class="pill-btn active" onclick="crmSwitchTab('leads')">Leads</button>
     <button id="crm-tab-converted" class="pill-btn" onclick="crmSwitchTab('converted')">Converted</button>
+    <div style="width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;"></div>
+    <button id="crm-view-list" class="pill-btn active" onclick="setCrmView('list')">☰ List</button>
+    <button id="crm-view-pipeline" class="pill-btn" onclick="setCrmView('pipeline')">⊞ Pipeline</button>
     <div style="flex:1;"></div>
     <div id="crm-count" style="font-size:11px;color:var(--muted);font-weight:500;"></div>
   </div>
