@@ -1,10 +1,8 @@
 // api/crm.js
-// Reads from all 3 lead databases + converted, merges into one unified list
+// Handles read/update for Lead Pipeline and Converted Leads databases
 
-const INSTAGRAM_DB = '8e5622d3e57482ba950081ac7695672e';   // Retreat Leaders Kevin
-const SHALA_DB     = '320622d3e57480608324f0eb4d3b8a2c';   // Shala Rental Whatsapp Kevin
-const WHATSAPP_DB  = '320622d3e5748066b6dfcea95816fad2';   // Retreat Leaders Whatsapp
-const CONV_DB      = '325622d3e57481bbbaaedeb47e377f2c';   // Converted Leads 2026
+const LEAD_DB    = 'a0b622d3e574829593bf0106312fbd3b';
+const CONV_DB    = '325622d3e57481bbbaaedeb47e377f2c';
 
 const headers = {
   'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
@@ -21,256 +19,149 @@ function getProp(props, name, type) {
   if (type === 'select')       return p.select?.name || null;
   if (type === 'multi_select') return p.multi_select?.map(s => s.name) || [];
   if (type === 'date')         return p.date?.start || null;
+  if (type === 'url')          return p.url || null;
+  if (type === 'phone')        return p.phone_number || null;
   return null;
 }
 
-function mapInstagram(page) {
+function mapLead(page) {
   const p = page.properties;
   return {
-    id: page.id, lastEdited: page.last_edited_time, db: 'leads',
-    source: 'Instagram',
-    name:        getProp(p, 'Name',                  'title'),
-    company:     getProp(p, 'Company',               'text'),
-    email:       getProp(p, 'Email',                 'email'),
-    location:    getProp(p, 'Location',              'text'),
-    insta:       getProp(p, 'Insta',                 'text'),
-    website:     getProp(p, 'Website',               'text'),
-    linkedin:    getProp(p, 'Linkydinky',            'text'),
-    notes:       getProp(p, 'Notes',                 'text'),
-    status:      getProp(p, 'Instagram',             'select'),
+    id:           page.id,
+    lastEdited:   page.last_edited_time,
+    db:           'leads',
+    name:         getProp(p, 'Name',                  'title'),
+    company:      getProp(p, 'Company',               'text'),
+    email:        getProp(p, 'Email',                 'email'),
+    location:     getProp(p, 'Location',              'text'),
+    insta:        getProp(p, 'Insta',                 'text'),
+    website:      getProp(p, 'Website',               'text'),
+    linkedin:     getProp(p, 'Linkydinky',            'text'),
+    notes:        getProp(p, 'Notes',                 'text'),
+    status:       getProp(p, 'Instagram',             'select'),
     suitability:  getProp(p, 'Suitability',           'select'),
     reachedOutOn: getProp(p, 'Reached out on',        'multi_select'),
     engagedFirst: getProp(p, 'Engaged first',         'date'),
-    engagedLast: getProp(p, 'Engaged last',          'date'),
-    engageNext:  getProp(p, 'Engage Next',           'date'),
-    salesCall:   getProp(p, 'Sales Call Booked Date','date'),
-  };
-}
-
-function mapShala(page) {
-  const p = page.properties;
-  return {
-    id: page.id, lastEdited: page.last_edited_time, db: 'leads',
-    source: 'Shala Rental',
-    name:        getProp(p, 'Name',                         'title'),
-    company:     getProp(p, 'Company',                      'text'),
-    email:       getProp(p, 'Mail',                         'text'),
-    location:    getProp(p, 'Location',                     'text'),
-    insta:       getProp(p, 'Insta',                        'text'),
-    website:     getProp(p, 'Website',                      'text'),
-    whatsapp:    getProp(p, 'Whatsapp',                     'text'),
-    leadType:    getProp(p, 'Lead Type',                    'select'),
-    suitability: getProp(p, 'Suitability',                  'select'),
-    engageNext:  getProp(p, 'Engage Next',                  'date'),
-    salesCall:   getProp(p, 'Sales Call/Visit Booked Date', 'date'),
-  };
-}
-
-function mapWhatsapp(page) {
-  const p = page.properties;
-  const wa1 = getProp(p, 'Whatsapp 1', 'text') || '';
-  const wa2 = getProp(p, 'Whatsapp 2', 'text') || '';
-  return {
-    id: page.id, lastEdited: page.last_edited_time, db: 'leads',
-    source: 'WhatsApp',
-    name:        getProp(p, 'Name',                         'title'),
-    company:     getProp(p, 'Company',                      'text'),
-    email:       getProp(p, 'Mail',                         'text'),
-    location:    getProp(p, 'Location',                     'text'),
-    insta:       getProp(p, 'Insta',                        'text'),
-    website:     getProp(p, 'Website',                      'text'),
-    whatsapp:    [wa1, wa2].filter(Boolean).join(', '),
-    leadType:    getProp(p, 'Lead Type',                    'select'),
-    status:      getProp(p, 'Multi-select',                 'select'),
-    suitability: getProp(p, 'Suitability',                  'select'),
-    engageNext:  getProp(p, 'Engage Next',                  'date'),
-    salesCall:   getProp(p, 'Sales Call/Visit Booked Date', 'date'),
+    engagedLast:  getProp(p, 'Engaged last',          'date'),
+    engageNext:   getProp(p, 'Engage Next',           'date'),
+    salesCall:    getProp(p, 'Sales Call Booked Date','date'),
   };
 }
 
 function mapConverted(page) {
   const p = page.properties;
   return {
-    id: page.id, lastEdited: page.last_edited_time, db: 'converted',
-    source: 'Converted',
-    name:        getProp(p, 'Name',                         'title'),
-    company:     getProp(p, 'Company',                      'text'),
-    email:       getProp(p, 'Mail',                         'text'),
-    location:    getProp(p, 'Location',                     'text'),
-    insta:       getProp(p, 'Insta',                        'text'),
-    website:     getProp(p, 'Website',                      'text'),
-    whatsapp:    getProp(p, 'Whatsapp',                     'text'),
-    notes:       getProp(p, 'Notes',                        'text'),
-    contact:     getProp(p, "Who's in contact",             'text'),
-    status:      getProp(p, 'Status',                       'multi_select'),
-    suitability: getProp(p, 'Suitability',                  'select'),
-    engageNext:  getProp(p, 'Engage Next',                  'date'),
-    salesCall:   getProp(p, 'Sales Call/Visit Booked Date', 'date'),
+    id:           page.id,
+    lastEdited:   page.last_edited_time,
+    db:           'converted',
+    name:         getProp(p, 'Name',                         'title'),
+    company:      getProp(p, 'Company',                      'text'),
+    email:        getProp(p, 'Mail',                         'text'),
+    location:     getProp(p, 'Location',                     'text'),
+    insta:        getProp(p, 'Insta',                        'text'),
+    website:      getProp(p, 'Website',                      'text'),
+    whatsapp:     getProp(p, 'Whatsapp',                     'text'),
+    notes:        getProp(p, 'Notes',                        'text'),
+    contact:      getProp(p, "Who's in contact",             'text'),
+    status:       getProp(p, 'Status',                       'multi_select'),
+    suitability:  getProp(p, 'Suitability',                  'select'),
+    engageNext:   getProp(p, 'Engage Next',                  'date'),
+    salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
   };
 }
 
-// Server cache keyed by dbId
-const cache = {};
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h — load once per session, force refresh manually
-
-async function queryDB(dbId, mapper, forceRefresh = false) {
-  const now = Date.now();
-  if (!forceRefresh && cache[dbId] && (now - cache[dbId].ts) < CACHE_TTL) {
-    return cache[dbId].data;
-  }
-  const results = [];
-  let cursor;
-  do {
-    const body = {
+async function queryDB(dbId, mapper) {
+  const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
       sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
       page_size: 100,
-    };
-    if (cursor) body.start_cursor = cursor;
-    const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-      method: 'POST', headers, body: JSON.stringify(body),
-    });
-    if (!resp.ok) throw new Error(`DB ${dbId} failed: ${await resp.text()}`);
-    const data = await resp.json();
-    results.push(...data.results.filter(p => !p.archived).map(mapper));
-    cursor = data.has_more ? data.next_cursor : undefined;
-  } while (cursor);
-  cache[dbId] = { ts: now, data: results };
-  return results;
+    }),
+  });
+  if (!resp.ok) throw new Error(`DB query failed: ${await resp.text()}`);
+  const data = await resp.json();
+  return data.results.map(mapper);
 }
 
 async function updatePage(pageId, properties) {
   const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-    method: 'PATCH', headers, body: JSON.stringify({ properties }),
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ properties }),
   });
   if (!resp.ok) throw new Error(`Update failed: ${await resp.text()}`);
-  return resp.json();
+  return await resp.json();
+}
+
+async function createLead(body) {
+  const resp = await fetch('https://api.notion.com/v1/pages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      parent: { database_id: LEAD_DB },
+      properties: {
+        'Name':     { title:     [{ text: { content: body.name || '' } }] },
+        'Company':  { rich_text: [{ text: { content: body.company || '' } }] },
+        'Email':    { email: body.email || null },
+        'Location': { rich_text: [{ text: { content: body.location || '' } }] },
+        'Insta':    { rich_text: [{ text: { content: body.insta || '' } }] },
+        'Notes':    { rich_text: [{ text: { content: body.notes || '' } }] },
+        ...(body.status && { 'Instagram': { select: { name: body.status } } }),
+      },
+    }),
+  });
+  if (!resp.ok) throw new Error(`Create failed: ${await resp.text()}`);
+  return await resp.json();
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
   const { action } = req.body;
+
   try {
-
+    // ── LOAD ALL ──────────────────────────────────────────────────────────────
     if (action === 'load') {
-      const force = req.body.forceRefresh === true;
-      // Load all 4 DBs in parallel, merge leads into one array
-      const [instagram, shala, whatsapp, converted] = await Promise.all([
-        queryDB(INSTAGRAM_DB, mapInstagram, force),
-        queryDB(SHALA_DB,     mapShala,     force),
-        queryDB(WHATSAPP_DB,  mapWhatsapp,  force),
-        queryDB(CONV_DB,      mapConverted, force),
+      const [leads, converted] = await Promise.all([
+        queryDB(LEAD_DB, mapLead),
+        queryDB(CONV_DB, mapConverted),
       ]);
-      // Merge all lead sources into one list
-      const leads = [...instagram, ...shala, ...whatsapp];
-      console.log(`[crm] instagram:${instagram.length} shala:${shala.length} whatsapp:${whatsapp.length} converted:${converted.length}`);
-      return res.status(200).json({ leads, converted, _counts: {instagram: instagram.length, shala: shala.length, whatsapp: whatsapp.length, converted: converted.length} });
+      return res.status(200).json({ leads, converted });
     }
 
+    // ── UPDATE STATUS / NOTES ─────────────────────────────────────────────────
     if (action === 'update') {
-      const { pageId, db, source, status, notes, engageNext } = req.body;
+      const { pageId, db, status, notes, engageNext } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
+
       const props = {};
-      if (notes !== undefined)
+      if (notes !== undefined) {
         props['Notes'] = { rich_text: [{ text: { content: notes } }] };
-      if (engageNext !== undefined)
+      }
+      if (engageNext !== undefined) {
         props['Engage Next'] = engageNext ? { date: { start: engageNext } } : { date: null };
+      }
       if (status !== undefined) {
-        if (source === 'Instagram')
+        if (db === 'leads') {
           props['Instagram'] = { select: { name: status } };
-        else if (source === 'WhatsApp')
-          props['Multi-select'] = { select: { name: status } };
-        else if (db === 'converted')
-          props['Status'] = { multi_select: (Array.isArray(status) ? status : [status]).map(s => ({ name: s })) };
+        } else {
+          props['Status'] = { multi_select: status.map(s => ({ name: s })) };
+        }
       }
+
       await updatePage(pageId, props);
       return res.status(200).json({ success: true });
     }
 
-    if (action === 'updateDetails') {
-      const { pageId, props } = req.body;
-      if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
-      await updatePage(pageId, props);
-      return res.status(200).json({ success: true });
-    }
-
+    // ── CREATE LEAD ───────────────────────────────────────────────────────────
     if (action === 'create') {
-      const { name, company, email, insta, whatsapp, location, notes, source } = req.body;
-      // Default to Instagram DB, route by source
-      let dbId = INSTAGRAM_DB;
-      let properties = {
-        'Name':     { title:     [{ text: { content: name || '' } }] },
-        'Company':  { rich_text: [{ text: { content: company || '' } }] },
-        'Email':    { email: email || null },
-        'Location': { rich_text: [{ text: { content: location || '' } }] },
-        'Insta':    { rich_text: [{ text: { content: insta || '' } }] },
-        'Notes':    { rich_text: [{ text: { content: notes || '' } }] },
-        'Instagram': { select: { name: 'Followed + Engaged' } },
-      };
-      if (source === 'WhatsApp') {
-        dbId = WHATSAPP_DB;
-        properties = {
-          'Name':       { title:     [{ text: { content: name || '' } }] },
-          'Company':    { rich_text: [{ text: { content: company || '' } }] },
-          'Mail':       { rich_text: [{ text: { content: email || '' } }] },
-          'Location':   { rich_text: [{ text: { content: location || '' } }] },
-          'Insta':      { rich_text: [{ text: { content: insta || '' } }] },
-          'Whatsapp 1': { rich_text: [{ text: { content: whatsapp || '' } }] },
-        };
-      } else if (source === 'Shala Rental') {
-        dbId = SHALA_DB;
-        properties = {
-          'Name':     { title:     [{ text: { content: name || '' } }] },
-          'Company':  { rich_text: [{ text: { content: company || '' } }] },
-          'Mail':     { rich_text: [{ text: { content: email || '' } }] },
-          'Location': { rich_text: [{ text: { content: location || '' } }] },
-          'Insta':    { rich_text: [{ text: { content: insta || '' } }] },
-          'Whatsapp': { rich_text: [{ text: { content: whatsapp || '' } }] },
-        };
-      }
-      const resp = await fetch('https://api.notion.com/v1/pages', {
-        method: 'POST', headers,
-        body: JSON.stringify({ parent: { database_id: dbId }, properties }),
-      });
-      if (!resp.ok) throw new Error(`Create failed: ${await resp.text()}`);
-      const data = await resp.json();
-      return res.status(200).json({ success: true, pageId: data.id });
-    }
-
-    if (action === 'promote') {
-      const { pageId, name, company, email, insta, website, location, notes } = req.body;
-      const resp = await fetch('https://api.notion.com/v1/pages', {
-        method: 'POST', headers,
-        body: JSON.stringify({
-          parent: { database_id: CONV_DB },
-          properties: {
-            'Name':     { title:     [{ text: { content: name || '' } }] },
-            'Company':  { rich_text: [{ text: { content: company || '' } }] },
-            'Mail':     { rich_text: [{ text: { content: email || '' } }] },
-            'Insta':    { rich_text: [{ text: { content: insta || '' } }] },
-            'Website':  { rich_text: [{ text: { content: website || '' } }] },
-            'Location': { rich_text: [{ text: { content: location || '' } }] },
-            'Notes':    { rich_text: [{ text: { content: notes || '' } }] },
-            'Status':   { multi_select: [{ name: 'Responded' }] },
-          },
-        }),
-      });
-      if (!resp.ok) throw new Error(`Promote failed: ${await resp.text()}`);
-      await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers, body: JSON.stringify({ archived: true }),
-      });
-      return res.status(200).json({ success: true });
-    }
-
-    if (action === 'delete') {
-      const { pageId } = req.body;
-      if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
-      await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers, body: JSON.stringify({ archived: true }),
-      });
-      return res.status(200).json({ success: true });
+      const page = await createLead(req.body);
+      return res.status(200).json({ success: true, pageId: page.id });
     }
 
     return res.status(400).json({ error: `Unknown action: ${action}` });
+
   } catch (err) {
     console.error('[crm]', err.message);
     return res.status(500).json({ error: err.message });
