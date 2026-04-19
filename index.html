@@ -18,7 +18,7 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #1a0e06;
+  background: #FAF7F2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -62,12 +62,12 @@
 
 /* Logo at top */
 .splash-logo {
-  width: 48px;
+  width: 144px;
   opacity: 0;
   animation: splashFadeUp 0.8s ease forwards;
   animation-delay: 0.2s;
-  filter: brightness(0) invert(1);
-  margin-bottom: 32px;
+  filter: none;
+  margin-bottom: 24px;
 }
 
 /* Warrior figure */
@@ -93,7 +93,7 @@
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(36px, 8vw, 56px);
   font-weight: 300;
-  color: #F5ECD7;
+  color: #221208;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   opacity: 0;
@@ -113,7 +113,7 @@
   font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgba(184,147,90,0.7);
+  color: rgba(184,147,90,0.9);
   opacity: 0;
   animation: splashFadeUp 0.8s ease forwards;
   animation-delay: 1.3s;
@@ -426,7 +426,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
       alt="Ubuntu Bali">
 
-    <!-- Warrior 1 — black background PNG, mix-blend-mode:screen removes black -->
+    <!-- Warrior 1 — inverted so black bg becomes cream, figure becomes warm dark tones -->
     <div class="splash-figure" style="width:280px;height:280px;display:flex;align-items:center;justify-content:center;">
       <img
         src="/warrior.png"
@@ -435,7 +435,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
           width:100%;
           height:100%;
           object-fit:contain;
-          mix-blend-mode:screen;
+          filter:invert(1) hue-rotate(180deg);
           opacity:0;
           animation:figureIn 0.9s ease 0.5s forwards;
         "
