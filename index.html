@@ -155,6 +155,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ── NAV ── */
 .nav{background:var(--dark);position:sticky;top:0;z-index:200;padding:0 16px;}
 .nav-inner{display:flex;align-items:center;height:56px;gap:12px;}
+/* Mobile nav: 2 rows */
+@media(max-width:600px){
+  .nav{padding:0;}
+  .nav-inner{display:none;}
+  .nav-mobile{display:flex;flex-direction:column;}
+  .nav-row1{display:flex;align-items:center;justify-content:center;padding:10px 16px 6px;gap:10px;}
+  .nav-row2{display:flex;align-items:center;padding:0 12px 8px;gap:4px;overflow-x:auto;scrollbar-width:none;}
+  .nav-row2::-webkit-scrollbar{display:none;}
+}
+@media(min-width:601px){
+  .nav-mobile{display:none;}
+}
 .nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .nav-logo{height:44px;filter:brightness(0) invert(1);opacity:.9;}
 .nav-brand-text{display:flex;flex-direction:column;line-height:1;}
@@ -414,18 +426,16 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
       alt="Ubuntu Bali">
 
-    <!-- Warrior 1 — actual reference image, background knocked out via mix-blend-mode -->
-    <div class="splash-figure" style="width:260px;height:260px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+    <!-- Warrior 1 — black background PNG, mix-blend-mode:screen removes black -->
+    <div class="splash-figure" style="width:280px;height:280px;display:flex;align-items:center;justify-content:center;">
       <img
-        src="/warrior.webp"
+        src="/warrior.png"
         alt="Warrior 1"
         style="
           width:100%;
           height:100%;
           object-fit:contain;
-          object-position:center bottom;
-          mix-blend-mode:multiply;
-          filter:grayscale(1) brightness(0) invert(1);
+          mix-blend-mode:screen;
           opacity:0;
           animation:figureIn 0.9s ease 0.5s forwards;
         "
@@ -472,6 +482,39 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- NAV -->
 <nav class="nav" id="main-nav" style="position:relative;">
+
+  <!-- MOBILE NAV (2 rows) -->
+  <div class="nav-mobile">
+    <!-- Row 1: Logo + brand name centred -->
+    <div class="nav-row1" onclick="switchTab('deal')" style="cursor:pointer;">
+      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
+        style="height:36px;filter:brightness(0) invert(1);opacity:.9;" alt="Ubuntu Bali">
+      <div style="display:flex;flex-direction:column;line-height:1;">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#F5ECD7;letter-spacing:.01em;">Ubuntu Flow</span>
+        <span style="font-size:7px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-top:2px;">Bali · Operations</span>
+      </div>
+    </div>
+    <!-- Row 2: Tabs + menu -->
+    <div class="nav-row2">
+      <button class="nav-tab" data-tab="deal" onclick="switchTab('deal')">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Deals
+      </button>
+      <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>CRM
+      </button>
+      <button class="nav-tab" data-tab="bizdev" onclick="switchTab('bizdev')">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Biz Dev
+      </button>
+      <button class="nav-tab" data-tab="tutorials" onclick="switchTab('tutorials')">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Tutorials
+      </button>
+      <div style="flex:1;min-width:6px;"></div>
+      <button id="update-btn-m" onclick="applyUpdate()" style="display:none;padding:6px 12px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">↑ Update</button>
+      <button class="nav-icon-btn" onclick="toggleNavMenu()" style="font-size:16px;letter-spacing:2px;font-weight:700;flex-shrink:0;">···</button>
+    </div>
+  </div>
+
+  <!-- DESKTOP NAV (single row) -->
   <div class="nav-inner">
     <div class="nav-brand" onclick="switchTab('deal')" style="cursor:pointer;">
       <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" class="nav-logo">
@@ -498,7 +541,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <button id="update-btn" onclick="applyUpdate()" style="display:none;padding:7px 14px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;animation:pulse 2s infinite;">↑ Update</button>
       <button class="nav-icon-btn" onclick="toggleNavMenu()" style="font-size:18px;letter-spacing:2px;font-weight:700;">···</button>
     </div>
-  </div>
+  </div><!-- end nav-inner desktop -->
   <div class="nav-dropdown" id="nav-dropdown">
     <button class="dropdown-item" onclick="switchTab('philosophy');toggleNavMenu()"><span>✦</span> Philosophy</button>
     <div class="dropdown-sep"></div>
