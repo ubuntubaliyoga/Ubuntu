@@ -155,18 +155,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ── NAV ── */
 .nav{background:var(--dark);position:sticky;top:0;z-index:200;padding:0 16px;}
 .nav-inner{display:flex;align-items:center;height:56px;gap:12px;}
-/* Mobile nav: 2 rows */
-@media(max-width:600px){
-  .nav{padding:0;}
-  .nav-inner{display:none;}
-  .nav-mobile{display:flex;flex-direction:column;}
-  .nav-row1{display:flex;align-items:center;justify-content:center;padding:10px 16px 6px;gap:10px;}
-  .nav-row2{display:flex;align-items:center;padding:0 12px 8px;gap:4px;overflow-x:auto;scrollbar-width:none;}
-  .nav-row2::-webkit-scrollbar{display:none;}
-}
-@media(min-width:601px){
-  .nav-mobile{display:none;}
-}
 .nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .nav-logo{height:44px;filter:brightness(0) invert(1);opacity:.9;}
 .nav-brand-text{display:flex;flex-direction:column;line-height:1;}
@@ -426,29 +414,59 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
       alt="Ubuntu Bali">
 
-    <!-- Warrior 1 — black background PNG, mix-blend-mode:screen removes black -->
-    <div class="splash-figure" style="width:280px;height:280px;display:flex;align-items:center;justify-content:center;">
-      <img
-        src="/warrior.png"
-        alt="Warrior 1"
-        style="
-          width:100%;
-          height:100%;
-          object-fit:contain;
-          mix-blend-mode:screen;
-          opacity:0;
-          animation:figureIn 0.9s ease 0.5s forwards;
-        "
-      />
-    </div>
-    <style>
-      @keyframes figureIn {
-        from { opacity:0; transform:translateY(16px); }
-        to   { opacity:1; transform:translateY(0); }
-      }
-    </style>
+    <!-- Warrior 1 SVG figure -->
+    <svg class="splash-figure" width="180" height="220" viewBox="0 0 180 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Glow behind figure -->
+      <ellipse cx="90" cy="185" rx="55" ry="8" fill="#B8935A" opacity="0.15"/>
 
-        <!-- Decorative rule -->
+      <!-- ── HEAD ── -->
+      <circle cx="90" cy="28" r="13" fill="none" stroke="#B8935A" stroke-width="2.5"/>
+
+      <!-- ── TORSO (upright, slight lean back) ── -->
+      <!-- Neck -->
+      <line x1="90" y1="41" x2="90" y2="52" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Torso body -->
+      <line x1="90" y1="52" x2="90" y2="100" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── ARMS (raised overhead in warrior 1) ── -->
+      <!-- Left arm: up and slightly left -->
+      <line x1="90" y1="60" x2="58" y2="30" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Left forearm -->
+      <line x1="58" y1="30" x2="50" y2="8" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- Right arm: up and slightly right -->
+      <line x1="90" y1="60" x2="122" y2="30" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Right forearm -->
+      <line x1="122" y1="30" x2="130" y2="8" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── HIPS ── -->
+      <line x1="75" y1="100" x2="105" y2="100" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── FRONT LEG (left — bent at knee, lunge forward) ── -->
+      <!-- Upper thigh -->
+      <line x1="78" y1="100" x2="60" y2="148" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Lower leg (vertical, shin) -->
+      <line x1="60" y1="148" x2="60" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Front foot -->
+      <line x1="60" y1="190" x2="38" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── BACK LEG (right — extended back, straight) ── -->
+      <!-- Upper thigh -->
+      <line x1="102" y1="100" x2="138" y2="148" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Lower leg (straight back) -->
+      <line x1="138" y1="148" x2="148" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Back foot (turned out ~45°) -->
+      <line x1="148" y1="190" x2="170" y2="183" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- Subtle floor line -->
+      <line x1="30" y1="194" x2="175" y2="194" stroke="#B8935A" stroke-width="1" opacity="0.25" stroke-linecap="round"/>
+
+      <!-- Decorative dots at wrist tips -->
+      <circle cx="50" cy="8" r="2.5" fill="#B8935A" opacity="0.7"/>
+      <circle cx="130" cy="8" r="2.5" fill="#B8935A" opacity="0.7"/>
+    </svg>
+
+    <!-- Decorative rule -->
     <div class="splash-rule"></div>
 
     <!-- Title -->
@@ -482,41 +500,8 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- NAV -->
 <nav class="nav" id="main-nav" style="position:relative;">
-
-  <!-- MOBILE NAV (2 rows) -->
-  <div class="nav-mobile">
-    <!-- Row 1: Logo + brand name centred -->
-    <div class="nav-row1" onclick="switchTab('deal')" style="cursor:pointer;">
-      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
-        style="height:36px;filter:brightness(0) invert(1);opacity:.9;" alt="Ubuntu Bali">
-      <div style="display:flex;flex-direction:column;line-height:1;">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#F5ECD7;letter-spacing:.01em;">Ubuntu Flow</span>
-        <span style="font-size:7px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-top:2px;">Bali · Operations</span>
-      </div>
-    </div>
-    <!-- Row 2: Tabs + menu -->
-    <div class="nav-row2">
-      <button class="nav-tab" data-tab="deal" onclick="switchTab('deal')">
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Deals
-      </button>
-      <button class="nav-tab" data-tab="crm" onclick="switchTab('crm')">
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>CRM
-      </button>
-      <button class="nav-tab" data-tab="bizdev" onclick="switchTab('bizdev')">
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Biz Dev
-      </button>
-      <button class="nav-tab" data-tab="tutorials" onclick="switchTab('tutorials')">
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Tutorials
-      </button>
-      <div style="flex:1;min-width:6px;"></div>
-      <button id="update-btn-m" onclick="applyUpdate()" style="display:none;padding:6px 12px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">↑ Update</button>
-      <button class="nav-icon-btn" onclick="toggleNavMenu()" style="font-size:16px;letter-spacing:2px;font-weight:700;flex-shrink:0;">···</button>
-    </div>
-  </div>
-
-  <!-- DESKTOP NAV (single row) -->
   <div class="nav-inner">
-    <div class="nav-brand" onclick="switchTab('deal')" style="cursor:pointer;">
+    <div class="nav-brand">
       <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" class="nav-logo">
       <div class="nav-brand-text">
         <span class="nav-brand-name">Ubuntu Flow</span>
@@ -541,7 +526,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <button id="update-btn" onclick="applyUpdate()" style="display:none;padding:7px 14px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;animation:pulse 2s infinite;">↑ Update</button>
       <button class="nav-icon-btn" onclick="toggleNavMenu()" style="font-size:18px;letter-spacing:2px;font-weight:700;">···</button>
     </div>
-  </div><!-- end nav-inner desktop -->
+  </div>
   <div class="nav-dropdown" id="nav-dropdown">
     <button class="dropdown-item" onclick="switchTab('philosophy');toggleNavMenu()"><span>✦</span> Philosophy</button>
     <div class="dropdown-sep"></div>
@@ -823,94 +808,26 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- PHILOSOPHY VIEW -->
 <div class="view" id="view-philosophy" style="background:var(--dark);min-height:100vh;padding:0;max-width:100%;">
-  <div style="max-width:680px;margin:0 auto;padding:56px 20px 100px;">
-
-    <!-- ── HERO ── -->
-    <div style="text-align:center;margin-bottom:56px;">
-      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
-        style="height:156px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:24px;display:block;margin-left:auto;margin-right:auto;">
-      <div style="font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;">Ubuntu Bali · Philosophy</div>
-      <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 28px;"></div>
-      <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,6vw,40px);font-weight:300;color:#F5ECD7;line-height:1.25;letter-spacing:-.01em;">The Strength of the Circle</h1>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);font-style:italic;margin-top:14px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
+  <div style="max-width:680px;margin:0 auto;padding:48px 20px 80px;">
+    <div style="text-align:center;margin-bottom:48px;">
+      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:52px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:24px;display:block;margin-left:auto;margin-right:auto;">
+      <div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Ubuntu Bali · Philosophy</div>
+      <div style="width:40px;height:1px;background:var(--gold);opacity:.4;margin:0 auto 24px;"></div>
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:#F5ECD7;line-height:1.35;">The Strength of the Circle</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);font-style:italic;margin-top:10px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
     </div>
-
-    <!-- ── PHOTO ── -->
-    <div style="margin-bottom:48px;border-radius:var(--radius);overflow:hidden;position:relative;">
-      <img src="https://balirescentre.com/wp-content/uploads/2025/12/UbuntuBali.Yoga_.Benjamin.2024_8128.jpg"
-        alt="Ubuntu Bali Yoga" style="width:100%;height:auto;display:block;">
-      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(26,14,6,.5) 0%,transparent 50%);pointer-events:none;"></div>
+    <div style="margin-bottom:28px;border-radius:var(--radius);overflow:hidden;">
+      <img src="https://balirescentre.com/wp-content/uploads/2025/12/UbuntuBali.Yoga_.Benjamin.2024_8128.jpg" alt="Ubuntu Bali" style="width:100%;height:auto;display:block;">
     </div>
-
-    <!-- ── OPENING ── -->
-    <p style="font-size:16px;color:#D4C4A8;line-height:2;margin-bottom:0;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
-
-    <!-- ── MAIN QUOTE ── -->
-    <div style="margin:48px 0;text-align:center;position:relative;">
-      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(184,147,90,.08) 0%,transparent 70%);pointer-events:none;"></div>
-      <div style="position:relative;">
-        <div style="font-size:60px;color:var(--gold);opacity:.3;line-height:1;margin-bottom:-10px;font-family:'Cormorant Garamond',serif;">"</div>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,5vw,34px);font-weight:300;color:#F5ECD7;font-style:italic;line-height:1.4;letter-spacing:.01em;">I am because we are.</p>
-        <div style="width:32px;height:1px;background:var(--gold);margin:20px auto 16px;opacity:.6;"></div>
-        <p style="font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);opacity:.8;">Ubuntu</p>
-      </div>
+    <p style="font-size:15px;color:#D4C4A8;line-height:1.9;margin-bottom:20px;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
+    <div style="border-left:3px solid var(--gold);padding:18px 24px;margin:32px 0;background:rgba(184,147,90,.07);border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
+      <p style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#F5ECD7;font-style:italic;line-height:1.5;">"I am because we are."</p>
+      <p style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:10px;">Ubuntu</p>
     </div>
-
-    <!-- ── SECTION: Illusion ── -->
-    <div style="margin-bottom:48px;">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-        <div style="width:28px;height:1px;background:var(--gold);opacity:.5;flex-shrink:0;"></div>
-        <h2 style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);white-space:nowrap;">The Illusion of the Individual</h2>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.2;"></div>
-      </div>
-      <p style="font-size:15px;color:#C8B89A;line-height:2;margin-bottom:16px;">In the West, we often follow the Cartesian logic of "I think, therefore I am." It places the center of the universe squarely between our own ears. But if you take a human being and strip away every relationship, every teacher, every parent, every colleague — what is left?</p>
-      <p style="font-size:15px;color:#C8B89A;line-height:2;">The truth is that none of us exists in a vacuum. A leader is not a leader without a team that chooses to follow. Ubuntu reminds us that we do not find ourselves by looking inward. We find ourselves by looking at the people around us.</p>
+    <div style="text-align:center;padding:32px 0;border-top:1px solid rgba(184,147,90,.2);">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#F5ECD7;font-style:italic;line-height:1.5;margin-bottom:14px;">"I am because we are."</div>
+      <div style="font-size:13px;color:#8B7355;line-height:1.9;">It is not just a philosophy.<br>It is a biological and social reality.</div>
     </div>
-
-    <!-- ── SECTION: Ecosystem ── -->
-    <div style="margin-bottom:48px;">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-        <div style="width:28px;height:1px;background:var(--gold);opacity:.5;flex-shrink:0;"></div>
-        <h2 style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);white-space:nowrap;">The Ecosystem of Humanity</h2>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.2;"></div>
-      </div>
-      <p style="font-size:15px;color:#C8B89A;line-height:2;margin-bottom:28px;">Imagine a forest. We might point to a single, towering oak and marvel at its strength. But beneath the soil, that tree is part of a complex, invisible network. If the forest dies, the tree dies — no matter how strong it thinks it is.</p>
-
-      <!-- Three principles -->
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="background:rgba(184,147,90,.07);border:1px solid rgba(184,147,90,.18);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:18px 20px;">
-          <div style="font-size:13px;font-weight:600;color:#F5ECD7;margin-bottom:6px;letter-spacing:.02em;">Your success is my success.</div>
-          <div style="font-size:13px;color:rgba(184,147,90,.8);line-height:1.7;">If the team wins, the individual thrives.</div>
-        </div>
-        <div style="background:rgba(184,147,90,.07);border:1px solid rgba(184,147,90,.18);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:18px 20px;">
-          <div style="font-size:13px;font-weight:600;color:#F5ECD7;margin-bottom:6px;letter-spacing:.02em;">Your suffering is my suffering.</div>
-          <div style="font-size:13px;color:rgba(184,147,90,.8);line-height:1.7;">If a member is marginalized, the integrity of the whole is compromised.</div>
-        </div>
-        <div style="background:rgba(184,147,90,.07);border:1px solid rgba(184,147,90,.18);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:18px 20px;">
-          <div style="font-size:13px;font-weight:600;color:#F5ECD7;margin-bottom:6px;letter-spacing:.02em;">Kindness is a survival strategy.</div>
-          <div style="font-size:13px;color:rgba(184,147,90,.8);line-height:1.7;">Treating others with dignity is the only way to sustain the environment that allows us to exist.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── SECTION: Leading ── -->
-    <div style="margin-bottom:56px;">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-        <div style="width:28px;height:1px;background:var(--gold);opacity:.5;flex-shrink:0;"></div>
-        <h2 style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);white-space:nowrap;">Leading with Ubuntu</h2>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.2;"></div>
-      </div>
-      <p style="font-size:15px;color:#C8B89A;line-height:2;">When a leader says "I am because we are," they acknowledge that their authority is a gift from the people they serve. Their job is not to be the smartest person in the room, but to create a room where everyone feels safe enough to be their best selves.</p>
-    </div>
-
-    <!-- ── CLOSING ── -->
-    <div style="text-align:center;padding:40px 0;border-top:1px solid rgba(184,147,90,.15);">
-      <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 32px;"></div>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,4vw,30px);font-weight:300;color:#F5ECD7;font-style:italic;line-height:1.4;margin-bottom:20px;">"I am because we are."</p>
-      <p style="font-size:13px;color:#6B5B4B;line-height:2;">It is not just a philosophy.<br>It is a biological and social reality.</p>
-      <div style="width:32px;height:1px;background:var(--gold);opacity:.25;margin:28px auto 0;"></div>
-    </div>
-
   </div>
 </div>
 
