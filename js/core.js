@@ -8,7 +8,7 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 
 let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
-let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false, crmCollapsed={};
+let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
 
 // Global error capture
 window.onerror=(msg,src,line)=>{dbg('ERR: '+msg+' ('+String(src).split('/').pop()+':'+line+')');};
@@ -49,7 +49,10 @@ function switchTab(t){
   const tb=$('deal-toolbar');
   if(tb)tb.classList.toggle('visible',t==='deal');
   if(t==='deal')switchDealTab(activeDealTab);
-  if(t==='crm'){loadCRM();crmSwitchTab(crmTab);}
+  if(t==='crm'){
+    if(typeof loadCRM==='function') loadCRM();
+    if(typeof crmSwitchTab==='function') crmSwitchTab(crmTab);
+  }
   const d=$('nav-dropdown');if(d)d.classList.remove('open');
 }
 
