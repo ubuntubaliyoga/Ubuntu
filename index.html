@@ -13,6 +13,134 @@
 <meta name="theme-color" content="#221208">
 <link rel="apple-touch-icon" href="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w">
 <style>
+/* ── SPLASH SCREEN ─────────────────────────────────────────────────────────── */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #1a0e06;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: all;
+}
+
+/* Subtle grain texture */
+#splash::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Radial glow behind figure */
+#splash::after {
+  content: '';
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(184,147,90,0.12) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  pointer-events: none;
+}
+
+.splash-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* Logo at top */
+.splash-logo {
+  width: 48px;
+  opacity: 0;
+  animation: splashFadeUp 0.8s ease forwards;
+  animation-delay: 0.2s;
+  filter: brightness(0) invert(1);
+  margin-bottom: 32px;
+}
+
+/* Warrior figure */
+.splash-figure {
+  opacity: 0;
+  animation: splashFadeUp 1s ease forwards;
+  animation-delay: 0.5s;
+  margin-bottom: 28px;
+}
+
+/* Thin horizontal rule */
+.splash-rule {
+  width: 0px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #B8935A, transparent);
+  animation: splashRule 0.8s ease forwards;
+  animation-delay: 1.1s;
+  margin-bottom: 20px;
+}
+
+/* Title */
+.splash-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 8vw, 56px);
+  font-weight: 300;
+  color: #F5ECD7;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: splashFadeUp 0.9s ease forwards;
+  animation-delay: 1.0s;
+  line-height: 1;
+}
+
+.splash-title span {
+  color: #B8935A;
+}
+
+/* Subtitle */
+.splash-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(184,147,90,0.7);
+  opacity: 0;
+  animation: splashFadeUp 0.8s ease forwards;
+  animation-delay: 1.3s;
+  margin-top: 10px;
+}
+
+/* Exit animation — triggered by JS */
+#splash.exit {
+  animation: splashExit 0.7s ease forwards;
+}
+
+@keyframes splashFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splashRule {
+  from { width: 0; }
+  to   { width: 120px; }
+}
+
+@keyframes splashExit {
+  from { opacity: 1; }
+  to   { opacity: 0; pointer-events: none; }
+}
+
+/* ── APP STYLES ────────────────────────────────────────────────────────────── */
 :root{
   --bg:#FAF7F2;--bg2:#F3EDE3;--surface:#FFFFFF;
   --border:rgba(184,147,90,.18);--gold:#B8935A;--gold-lt:#D4B483;
@@ -205,21 +333,19 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .ios-modal-step .num{font-size:11px;font-weight:700;color:var(--gold);background:var(--bg2);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ios-modal-close{width:100%;margin-top:16px;padding:15px;background:var(--dark);color:#F5ECD7;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;}
 
-/* ── CRM CARDS ── */
-.crm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px;}
+/* ── CRM ── */
+.crm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px;}
 .crm-card:hover{border-color:var(--gold-lt);box-shadow:var(--shadow);}
-.crm-card-main{}
 .crm-card-name{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px;}
-.crm-card-loc{font-size:12px;color:var(--muted);}
+.crm-card-meta{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;}
 .crm-card-badges{display:flex;flex-wrap:wrap;gap:5px;}
+.crm-card-notes{font-size:12px;color:var(--muted);line-height:1.5;font-style:italic;}
 .crm-empty{text-align:center;padding:48px 0;color:var(--muted);font-size:13px;font-style:italic;}
 .crm-badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:.03em;white-space:nowrap;}
 .crm-suit-1{background:#E8F5E9;color:#2E7D32;}
 .crm-suit-2{background:#E3F0FA;color:#1565C0;}
 .crm-suit-3{background:#FFF8E1;color:#8B6914;}
 .crm-suit-4{background:#FDECEA;color:#B71C1C;}
-
-/* ── CRM MODAL ── */
 .modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:8px;}
 .modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--dark);line-height:1.2;}
 .modal-sub{font-size:12px;color:var(--muted);margin-top:3px;}
@@ -229,12 +355,8 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .crm-field{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
 .crm-field-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:90px;padding-top:2px;flex-shrink:0;}
 .crm-select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);outline:none;margin-bottom:8px;-webkit-appearance:none;appearance:none;}
-
-/* ── REACHED OUT BUTTONS ── */
 .reach-btn{padding:7px 14px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;font-family:'DM Sans',sans-serif;}
 .reach-btn.active{background:var(--gold);border-color:var(--gold);color:var(--dark);}
-
-/* ── PILL BTN ── */
 .pill-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .pill-btn:hover{border-color:var(--gold);color:var(--text);}
 .pill-btn.active{background:var(--gold);border-color:var(--gold);color:var(--dark);}
@@ -268,7 +390,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .extra-tag-del{width:30px;height:30px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0;}
 .extra-tag-del:hover{background:#FDECEA;border-color:#E57373;color:#B71C1C;}
 
-/* ── TUTORIALS GRID ── */
+/* ── TUTORIALS ── */
 .tut-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
 @media(max-width:600px){.tut-grid{grid-template-columns:1fr 1fr;}}
 @media(max-width:380px){.tut-grid{grid-template-columns:1fr;}}
@@ -280,6 +402,85 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SPLASH SCREEN
+     ═══════════════════════════════════════════════════════════ -->
+<div id="splash">
+  <div class="splash-inner">
+
+    <!-- Ubuntu Bali logo -->
+    <img class="splash-logo"
+      src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
+      alt="Ubuntu Bali">
+
+    <!-- Warrior 1 SVG figure -->
+    <svg class="splash-figure" width="180" height="220" viewBox="0 0 180 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Glow behind figure -->
+      <ellipse cx="90" cy="185" rx="55" ry="8" fill="#B8935A" opacity="0.15"/>
+
+      <!-- ── HEAD ── -->
+      <circle cx="90" cy="28" r="13" fill="none" stroke="#B8935A" stroke-width="2.5"/>
+
+      <!-- ── TORSO (upright, slight lean back) ── -->
+      <!-- Neck -->
+      <line x1="90" y1="41" x2="90" y2="52" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Torso body -->
+      <line x1="90" y1="52" x2="90" y2="100" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── ARMS (raised overhead in warrior 1) ── -->
+      <!-- Left arm: up and slightly left -->
+      <line x1="90" y1="60" x2="58" y2="30" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Left forearm -->
+      <line x1="58" y1="30" x2="50" y2="8" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- Right arm: up and slightly right -->
+      <line x1="90" y1="60" x2="122" y2="30" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Right forearm -->
+      <line x1="122" y1="30" x2="130" y2="8" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── HIPS ── -->
+      <line x1="75" y1="100" x2="105" y2="100" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── FRONT LEG (left — bent at knee, lunge forward) ── -->
+      <!-- Upper thigh -->
+      <line x1="78" y1="100" x2="60" y2="148" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Lower leg (vertical, shin) -->
+      <line x1="60" y1="148" x2="60" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Front foot -->
+      <line x1="60" y1="190" x2="38" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- ── BACK LEG (right — extended back, straight) ── -->
+      <!-- Upper thigh -->
+      <line x1="102" y1="100" x2="138" y2="148" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Lower leg (straight back) -->
+      <line x1="138" y1="148" x2="148" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Back foot (turned out ~45°) -->
+      <line x1="148" y1="190" x2="170" y2="183" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- Subtle floor line -->
+      <line x1="30" y1="194" x2="175" y2="194" stroke="#B8935A" stroke-width="1" opacity="0.25" stroke-linecap="round"/>
+
+      <!-- Decorative dots at wrist tips -->
+      <circle cx="50" cy="8" r="2.5" fill="#B8935A" opacity="0.7"/>
+      <circle cx="130" cy="8" r="2.5" fill="#B8935A" opacity="0.7"/>
+    </svg>
+
+    <!-- Decorative rule -->
+    <div class="splash-rule"></div>
+
+    <!-- Title -->
+    <div class="splash-title">Ubuntu <span>Flow</span></div>
+
+    <!-- Subtitle -->
+    <div class="splash-sub">Bali · Operations</div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP
+     ═══════════════════════════════════════════════════════════ -->
 
 <div id="debug-panel">
   <button onclick="document.getElementById('debug-panel').style.display='none'" style="position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:18px;cursor:pointer;line-height:1;">✕</button>
@@ -355,8 +556,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- DEAL VIEW -->
 <div class="view active" id="view-deal">
-
-  <!-- DRAFTS -->
   <div id="sub-view-drafts">
     <div class="view-hero">
       <div class="view-hero-title">Deals</div>
@@ -365,19 +564,15 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div style="display:flex;gap:8px;margin-bottom:20px;">
       <button class="pill-btn dark" onclick="newDraft()">+ New Deal</button>
     </div>
-    <div id="drafts-list">
-      <div class="crm-empty">Loading drafts…</div>
-    </div>
+    <div id="drafts-list"><div class="crm-empty">Loading drafts…</div></div>
   </div>
 
-  <!-- EDIT -->
   <div id="sub-view-edit" style="display:none;">
     <div class="view-hero">
       <div class="view-hero-title">Edit Deal</div>
       <div class="view-hero-sub">Fill in retreat details to generate offer &amp; contract</div>
     </div>
     <div oninput="markDraftActive()" onchange="markDraftActive()">
-
       <div class="s-section">Client</div>
       <div class="fg-row">
         <div class="fg"><label>Organizer Name</label><input type="text" id="f-name"></div>
@@ -467,11 +662,9 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
           </div>
         </div>
       </div>
-
       <div class="fg"><label>Retreat Packages (people)</label>
         <select id="f-pkgcount">
-          <option value="0">None</option>
-          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15" selected>15</option>
+          <option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15" selected>15</option>
         </select>
       </div>
       <div class="fg-row">
@@ -531,7 +724,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
   </div>
 
-  <!-- OFFER -->
   <div id="sub-view-offer" style="display:none;">
     <div class="view-hero"><div class="view-hero-title">Offer Preview</div></div>
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
@@ -541,7 +733,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="email-wrap"><div class="email" id="offer-output"></div></div>
   </div>
 
-  <!-- CONTRACT -->
   <div id="sub-view-contract" style="display:none;">
     <div class="view-hero"><div class="view-hero-title">Contract Preview</div></div>
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
@@ -550,8 +741,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
     <div class="contract-wrap"><div id="contract-output"></div></div>
   </div>
-
-</div><!-- end view-deal -->
+</div>
 
 <!-- CRM VIEW -->
 <div class="view" id="view-crm">
@@ -566,8 +756,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <button class="pill-btn" onclick="showDuplicates()">⊕ Dupes</button>
     </div>
   </div>
-
-  <!-- Tabs -->
   <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
     <button id="crm-tab-cold"      class="pill-btn active" onclick="crmSwitchTab('cold')">🌱 Cold Leads</button>
     <button id="crm-tab-converted" class="pill-btn"        onclick="crmSwitchTab('converted')">🤝 Converted</button>
@@ -576,8 +764,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div style="flex:1;"></div>
     <div id="crm-count" style="font-size:11px;color:var(--muted);font-weight:500;"></div>
   </div>
-
-  <!-- Search + sort -->
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
     <div style="flex:1;min-width:0;position:relative;">
       <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:14px;pointer-events:none;">🔍</span>
@@ -591,7 +777,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <option value="location">↕ Location</option>
     </select>
   </div>
-
   <div id="crm-list"></div>
 </div>
 
@@ -609,39 +794,15 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 <div class="view" id="view-tutorials">
   <div class="view-hero"><div class="view-hero-title">Tutorials</div><div class="view-hero-sub">Learn how to run and grow Ubuntu Bali</div></div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;">
-    <p style="font-size:14px;color:var(--muted);line-height:1.7;">This section walks you and the team through everything — from how to find and qualify a lead, to running Ubuntu Flow, to closing a retreat booking.</p>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;">Six modules to get you and the team up to speed fast.</p>
   </div>
   <div class="tut-grid">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">1</div>
-      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Intro to Biz Dev</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Philosophy and approach.</div></div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">2</div>
-      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Ubuntu Flow</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">How to use this app.</div></div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">3</div>
-      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Tech</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Tools and how they connect.</div></div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">4</div>
-      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Lead Generation</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Find and qualify retreat leaders.</div></div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">5</div>
-      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Outreach</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Scripts and timing.</div></div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">6</div>
-      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Sale</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Discovery call to close.</div></div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
-    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;"><div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">1</div><div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Intro to Biz Dev</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Philosophy and approach.</div></div><div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;"><div style="width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">2</div><div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Ubuntu Flow</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">How to use this app.</div></div><div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;"><div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">3</div><div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Tech</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Tools and how they connect.</div></div><div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;"><div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">4</div><div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Lead Generation</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Find and qualify retreat leaders.</div></div><div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;"><div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">5</div><div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Outreach</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Scripts and timing.</div></div><div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;opacity:.6;"><div style="width:34px;height:34px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">6</div><div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Sale</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Discovery call to close.</div></div><div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div></div>
   </div>
 </div>
 
@@ -672,9 +833,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- CRM DETAIL MODAL -->
 <div class="ios-modal" id="crm-modal" onclick="closeCrmModal(event)">
-  <div class="ios-modal-box">
-    <div id="crm-modal-content"></div>
-  </div>
+  <div class="ios-modal-box"><div id="crm-modal-content"></div></div>
 </div>
 
 <!-- NEW LEAD MODAL -->
@@ -700,6 +859,29 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);">Cancel</button>
   </div>
 </div>
+
+<script>
+  // ── SPLASH DISMISS ────────────────────────────────────────────────────────
+  // Show for 2.6s then fade out
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      splash.classList.add('exit');
+      splash.addEventListener('animationend', () => {
+        splash.style.display = 'none';
+      }, { once: true });
+    }, 2600);
+  });
+
+  // Tap to skip
+  document.getElementById('splash').addEventListener('click', () => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('exit');
+    splash.addEventListener('animationend', () => {
+      splash.style.display = 'none';
+    }, { once: true });
+  });
+</script>
 
 <script src="/js/core.js"></script>
 <script src="/js/offer.js"></script>
