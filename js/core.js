@@ -8,9 +8,8 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 
 let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
-let crmData={leads:[],converted:[]}, crmTab='leads', crmLoaded=false;
+// crmData, crmTab, crmLoaded declared in crm.js — do NOT redeclare here
 
-// Global error capture
 window.onerror=(msg,src,line)=>{dbg('ERR: '+msg+' ('+String(src).split('/').pop()+':'+line+')');};
 window.onunhandledrejection=e=>{dbg('PROMISE ERR: '+(e.reason?.message||e.reason||'?'));};
 
@@ -24,7 +23,7 @@ function dbg(msg){
 function toggleDebug(){
   const p=$('debug-panel');
   if(p)p.style.display=p.style.display==='block'?'none':'block';
-  const d=$('nav-dropdown');if(d)d.style.display='none';
+  const d=$('nav-dropdown');if(d)d.classList.remove('open');
 }
 
 function toggleNavMenu(){
@@ -45,13 +44,12 @@ function switchTab(t){
     if(el)el.classList.toggle('active',v===t);
   });
   document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
-  // Show/hide deal toolbar
   const tb=$('deal-toolbar');
   if(tb)tb.classList.toggle('visible',t==='deal');
   if(t==='deal')switchDealTab(activeDealTab);
   if(t==='crm'){
     if(typeof loadCRM==='function') loadCRM();
-    if(typeof crmSwitchTab==='function') crmSwitchTab(crmTab);
+    if(typeof crmSwitchTab==='function') crmSwitchTab(typeof crmTab!=='undefined'?crmTab:'cold');
   }
   const d=$('nav-dropdown');if(d)d.classList.remove('open');
 }
@@ -107,12 +105,11 @@ function newDraft(){
   switchDealTab('edit');
 }
 
-// PWA Install
 let deferredPrompt=null;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
 const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
 if(!isStandalone){
-  if(isIOS){const b=$('install-btn');if(b){b.style.display='flex';}}
+  if(isIOS){const b=$('install-btn');if(b)b.style.display='flex';}
   else window.addEventListener('beforeinstallprompt',e=>{
     e.preventDefault();deferredPrompt=e;
     const b=$('install-btn');if(b)b.style.display='flex';
@@ -123,7 +120,6 @@ function handleInstall(){
   else if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;const b=$('install-btn');if(b)b.style.display='none';});}
 }
 
-// Service worker
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js').then(reg=>{
     reg.addEventListener('updatefound',()=>{
@@ -138,12 +134,10 @@ if('serviceWorker' in navigator){
 }
 function applyUpdate(){window.location.reload(true);}
 
-// Init — defer until all scripts loaded
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
-window.addEventListener('load', ()=>switchTab('deal'));
+window.addEventListener('load',()=>switchTab('deal'));
 
-// IDR rate
 (async()=>{
   const dot=$('idr-dot'),info=$('idr-info');
   try{
@@ -159,11 +153,9 @@ window.addEventListener('load', ()=>switchTab('deal'));
   }
 })();
 
-function toggleMoreDetails(btn) {
-  const details = btn.nextElementSibling;
-  const open = details.style.display !== 'none';
-  details.style.display = open ? 'none' : 'block';
-  btn.textContent = open
-    ? btn.textContent.replace('− ', '+ ')
-    : btn.textContent.replace('+ ', '− ');
+function toggleMoreDetails(btn){
+  const details=btn.nextElementSibling;
+  const open=details.style.display!=='none';
+  details.style.display=open?'none':'block';
+  btn.textContent=open?btn.textContent.replace('− ','+ '):btn.textContent.replace('+ ','− ');
 }
