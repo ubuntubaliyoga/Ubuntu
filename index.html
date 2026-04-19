@@ -414,172 +414,31 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
       alt="Ubuntu Bali">
 
-    <!-- Warrior 1 — silhouette traced from reference, animated entry -->
-    <svg class="splash-figure" width="230" height="300" viewBox="0 0 230 300" xmlns="http://www.w3.org/2000/svg">
-      <style>
-        /* Sequenced entry: feet → legs → hips/torso → arm sweeps up → head */
-        #f-foot-f  { animation: fu 0.5s ease 0.3s both; }
-        #f-foot-b  { animation: fu 0.5s ease 0.3s both; }
-        #f-shin-f  { transform-origin:85px 252px; animation: shinF 1.1s cubic-bezier(.4,0,.2,1) 0.4s both; }
-        #f-shin-b  { transform-origin:148px 248px; animation: shinB 1.1s cubic-bezier(.4,0,.2,1) 0.4s both; }
-        #f-thigh-f { transform-origin:90px 212px; animation: thighF 1.1s cubic-bezier(.4,0,.2,1) 0.5s both; }
-        #f-thigh-b { transform-origin:112px 208px; animation: thighB 1.1s cubic-bezier(.4,0,.2,1) 0.5s both; }
-        #f-hips    { animation: fu 0.7s ease 0.85s both; }
-        #f-torso   { animation: fu 0.7s ease 0.95s both; }
-        #f-arm-lo  { animation: fu 0.6s ease 1.1s both; }
-        #f-arm-up  { transform-origin:104px 148px; animation: armUp 1s cubic-bezier(.4,0,.2,1) 1.2s both; }
-        #f-head    { animation: fu 0.6s ease 1.8s both; }
+    <!-- Warrior 1 — actual reference image, background knocked out via mix-blend-mode -->
+    <div class="splash-figure" style="width:260px;height:260px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+      <img
+        src="/warrior.webp"
+        alt="Warrior 1"
+        style="
+          width:100%;
+          height:100%;
+          object-fit:contain;
+          object-position:center bottom;
+          mix-blend-mode:multiply;
+          filter:grayscale(1) brightness(0) invert(1);
+          opacity:0;
+          animation:figureIn 0.9s ease 0.5s forwards;
+        "
+      />
+    </div>
+    <style>
+      @keyframes figureIn {
+        from { opacity:0; transform:translateY(16px); }
+        to   { opacity:1; transform:translateY(0); }
+      }
+    </style>
 
-        @keyframes fu {
-          from { opacity:0; transform:translateY(8px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-        @keyframes shinF {
-          from { opacity:0; transform:rotate(28deg); }
-          to   { opacity:1; transform:rotate(0deg); }
-        }
-        @keyframes shinB {
-          from { opacity:0; transform:rotate(-22deg); }
-          to   { opacity:1; transform:rotate(0deg); }
-        }
-        @keyframes thighF {
-          from { opacity:0; transform:rotate(18deg) translateX(12px); }
-          to   { opacity:1; transform:rotate(0deg) translateX(0); }
-        }
-        @keyframes thighB {
-          from { opacity:0; transform:rotate(-22deg) translateX(-12px); }
-          to   { opacity:1; transform:rotate(0deg) translateX(0); }
-        }
-        @keyframes armUp {
-          from { opacity:0; transform:rotate(95deg); }
-          to   { opacity:1; transform:rotate(0deg); }
-        }
-        /* Gentle breath loop after entry */
-        #f-arm-up {
-          animation: armUp 1s cubic-bezier(.4,0,.2,1) 1.2s forwards,
-                     breath 3.5s ease-in-out 2.4s infinite;
-        }
-        @keyframes breath {
-          0%,100% { transform:translateY(0); }
-          50%     { transform:translateY(-4px); }
-        }
-      </style>
-
-      <!-- Mat shadow -->
-      <ellipse cx="110" cy="290" rx="80" ry="7" fill="#B8935A" opacity="0.12"/>
-
-      <!-- ═══ BACK LEG (right) — extends behind, heel lifted ═══ -->
-      <path id="f-thigh-b" fill="white" opacity="0.93" d="
-        M 116 205 C 124 212 135 222 145 233
-        C 153 242 159 250 160 256
-        C 161 260 159 263 155 263
-        C 151 263 148 260 146 255
-        C 143 248 137 239 129 230
-        C 121 221 113 212 109 207 Z"/>
-      <path id="f-shin-b" fill="white" opacity="0.93" d="
-        M 158 257 C 160 264 161 271 160 277
-        C 159 281 156 283 152 282
-        C 148 281 146 278 147 273
-        C 147 267 147 261 147 256 Z"/>
-      <path id="f-foot-b" fill="white" opacity="0.93" d="
-        M 150 278 C 156 276 164 276 171 277
-        C 177 278 181 280 181 283
-        C 181 286 177 288 170 288
-        C 162 288 153 286 149 283
-        C 147 281 148 279 150 278 Z"/>
-
-      <!-- ═══ FRONT LEG (left) — deep bent knee, shin vertical ═══ -->
-      <path id="f-thigh-f" fill="white" opacity="0.93" d="
-        M 103 207 C 98 214 92 223 87 233
-        C 83 242 81 251 82 257
-        C 83 261 86 263 90 262
-        C 94 261 96 257 96 252
-        C 96 244 97 235 99 225
-        C 101 216 103 209 104 206 Z"/>
-      <path id="f-shin-f" fill="white" opacity="0.93" d="
-        M 83 258 C 82 266 82 274 83 280
-        C 84 284 87 286 91 285
-        C 95 284 96 281 96 277
-        C 96 270 95 263 94 258 Z"/>
-      <path id="f-foot-f" fill="white" opacity="0.93" d="
-        M 80 282 C 72 282 62 283 54 285
-        C 48 287 45 290 48 292
-        C 51 294 58 293 66 292
-        C 75 290 85 287 90 284
-        C 93 282 92 280 89 280 Z"/>
-
-      <!-- ═══ HIPS ═══ -->
-      <path id="f-hips" fill="white" opacity="0.92" d="
-        M 94 198 C 90 202 88 208 89 214
-        C 90 220 95 224 101 224
-        L 107 224
-        C 113 224 118 220 119 214
-        C 120 208 118 202 114 198
-        C 110 195 105 194 101 194
-        C 97 194 96 196 94 198 Z"/>
-
-      <!-- ═══ TORSO — upright core, slight open chest ═══ -->
-      <path id="f-torso" fill="white" opacity="0.95" d="
-        M 89 143 C 85 148 83 156 83 166
-        C 83 179 85 193 90 203
-        C 93 210 97 214 101 214
-        C 106 214 110 210 113 203
-        C 118 193 120 179 120 166
-        C 120 156 118 148 114 143
-        C 110 138 105 136 101 136
-        C 97 136 93 138 89 143 Z"/>
-
-      <!-- ═══ LOW ARM — trailing arm, slightly extended back at waist level ═══ -->
-      <path id="f-arm-lo" fill="white" opacity="0.88" d="
-        M 114 150 C 119 155 124 162 128 170
-        C 132 177 133 184 131 188
-        C 129 192 125 192 122 188
-        C 119 184 117 177 115 169
-        C 113 162 113 155 114 150 Z"/>
-
-      <!-- ═══ RAISED ARM — one arm straight up, palm faces inward ═══ -->
-      <g id="f-arm-up">
-        <!-- Upper arm — shoulder to elbow, vertical with slight lean right -->
-        <path fill="white" opacity="0.93" d="
-          M 97 140 C 95 128 93 115 92 101
-          C 91 88 92 76 95 67
-          C 97 60 100 57 103 58
-          C 106 59 108 63 109 71
-          C 111 81 111 94 110 107
-          C 109 120 107 133 105 143 Z"/>
-        <!-- Forearm — elbow to wrist, continues upward -->
-        <path fill="white" opacity="0.93" d="
-          M 95 70 C 94 57 95 44 98 33
-          C 100 24 103 18 106 19
-          C 109 20 111 27 112 36
-          C 113 47 112 60 110 72 Z"/>
-        <!-- Hand + prayer gesture at apex -->
-        <path fill="white" opacity="0.90" d="
-          M 99 35 C 98 26 100 18 103 13
-          C 105 9 107 8 109 9
-          C 111 11 112 16 112 22
-          C 112 29 111 36 109 41
-          L 104 43 Z"/>
-      </g>
-
-      <!-- ═══ HEAD — faces left, eyes closed/forward, hair bun ═══ -->
-      <g id="f-head">
-        <!-- Neck -->
-        <path fill="white" opacity="0.95" d="
-          M 96 132 C 94 137 94 143 96 147
-          C 98 150 104 150 106 147
-          C 108 143 108 137 106 132 Z"/>
-        <!-- Head oval, tilted slightly left (facing direction of front leg) -->
-        <ellipse cx="98" cy="116" rx="14" ry="16" fill="white" opacity="0.95"/>
-        <!-- Hair bun — at back/top of head -->
-        <ellipse cx="110" cy="108" rx="9" ry="7" fill="white" opacity="0.95"/>
-        <!-- Chin definition — small protrusion left -->
-        <ellipse cx="86" cy="120" rx="4" ry="3" fill="white" opacity="0.92"/>
-      </g>
-
-    </svg>
-
-            <!-- Decorative rule -->
+        <!-- Decorative rule -->
     <div class="splash-rule"></div>
 
     <!-- Title -->
@@ -614,7 +473,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 <!-- NAV -->
 <nav class="nav" id="main-nav" style="position:relative;">
   <div class="nav-inner">
-    <div class="nav-brand">
+    <div class="nav-brand" onclick="switchTab('deal')" style="cursor:pointer;">
       <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali" class="nav-logo">
       <div class="nav-brand-text">
         <span class="nav-brand-name">Ubuntu Flow</span>
@@ -926,7 +785,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <!-- ── HERO ── -->
     <div style="text-align:center;margin-bottom:56px;">
       <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
-        style="height:52px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:28px;display:block;margin-left:auto;margin-right:auto;">
+        style="height:156px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:24px;display:block;margin-left:auto;margin-right:auto;">
       <div style="font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;">Ubuntu Bali · Philosophy</div>
       <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 28px;"></div>
       <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,6vw,40px);font-weight:300;color:#F5ECD7;line-height:1.25;letter-spacing:-.01em;">The Strength of the Circle</h1>
