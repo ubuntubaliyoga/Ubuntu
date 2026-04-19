@@ -39,7 +39,7 @@ document.addEventListener('click',e=>{
 
 function switchTab(t){
   activeTab=t;
-  ['deal','crm','bizdev','philosophy'].forEach(v=>{
+  ['deal','crm','bizdev','philosophy','tutorials'].forEach(v=>{
     const el=$('view-'+v);
     if(el)el.classList.toggle('active',v===t);
   });
