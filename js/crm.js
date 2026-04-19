@@ -1,18 +1,16 @@
 // js/crm.js
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-// NOTE: crmData declared here — do NOT declare in core.js
 let crmData = { emailLeads: [], whatsappLeads: [], shalaLeads: [], converted: [] };
 let crmTab = 'cold';
 let crmCollapsed = {};
 let crmLoaded = false;
-let dragItemId = null;
 
 const REACHED_OUT_OPTIONS = ['Email', 'Instagram', 'LinkedIn', 'WhatsApp', 'In Person', 'Cold Call'];
 
-const CLOSED_STATUSES  = ['SALE CLOSED', 'Converted to Customer'];
-const WARM_STATUSES    = ['WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY', 'Booked a call', 'Sent an offer'];
-const DEAD_STATUSES    = ['GHOSTED', 'TERMINATED', 'NOT GOOD FIT'];
+const CLOSED_STATUSES = ['SALE CLOSED', 'Converted to Customer'];
+const WARM_STATUSES   = ['WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY', 'Booked a call', 'Sent an offer'];
+const DEAD_STATUSES   = ['GHOSTED', 'TERMINATED', 'NOT GOOD FIT'];
 
 const SRC_CFG = {
   email:    { label: '📧 Email',    color: '#1565C0', bg: '#E3F2FD' },
@@ -38,11 +36,11 @@ function getStageKey(c) {
 }
 
 function cleanLocation(loc) {
-  if (!loc) return '—';
+  if (!loc) return null;
   if (loc.includes('maps.google.com') || loc.startsWith('http')) {
     const m = loc.match(/[?&]q=([^&]+)/);
     if (m) return decodeURIComponent(m[1]).replace(/\+/g, ' ');
-    return '—';
+    return null;
   }
   return loc;
 }
@@ -53,6 +51,12 @@ function suitClass(s) {
   if (s.startsWith('2')) return 'crm-suit-2';
   if (s.startsWith('3')) return 'crm-suit-3';
   return 'crm-suit-4';
+}
+
+function fmtDateShort(s) {
+  if (!s) return null;
+  const d = new Date(s + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
 
 // ── TAB ───────────────────────────────────────────────────────────────────────
@@ -68,10 +72,9 @@ function tabItems() {
   if (crmTab === 'shala')     return crmData.shalaLeads || [];
   if (crmTab === 'converted') return crmData.converted  || [];
   if (crmTab === 'closed')    return allLeads().filter(c => getStageKey(c) === 'closed');
-  // cold = all non-shala leads not yet closed
   return allLeads().filter(c => {
-    const stage = getStageKey(c);
-    return stage === 'cold' || stage === 'warm' || stage === 'dead';
+    const s = getStageKey(c);
+    return s === 'cold' || s === 'warm' || s === 'dead';
   });
 }
 
@@ -79,7 +82,7 @@ function tabItems() {
 function crmSort(items) {
   const g = document.getElementById('crm-group')?.value || 'date';
   if (g === 'name')     return [...items].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  if (g === 'location') return [...items].sort((a, b) => cleanLocation(a.location).localeCompare(cleanLocation(b.location)));
+  if (g === 'location') return [...items].sort((a, b) => (cleanLocation(a.location)||'').localeCompare(cleanLocation(b.location)||''));
   return [...items].sort((a, b) => new Date(b.lastEdited || 0) - new Date(a.lastEdited || 0));
 }
 
@@ -100,26 +103,50 @@ function crmRender() {
   list.innerHTML = items.length ? buildList(items) : '<div class="crm-empty">No leads found.</div>';
 }
 
+// ── CARD LIST ─────────────────────────────────────────────────────────────────
 function buildList(items) {
   return items.map(c => {
-    const src = SRC_CFG[c.db] || SRC_CFG.email;
-    const reached = c.reachedOutOn || [];
-    const stage = getStageKey(c);
+    const src      = SRC_CFG[c.db] || SRC_CFG.email;
+    const reached  = c.reachedOutOn || [];
+    const loc      = cleanLocation(c.location);
+    const stage    = getStageKey(c);
+    const firstOut = c.engagedFirst ? fmtDateShort(c.engagedFirst) : null;
+
     const stageBadge = stage === 'warm'
       ? `<span class="crm-badge" style="background:#E3F2FD;color:#1565C0;">🔥 Warm</span>`
       : stage === 'dead'
       ? `<span class="crm-badge" style="background:#F0EBE3;color:#8B7355;">👻 Dead</span>`
       : '';
+
+    // Meta row: location · first outreach date
+    const metaParts = [
+      loc      && `<span>📍 ${loc}</span>`,
+      firstOut && `<span>🗓 ${firstOut}</span>`,
+    ].filter(Boolean);
+
+    // Reached out chips (max 3)
+    const reachedChips = reached.slice(0, 3).map(r =>
+      `<span class="crm-badge" style="background:var(--bg2);color:var(--muted);">${r}</span>`
+    ).join('');
+
+    // Notes preview (truncated)
+    const notePreview = c.notes
+      ? `<div class="crm-card-notes">${c.notes.length > 80 ? c.notes.slice(0, 80) + '…' : c.notes}</div>`
+      : '';
+
     return `<div class="crm-card" onclick="openCrmModal('${c.id}')">
-      <div class="crm-card-main">
-        <div class="crm-card-name">${c.name || 'Unnamed'}</div>
-        <div class="crm-card-loc">${cleanLocation(c.location)}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="min-width:0;">
+          <div class="crm-card-name">${c.name || 'Unnamed'}</div>
+          ${metaParts.length ? `<div class="crm-card-meta">${metaParts.join('<span style="margin:0 4px;opacity:.4;">·</span>')}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+          <span class="crm-badge" style="background:${src.bg};color:${src.color};">${src.label}</span>
+          ${stageBadge}
+        </div>
       </div>
-      <div class="crm-card-badges">
-        <span class="crm-badge" style="background:${src.bg};color:${src.color};">${src.label}</span>
-        ${stageBadge}
-        ${reached.slice(0, 2).map(r => `<span class="crm-badge" style="background:var(--bg2);color:var(--muted);">${r}</span>`).join('')}
-      </div>
+      ${reachedChips ? `<div class="crm-card-badges" style="margin-top:6px;">${reachedChips}</div>` : ''}
+      ${notePreview}
     </div>`;
   }).join('');
 }
@@ -173,9 +200,14 @@ function closeCrmModal(e) {
 }
 
 function crmDetailHTML(c) {
-  const src = SRC_CFG[c.db] || SRC_CFG.email;
-  const reached = c.reachedOutOn || [];
-  const isLead = c.db !== 'converted';
+  const src     = SRC_CFG[c.db] || SRC_CFG.email;
+  const reached = Array.isArray(c.reachedOutOn) ? c.reachedOutOn : [];
+  const isLead  = c.db !== 'converted';
+  const loc     = cleanLocation(c.location);
+
+  // All options to show — union of standard options + any custom ones already on the lead
+  const allOptions = [...REACHED_OUT_OPTIONS];
+  reached.forEach(r => { if (!allOptions.includes(r)) allOptions.push(r); });
 
   const emailStatuses = ['Followed + Engaged','Reached out','WARM: Booked a call OR asked for help','HOT: Past client/strong conversation','QUALIFIED TO BUY','SALE CLOSED','GHOSTED','TERMINATED','NOT GOOD FIT'];
   const waStatuses    = ['Booked a call','Sent an offer','Converted to Customer'];
@@ -200,24 +232,24 @@ function crmDetailHTML(c) {
   }
 
   const fields = [
-    c.company    && ['Company',    c.company],
     c.email      && ['Email',      `<a href="mailto:${c.email}" style="color:var(--gold);">${c.email}</a>`],
     c.insta      && ['Instagram',  c.insta],
     c.website    && ['Website',    `<a href="${c.website}" target="_blank" style="color:var(--gold);">${c.website}</a>`],
     c.linkedin   && ['LinkedIn',   c.linkedin],
     c.whatsapp   && ['WhatsApp',   c.whatsapp],
     c.whatsapp2  && ['WhatsApp 2', c.whatsapp2],
-    c.engagedFirst && ['First contact', c.engagedFirst],
-    c.engagedLast  && ['Last contact',  fmtD(c.engagedLast)],
-    c.engageNext   && ['Engage next',   fmtD(c.engageNext)],
-    c.suitability  && ['Suitability',   `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>`],
+    c.company    && ['Company',    c.company],
+    c.engagedFirst && ['First outreach', c.engagedFirst],
+    c.engagedLast  && ['Last contact',   fmtD(c.engagedLast)],
+    c.engageNext   && ['Engage next',    fmtD(c.engageNext)],
+    c.suitability  && ['Suitability',    `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>`],
   ].filter(Boolean);
 
   return `
     <div class="modal-header">
       <div>
         <div class="modal-title">${c.name || 'Unnamed'}</div>
-        <div class="modal-sub">${cleanLocation(c.location)}</div>
+        ${loc ? `<div class="modal-sub">📍 ${loc}</div>` : ''}
       </div>
       <button class="modal-close" onclick="document.getElementById('crm-modal').classList.remove('open')">✕</button>
     </div>
@@ -228,10 +260,10 @@ function crmDetailHTML(c) {
 
     <div class="crm-section-hd">Reached Out On</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="reached-out-tags">
-      ${REACHED_OUT_OPTIONS.map(opt => {
+      ${allOptions.map(opt => {
         const active = reached.includes(opt);
         return `<button class="reach-btn${active ? ' active' : ''}" data-opt="${opt}"
-          onclick="toggleReachedOut('${c.id}','${c.db}','${opt}',this)">${opt}</button>`;
+          onclick="toggleReachedOut('${c.id}','${c.db}',this)">${opt}</button>`;
       }).join('')}
     </div>
     <div style="display:flex;gap:6px;margin-bottom:16px;">
@@ -243,10 +275,10 @@ function crmDetailHTML(c) {
 
     ${statusBlock}
 
+    ${c.notes ? `<div class="crm-section-hd">Notes</div><div style="font-size:13px;line-height:1.7;color:var(--text);margin-bottom:8px;">${c.notes}</div>` : ''}
+
     ${fields.length ? `<div class="crm-section-hd">Info</div>
       ${fields.map(([label, val]) => `<div class="crm-field"><div class="crm-field-label">${label}</div><div style="font-size:13px;flex:1;word-break:break-word;">${val}</div></div>`).join('')}` : ''}
-
-    ${c.notes ? `<div class="crm-section-hd">Notes</div><div style="font-size:13px;line-height:1.7;color:var(--text);">${c.notes}</div>` : ''}
 
     <div class="modal-actions">
       <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;">✎ Edit</button>
@@ -264,25 +296,34 @@ function crmEditHTML(c) {
     <div class="crm-section-hd">Details</div>
     ${['name','company','location','email','insta','website'].map(f => `
       <div class="fg"><label>${f.charAt(0).toUpperCase()+f.slice(1)}</label>
-        <input id="ce-${f}" type="text" value="${(f === 'location' ? cleanLocation(c.location) : c[f]) || ''}"
+        <input id="ce-${f}" type="text" value="${(f === 'location' ? (cleanLocation(c.location)||'') : (c[f]||''))}"
           style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;">
       </div>`).join('')}
     ${c.db === 'email' ? `<div class="fg"><label>Notes</label>
-      <textarea id="ce-notes" rows="3" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;resize:vertical;">${c.notes || ''}</textarea>
+      <textarea id="ce-notes" rows="3" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;resize:vertical;">${c.notes||''}</textarea>
     </div>` : ''}
     <button onclick="saveContactDetails('${c.id}','${c.db}')" class="ios-modal-close" style="margin-top:8px;">Save Changes</button>
     <button onclick="openCrmModal('${c.id}')" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--muted);">Cancel</button>`;
 }
 
-// ── ACTIONS ───────────────────────────────────────────────────────────────────
-function toggleReachedOut(id, db, opt, btn) {
-  btn.classList.toggle('active');
+// ── REACHED OUT — fixed: read active state from classList, not a parameter ────
+function toggleReachedOut(id, db, btn) {
+  // Toggle active state
+  const wasActive = btn.classList.contains('active');
+  btn.classList.toggle('active', !wasActive);
+
+  // Collect all currently active options
   const container = btn.closest('#reached-out-tags');
   const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
+
+  // Update local cache
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
+
+  // Save to Notion (email DB only — others don't have the field)
   fetch('/api/crm', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
@@ -292,23 +333,30 @@ function addCustomReachedOut(id, db) {
   const val = input?.value?.trim();
   if (!val) return;
   input.value = '';
+
   const container = document.getElementById('reached-out-tags');
-  if (!container || Array.from(container.querySelectorAll('button')).some(b => b.dataset.opt === val)) return;
+  if (!container) return;
+  if (Array.from(container.querySelectorAll('button')).some(b => b.dataset.opt === val)) return;
+
   const btn = document.createElement('button');
   btn.className = 'reach-btn active';
   btn.dataset.opt = val;
   btn.textContent = val;
-  btn.onclick = function() { toggleReachedOut(id, db, val, this); };
+  btn.onclick = function() { toggleReachedOut(id, db, this); };
   container.appendChild(btn);
+
   const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
+
   fetch('/api/crm', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
 
+// ── OTHER ACTIONS ─────────────────────────────────────────────────────────────
 async function savePipelineStage(id, db, status) {
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.status = status;
@@ -397,7 +445,7 @@ function showDuplicates() {
       ${group.map((c, i) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);">
         <div>
           <div style="font-size:13px;font-weight:500;">${c.name} <span style="font-size:10px;color:var(--muted);">(${c.db})</span></div>
-          <div style="font-size:11px;color:var(--muted);">${cleanLocation(c.location)}</div>
+          <div style="font-size:11px;color:var(--muted);">${cleanLocation(c.location)||'—'}</div>
         </div>
         ${i > 0 ? `<button onclick="deleteDupConfirm('${c.id}','${c.name}')" style="padding:5px 14px;border-radius:100px;border:1px solid #FDECEA;background:transparent;color:#B71C1C;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>` : '<span style="font-size:11px;color:#2E7D32;font-weight:600;">Keep</span>'}
       </div>`).join('')}
