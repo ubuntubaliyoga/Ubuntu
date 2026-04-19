@@ -1,9 +1,9 @@
 // api/crm.js
 
-const EMAIL_DB    = '8e5622d3e57482ba950081ac7695672e'; // Retreat Leaders Kevin (email outreach) → rename to "Retreat Leaders Email"
-const SHALA_DB    = '320622d3e57480608324f0eb4d3b8a2c'; // Shala Rental Whatsapp Kevin
-const WHATSAPP_DB = '320622d3e5748066b6dfcea95816fad2'; // Retreat Leaders Whatsapp
-const CONV_DB     = '325622d3e57480c1b847dbc308d7393e'; // Converted Leads
+const EMAIL_DB    = '8e5622d3e57482ba950081ac7695672e'; // Retreat Leaders Kevin (email)
+const WHATSAPP_DB = '320622d3e5748066b6dfcea95816fad2'; // Retreat Leaders WhatsApp
+const SHALA_DB    = '320622d3e57480608324f0eb4d3b8a2c'; // Shala Rental WhatsApp Kevin
+const CONV_DB     = '325622d3e57481bbbaaedeb47e377f2c'; // Retreat Leaders 2026 (converted)
 
 const headers = {
   'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
@@ -23,8 +23,6 @@ function getProp(props, name, type) {
   return null;
 }
 
-// ── MAPPERS ───────────────────────────────────────────────────────────────────
-
 function mapEmailLead(page) {
   const p = page.properties;
   return {
@@ -39,7 +37,7 @@ function mapEmailLead(page) {
     website:      getProp(p, 'Website',                'text'),
     linkedin:     getProp(p, 'Linkydinky',             'text'),
     notes:        getProp(p, 'Notes',                  'text'),
-    status:       getProp(p, 'Instagram',              'select'),  // pipeline status field is called "Instagram" in this DB
+    status:       getProp(p, 'Instagram',              'select'),
     suitability:  getProp(p, 'Suitability',            'select'),
     reachedOutOn: getProp(p, 'Reached out on',         'multi_select'),
     engagedFirst: getProp(p, 'Engaged first',          'date'),
@@ -55,21 +53,21 @@ function mapWhatsappLead(page) {
     id:           page.id,
     lastEdited:   page.last_edited_time,
     db:           'whatsapp',
-    name:         getProp(p, 'Name',                          'title'),
-    company:      getProp(p, 'Company',                       'text'),
-    email:        getProp(p, 'Mail',                          'text'),
-    location:     getProp(p, 'Location',                      'text'),
-    insta:        getProp(p, 'Insta',                         'text'),
-    website:      getProp(p, 'Website',                       'text'),
-    whatsapp:     getProp(p, 'Whatsapp 1',                    'text'),
-    whatsapp2:    getProp(p, 'Whatsapp 2',                    'text'),
+    name:         getProp(p, 'Name',                         'title'),
+    company:      getProp(p, 'Company',                      'text'),
+    email:        getProp(p, 'Mail',                         'text'),
+    location:     getProp(p, 'Location',                     'text'),
+    insta:        getProp(p, 'Insta',                        'text'),
+    website:      getProp(p, 'Website',                      'text'),
+    whatsapp:     getProp(p, 'Whatsapp 1',                   'text'),
+    whatsapp2:    getProp(p, 'Whatsapp 2',                   'text'),
     notes:        null,
-    status:       getProp(p, 'Multi-select',                  'select'),
-    suitability:  getProp(p, 'Suitability',                   'select'),
+    status:       getProp(p, 'Multi-select',                 'select'),
+    suitability:  getProp(p, 'Suitability',                  'select'),
     reachedOutOn: ['WhatsApp'],
-    engagedFirst: getProp(p, 'Engaged first',                 'text'),
-    engageNext:   getProp(p, 'Engage Next',                   'date'),
-    salesCall:    getProp(p, 'Sales Call/Visit Booked Date',  'date'),
+    engagedFirst: getProp(p, 'Engaged first',                'text'),
+    engageNext:   getProp(p, 'Engage Next',                  'date'),
+    salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
   };
 }
 
@@ -119,8 +117,6 @@ function mapConverted(page) {
   };
 }
 
-// ── DB QUERY ──────────────────────────────────────────────────────────────────
-
 async function queryDB(dbId, mapper) {
   const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
     method: 'POST',
@@ -145,16 +141,13 @@ async function updatePage(pageId, properties) {
   return resp.json();
 }
 
-// ── HANDLER ───────────────────────────────────────────────────────────────────
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
   const { action } = req.body;
 
   try {
 
-    // ── LOAD ALL ──────────────────────────────────────────────────────────────
+    // ── LOAD ──────────────────────────────────────────────────────────────────
     if (action === 'load') {
       const [emailLeads, whatsappLeads, shalaLeads, converted] = await Promise.all([
         queryDB(EMAIL_DB,    mapEmailLead),
@@ -165,30 +158,23 @@ export default async function handler(req, res) {
       return res.status(200).json({ emailLeads, whatsappLeads, shalaLeads, converted });
     }
 
-    // ── UPDATE STATUS ─────────────────────────────────────────────────────────
+    // ── UPDATE STATUS / NOTES / ENGAGE NEXT ───────────────────────────────────
     if (action === 'update') {
       const { pageId, db, status, notes, engageNext } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
-
       const props = {};
-
-      if (notes !== undefined) {
+      if (notes !== undefined)
         props['Notes'] = { rich_text: [{ text: { content: notes } }] };
-      }
-      if (engageNext !== undefined) {
+      if (engageNext !== undefined)
         props['Engage Next'] = engageNext ? { date: { start: engageNext } } : { date: null };
-      }
       if (status !== undefined) {
-        if (db === 'converted') {
+        if (db === 'converted')
           props['Status'] = { multi_select: (Array.isArray(status) ? status : [status]).map(s => ({ name: s })) };
-        } else if (db === 'email') {
-          props['Instagram'] = { select: { name: status } }; // status field is named "Instagram" in this DB
-        } else if (db === 'whatsapp') {
+        else if (db === 'email')
+          props['Instagram'] = { select: { name: status } };
+        else if (db === 'whatsapp')
           props['Multi-select'] = { select: { name: status } };
-        }
-        // shala has no status field
       }
-
       await updatePage(pageId, props);
       return res.status(200).json({ success: true });
     }
@@ -197,16 +183,11 @@ export default async function handler(req, res) {
     if (action === 'updateReachedOut') {
       const { pageId, db, reachedOutOn } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
-
-      const props = {};
-      // Only the email DB has the "Reached out on" multi_select field
       if (db === 'email') {
-        props['Reached out on'] = {
-          multi_select: (reachedOutOn || []).map(v => ({ name: v })),
-        };
-        await updatePage(pageId, props);
+        await updatePage(pageId, {
+          'Reached out on': { multi_select: (reachedOutOn || []).map(v => ({ name: v })) },
+        });
       }
-      // whatsapp/shala don't have this field — we just acknowledge
       return res.status(200).json({ success: true });
     }
 
@@ -214,33 +195,26 @@ export default async function handler(req, res) {
     if (action === 'updateDetails') {
       const { pageId, db, name, company, location, email, insta, website, notes } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
-
       const props = {};
       if (name     !== undefined) props['Name']     = { title:     [{ text: { content: name } }] };
       if (company  !== undefined) props['Company']  = { rich_text: [{ text: { content: company } }] };
       if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location } }] };
       if (insta    !== undefined) props['Insta']    = { rich_text: [{ text: { content: insta } }] };
       if (website  !== undefined) props['Website']  = { rich_text: [{ text: { content: website } }] };
-
-      // email field naming differs by db
-      if (email !== undefined) {
+      if (email    !== undefined) {
         if (db === 'email') props['Email'] = { email: email || null };
-        else props['Mail'] = { rich_text: [{ text: { content: email } }] };
+        else                props['Mail']  = { rich_text: [{ text: { content: email } }] };
       }
-      if (notes !== undefined && db === 'email') {
+      if (notes !== undefined && db === 'email')
         props['Notes'] = { rich_text: [{ text: { content: notes } }] };
-      }
-
       await updatePage(pageId, props);
       return res.status(200).json({ success: true });
     }
 
-    // ── CREATE LEAD ───────────────────────────────────────────────────────────
+    // ── CREATE ────────────────────────────────────────────────────────────────
     if (action === 'create') {
       const { db: targetDb, name, company, email, insta, whatsapp, location, notes, status } = req.body;
-
       let dbId, properties;
-
       if (targetDb === 'whatsapp') {
         dbId = WHATSAPP_DB;
         properties = {
@@ -261,7 +235,6 @@ export default async function handler(req, res) {
           'Location': { rich_text: [{ text: { content: location || '' } }] },
         };
       } else {
-        // default: email leads DB
         dbId = EMAIL_DB;
         properties = {
           'Name':     { title:     [{ text: { content: name || '' } }] },
@@ -273,10 +246,8 @@ export default async function handler(req, res) {
           ...(status && { 'Instagram': { select: { name: status } } }),
         };
       }
-
       const resp = await fetch('https://api.notion.com/v1/pages', {
-        method: 'POST',
-        headers,
+        method: 'POST', headers,
         body: JSON.stringify({ parent: { database_id: dbId }, properties }),
       });
       if (!resp.ok) throw new Error(`Create failed: ${await resp.text()}`);
@@ -284,25 +255,23 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, pageId: data.id });
     }
 
-    // ── DELETE (trash) ────────────────────────────────────────────────────────
+    // ── DELETE ────────────────────────────────────────────────────────────────
     if (action === 'delete') {
       const { pageId } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
       const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH',
-        headers,
+        method: 'PATCH', headers,
         body: JSON.stringify({ in_trash: true }),
       });
       if (!resp.ok) throw new Error(`Delete failed: ${await resp.text()}`);
       return res.status(200).json({ success: true });
     }
 
-    // ── PROMOTE (lead → converted) ────────────────────────────────────────────
+    // ── PROMOTE ───────────────────────────────────────────────────────────────
     if (action === 'promote') {
       const { pageId, name, company, email, insta, website, location, notes } = req.body;
       await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers,
-        body: JSON.stringify({ in_trash: true }),
+        method: 'PATCH', headers, body: JSON.stringify({ in_trash: true }),
       });
       const resp = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST', headers,
