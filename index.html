@@ -32,212 +32,80 @@
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
 /* ── NAV ── */
-.nav{
-  background:var(--dark);
-  position:sticky;top:0;z-index:200;
-  padding:0 20px;
-}
-.nav-inner{
-  display:flex;align-items:center;
-  height:60px;gap:16px;
-}
-.nav-brand{
-  display:flex;align-items:center;gap:12px;
-  flex-shrink:0;margin-right:8px;
-}
+.nav{background:var(--dark);position:sticky;top:0;z-index:200;padding:0 20px;}
+.nav-inner{display:flex;align-items:center;height:60px;gap:16px;}
+.nav-brand{display:flex;align-items:center;gap:12px;flex-shrink:0;margin-right:8px;}
 .nav-logo{height:56px;filter:brightness(0) invert(1);opacity:.9;}
-.nav-brand-text{
-  display:flex;flex-direction:column;line-height:1;
-}
-.nav-brand-name{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;font-weight:600;
-  color:#F5ECD7;letter-spacing:.01em;
-}
-.nav-brand-sub{
-  font-size:8px;letter-spacing:.22em;text-transform:uppercase;
-  color:var(--gold);font-weight:500;margin-top:2px;
-}
-.nav-tabs{
-  display:flex;gap:4px;flex:1;align-items:center;
-  overflow-x:auto;scrollbar-width:none;
-}
+.nav-brand-text{display:flex;flex-direction:column;line-height:1;}
+.nav-brand-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#F5ECD7;letter-spacing:.01em;}
+.nav-brand-sub{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-top:2px;}
+.nav-tabs{display:flex;gap:4px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none;}
 .nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{
-  display:flex;align-items:center;gap:7px;
-  padding:8px 16px;border-radius:100px;
-  background:transparent;border:1px solid rgba(245,236,215,.12);
-  color:rgba(245,236,215,.5);
-  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;
-}
+.nav-tab{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:100px;background:transparent;border:1px solid rgba(245,236,215,.12);color:rgba(245,236,215,.5);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
 .nav-tab svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
 .nav-tab:hover{background:rgba(245,236,215,.08);color:rgba(245,236,215,.8);}
-.nav-tab.active{
-  background:var(--gold);color:var(--dark);
-  border-color:var(--gold);font-weight:600;
-}
+.nav-tab.active{background:var(--gold);color:var(--dark);border-color:var(--gold);font-weight:600;}
 .nav-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.nav-icon-btn{
-  width:36px;height:36px;border-radius:50%;
-  background:rgba(245,236,215,.08);border:1px solid rgba(245,236,215,.12);
-  color:rgba(245,236,215,.6);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;font-size:15px;
-}
+.nav-icon-btn{width:36px;height:36px;border-radius:50%;background:rgba(245,236,215,.08);border:1px solid rgba(245,236,215,.12);color:rgba(245,236,215,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:15px;}
 .nav-icon-btn:hover{background:rgba(245,236,215,.15);color:#F5ECD7;}
 .nav-menu-btn{font-size:18px;letter-spacing:2px;font-weight:700;}
 
 /* ── DROPDOWN ── */
-.nav-dropdown{
-  display:none;position:absolute;top:68px;right:20px;
-  background:var(--dark);
-  border:1px solid rgba(184,147,90,.25);
-  border-radius:var(--radius);padding:12px;
-  min-width:200px;z-index:300;
-  box-shadow:var(--shadow-lg);
-}
+.nav-dropdown{display:none;position:absolute;top:68px;right:20px;background:var(--dark);border:1px solid rgba(184,147,90,.25);border-radius:var(--radius);padding:12px;min-width:200px;z-index:300;box-shadow:var(--shadow-lg);}
 .nav-dropdown.open{display:block;}
-.dropdown-item{
-  width:100%;padding:10px 14px;border-radius:var(--radius-sm);
-  background:transparent;border:none;
-  color:rgba(245,236,215,.7);font-family:'DM Sans',sans-serif;
-  font-size:12px;font-weight:500;cursor:pointer;text-align:left;
-  display:flex;align-items:center;gap:8px;transition:all .15s;
-}
+.dropdown-item{width:100%;padding:10px 14px;border-radius:var(--radius-sm);background:transparent;border:none;color:rgba(245,236,215,.7);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .15s;}
 .dropdown-item:hover{background:rgba(245,236,215,.08);color:#F5ECD7;}
 .dropdown-sep{height:1px;background:rgba(184,147,90,.15);margin:6px 0;}
 
-/* ── DEAL TOOLBAR (shown only in deal views) ── */
-.deal-toolbar{
-  display:none;
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  padding:0 20px;
-  position:sticky;top:60px;z-index:190;
-}
+/* ── DEAL TOOLBAR ── */
+.deal-toolbar{display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:60px;z-index:190;}
 .deal-toolbar.visible{display:flex;}
-.deal-toolbar-inner{
-  display:flex;align-items:center;gap:8px;height:52px;
-  max-width:900px;margin:0 auto;width:100%;
-}
-.deal-sub-tab{
-  padding:6px 16px;border-radius:100px;
-  background:transparent;border:1px solid transparent;
-  color:var(--muted);font-family:'DM Sans',sans-serif;
-  font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;
-}
-.deal-sub-tab.active{
-  background:var(--bg2);border-color:var(--border);
-  color:var(--text);font-weight:600;
-}
+.deal-toolbar-inner{display:flex;align-items:center;gap:8px;height:52px;max-width:900px;margin:0 auto;width:100%;}
+.deal-sub-tab{padding:6px 16px;border-radius:100px;background:transparent;border:1px solid transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
+.deal-sub-tab.active{background:var(--bg2);border-color:var(--border);color:var(--text);font-weight:600;}
 .deal-toolbar-spacer{flex:1;}
-.save-btn{
-  padding:8px 20px;border-radius:100px;
-  background:var(--gold);border:none;
-  color:var(--dark);font-family:'DM Sans',sans-serif;
-  font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;
-}
+.save-btn{padding:8px 20px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
 .save-btn:hover{background:var(--gold-lt);}
 .save-btn.saved{background:#3D6636;color:#fff;}
 .save-btn.error{background:#8B3A2E;color:#fff;}
-.status-select{
-  padding:7px 14px;border-radius:100px;
-  border:1px solid var(--border);background:var(--bg);
-  color:var(--muted);font-family:'DM Sans',sans-serif;
-  font-size:11px;font-weight:500;outline:none;cursor:pointer;
-}
+.status-select{padding:7px 14px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;outline:none;cursor:pointer;}
 .autosave-status{font-size:11px;color:var(--gold);font-style:italic;}
 
 /* ── VIEWS ── */
 .view{display:none;padding:28px 20px 60px;max-width:900px;margin:0 auto;}
 .view.active{display:block;}
-.view-hero{
-  margin-bottom:28px;
-}
-.view-hero-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:36px;font-weight:300;color:var(--dark);
-  letter-spacing:-.01em;line-height:1.1;
-}
-.view-hero-sub{
-  font-size:13px;color:var(--muted);margin-top:6px;font-weight:400;
-}
+.view-hero{margin-bottom:28px;}
+.view-hero-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--dark);letter-spacing:-.01em;line-height:1.1;}
+.view-hero-sub{font-size:13px;color:var(--muted);margin-top:6px;font-weight:400;}
 
 /* ── CARDS ── */
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:20px;
-  box-shadow:var(--shadow);
-}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
 .card+.card{margin-top:12px;}
 
 /* ── FORM ── */
-.s-section{
-  font-family:'Cormorant Garamond',serif;
-  font-size:20px;font-weight:600;letter-spacing:.01em;
-  color:var(--dark);margin:32px 0 16px;
-  padding-top:24px;border-top:2px solid var(--border);
-  display:flex;align-items:center;gap:10px;
-}
-.s-section::before{
-  content:'';display:block;width:4px;height:20px;
-  background:var(--gold);border-radius:2px;flex-shrink:0;
-}
+.s-section{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;letter-spacing:.01em;color:var(--dark);margin:32px 0 16px;padding-top:24px;border-top:2px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-section::before{content:'';display:block;width:4px;height:20px;background:var(--gold);border-radius:2px;flex-shrink:0;}
 .s-section:first-child{margin-top:0;padding-top:0;border-top:none;}
 .fg{margin-bottom:14px;}
-.fg label{
-  display:block;font-size:10px;font-weight:600;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--muted);margin-bottom:6px;
-}
-.fg input,.fg select,.fg textarea{
-  width:100%;padding:10px 14px;
-  border:1px solid var(--border);border-radius:var(--radius-sm);
-  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);
-  background:var(--bg);outline:none;transition:all .15s;
-}
-.fg input:focus,.fg select:focus,.fg textarea:focus{
-  border-color:var(--gold);background:#fff;
-  box-shadow:0 0 0 3px rgba(184,147,90,.1);
-}
+.fg label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:all .15s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(184,147,90,.1);}
 .fg textarea{resize:vertical;line-height:1.6;}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .hint{font-size:10px;color:var(--muted);font-style:italic;margin-top:4px;}
-.accom-block{
-  background:var(--bg);border:1px solid var(--border);
-  border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;
-}
-.accom-block-title{
-  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:10px;
-}
+.accom-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;}
+.accom-block-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
 .accom-divider{height:1px;background:var(--border);margin:12px 0;}
-.villa-box{
-  border:1px solid var(--border);border-radius:var(--radius-sm);
-  padding:12px;margin-bottom:10px;background:#fff;
-}
-.villa-box-hd{
-  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--text);margin-bottom:10px;
-  display:flex;align-items:center;gap:8px;
-}
+.villa-box{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;background:#fff;}
+.villa-box-hd{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .villa-box-hd input{width:auto;}
 .villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .villa-fields.disabled{opacity:.4;pointer-events:none;}
 .radio-grp{display:flex;gap:16px;margin-top:6px;flex-wrap:wrap;}
-.radio-grp label{
-  font-size:13px;text-transform:none;letter-spacing:0;
-  color:var(--text);display:flex;align-items:center;gap:6px;
-  cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:400;
-}
+.radio-grp label{font-size:13px;text-transform:none;letter-spacing:0;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:400;}
 .radio-grp input{width:auto;}
 .action-row{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap;}
-.action-btn{
-  flex:1;min-width:140px;padding:12px 20px;
-  border:none;border-radius:100px;
-  font-family:'DM Sans',sans-serif;font-size:12px;
-  font-weight:600;cursor:pointer;transition:all .2s;
-}
+.action-btn{flex:1;min-width:140px;padding:12px 20px;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
 .action-btn.dark{background:var(--dark);color:#F5ECD7;}
 .action-btn.dark:hover{background:#3a3228;}
 .action-btn.gold{background:var(--gold);color:var(--dark);}
@@ -324,80 +192,39 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .bank-table td:first-child{font-weight:700;font-size:9.5px;letter-spacing:.05em;white-space:nowrap;}
 
 /* ── DRAFTS ── */
-.draft-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;
-  transition:border-color .15s,box-shadow .15s;
-}
+.draft-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;transition:border-color .15s,box-shadow .15s;}
 .draft-card:hover{border-color:var(--gold-lt);box-shadow:var(--shadow);}
 .draft-name{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px;}
 .draft-meta{font-size:12px;color:var(--muted);}
-.draft-status{
-  display:inline-block;padding:2px 10px;border-radius:100px;
-  font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-left:8px;
-}
+.draft-status{display:inline-block;padding:2px 10px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-left:8px;}
 .s-Draft{background:#F0EBE3;color:#8B7355;}
 .s-Sent{background:#E3EEF7;color:#1A5F8A;}
 .s-Signed{background:#E3F2E3;color:#1A6A1A;}
 .s-Cancelled{background:#F7E3E3;color:#8A1A1A;}
 .draft-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;}
-.draft-btn{
-  padding:6px 14px;border-radius:100px;
-  font-family:'DM Sans',sans-serif;font-size:11px;
-  font-weight:600;cursor:pointer;border:none;transition:all .2s;
-}
+.draft-btn{padding:6px 14px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
 .draft-btn.load{background:var(--dark);color:#F5ECD7;}
 .draft-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
 .draft-btn.ghost:hover{border-color:#8B3A2E;color:#8B3A2E;}
 .draft-edit-row{display:none;gap:6px;margin-top:10px;flex-wrap:wrap;}
 .draft-edit-row.open{display:flex;}
-.draft-edit-input{
-  flex:1;min-width:120px;padding:8px 12px;
-  border:1px solid var(--border);border-radius:var(--radius-sm);
-  font-family:'DM Sans',sans-serif;font-size:12px;
-  color:var(--text);background:var(--bg);outline:none;
-}
-.draft-edit-btn{
-  padding:8px 14px;border-radius:100px;
-  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;
-}
+.draft-edit-input{flex:1;min-width:120px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:var(--bg);outline:none;}
+.draft-edit-btn{padding:8px 14px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;}
 .draft-edit-btn.confirm{background:var(--dark);color:#F5ECD7;}
 .draft-edit-btn.cancel{background:transparent;border:1px solid var(--border);color:var(--muted);}
 
 /* ── MODALS ── */
 .ios-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
 .ios-modal.open{display:flex;}
-.ios-modal-box{
-  background:#fff;border-radius:24px 24px 0 0;
-  padding:28px 24px 40px;width:100%;max-width:520px;
-  font-family:'DM Sans',sans-serif;
-  box-shadow:0 -8px 40px rgba(0,0,0,.15);
-}
-.ios-modal-title{
-  font-family:'Cormorant Garamond',serif;font-size:20px;
-  font-weight:600;color:var(--dark);margin-bottom:18px;text-align:center;
-}
+.ios-modal-box{background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:520px;font-family:'DM Sans',sans-serif;box-shadow:0 -8px 40px rgba(0,0,0,.15);}
+.ios-modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--dark);margin-bottom:18px;text-align:center;}
 .ios-modal-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;font-size:13px;color:var(--text);line-height:1.6;}
-.ios-modal-step .num{
-  font-size:11px;font-weight:700;color:var(--gold);
-  background:var(--bg2);border-radius:50%;width:24px;height:24px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.ios-modal-close{
-  width:100%;margin-top:20px;padding:14px;
-  background:var(--dark);color:#F5ECD7;border:none;
-  border-radius:100px;font-family:'DM Sans',sans-serif;
-  font-size:12px;font-weight:600;cursor:pointer;
-  transition:background .2s;
-}
+.ios-modal-step .num{font-size:11px;font-weight:700;color:var(--gold);background:var(--bg2);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ios-modal-close{width:100%;margin-top:20px;padding:14px;background:var(--dark);color:#F5ECD7;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s;}
 .ios-modal-close:hover{background:#3a3228;}
 
 /* ── CRM ── */
-.crm-badge{
-  display:inline-block;padding:3px 9px;border-radius:100px;
-  font-size:9px;font-family:'DM Sans',sans-serif;
-  font-weight:600;letter-spacing:.04em;margin-right:3px;white-space:nowrap;
-}
+.crm-badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:9px;font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:.04em;margin-right:3px;white-space:nowrap;}
 .crm-status-not-good,.crm-status-terminated,.crm-status-ghosted{background:#F0EBE3;color:#8B7355;}
 .crm-status-followed{background:#FFF8E1;color:#8B6914;}
 .crm-status-reached{background:#E8F5E9;color:#2E7D32;}
@@ -405,73 +232,30 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .crm-status-hot,.crm-status-qualified{background:#FDECEA;color:#B71C1C;}
 .crm-status-closed,.crm-status-booked{background:var(--dark);color:#F5ECD7;}
 .crm-status-responded{background:#E8F5E9;color:#2E7D32;}
-.crm-status-face2face{background:#F3E5F5;color:#6A1B9A;}
-.crm-status-phone{background:#FFF3E0;color:#E65100;}
 .crm-suit-1{background:#E8F5E9;color:#2E7D32;}
 .crm-suit-2{background:#E3F0FA;color:#1565C0;}
 .crm-suit-3{background:#FFF8E1;color:#8B6914;}
 .crm-suit-4{background:#FDECEA;color:#B71C1C;}
-.crm-section-hd{
-  font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--gold);margin:18px 0 8px;
-  padding-bottom:6px;border-bottom:1px solid var(--border);
-}
+.crm-section-hd{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
 .crm-field{display:flex;gap:8px;margin-bottom:7px;font-size:13px;}
-.crm-field-label{
-  font-size:9px;font-weight:700;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--muted);
-  min-width:90px;padding-top:3px;flex-shrink:0;
-}
-.crm-select{
-  width:100%;padding:8px 12px;border:1px solid var(--border);
-  border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;
-  font-size:13px;background:var(--bg);outline:none;margin-bottom:8px;
-}
-.crm-textarea{
-  width:100%;padding:10px 12px;border:1px solid var(--border);
-  border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;
-  font-size:13px;background:var(--bg);outline:none;
-  resize:vertical;min-height:70px;
-}
-.pill-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 16px;border-radius:100px;
-  border:1px solid var(--border);background:var(--bg);
-  color:var(--muted);font-family:'DM Sans',sans-serif;
-  font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;
-  white-space:nowrap;
-}
+.crm-field-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:90px;padding-top:3px;flex-shrink:0;}
+.crm-select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;margin-bottom:8px;}
+.pill-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .pill-btn:hover{border-color:var(--gold);color:var(--text);}
 .pill-btn.active{background:var(--gold);border-color:var(--gold);color:var(--dark);}
 .pill-btn.dark{background:var(--dark);border-color:var(--dark);color:#F5ECD7;}
 .pill-btn.dark:hover{background:#3a3228;}
 
-/* ── BIZ DEV (placeholder) ── */
-.bizdev-empty{
-  text-align:center;padding:80px 20px;
-  background:var(--surface);border-radius:var(--radius);
-  border:1px dashed var(--border);
-}
+/* ── BIZ DEV ── */
+.bizdev-empty{text-align:center;padding:80px 20px;background:var(--surface);border-radius:var(--radius);border:1px dashed var(--border);}
 .bizdev-empty-icon{font-size:48px;margin-bottom:16px;}
-.bizdev-empty-title{
-  font-family:'Cormorant Garamond',serif;font-size:24px;
-  font-weight:300;color:var(--dark);margin-bottom:8px;
-}
+.bizdev-empty-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--dark);margin-bottom:8px;}
 .bizdev-empty-sub{font-size:13px;color:var(--muted);line-height:1.6;}
 
-/* ── PHILOSOPHY ── */
-#view-philosophy{background:var(--dark);padding:0;}
-#view-philosophy > div{max-width:680px;margin:0 auto;padding:48px 28px 80px;}
-
 /* ── DEBUG ── */
-.debug-panel{
-  display:none;position:fixed;top:0;left:0;right:0;
-  background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;
-  padding:10px 12px;max-height:180px;overflow-y:auto;z-index:9999;
-  border-bottom:2px solid #0f0;
-}
+.debug-panel{display:none;position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:10px 12px;max-height:180px;overflow-y:auto;z-index:9999;border-bottom:2px solid #0f0;}
 
-/* ── IDR ROW ── */
+/* ── IDR ── */
 .idr-status-row{display:flex;align-items:center;gap:6px;margin-top:5px;}
 .idr-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;}
 .idr-dot.live{background:#27AE60;}
@@ -479,40 +263,21 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .idr-dot.error{background:#E74C3C;}
 .idr-info{font-size:10px;color:var(--muted);font-style:italic;}
 
-
 /* ── MORE DETAILS TOGGLE ── */
 .more-details{animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 
-
-/* ── CRM MOBILE ── */
-@media(max-width:600px){
-  .ios-modal-box{padding:20px 16px 32px;}
-  #view-crm .view-hero-title{font-size:28px;}
-  #view-crm > .view-hero{margin-bottom:16px;}
-  /* Stack filter controls */
-  #view-crm [style*="display:flex"][style*="gap:8px"]{flex-wrap:wrap;}
-  #crm-search{font-size:16px !important;} /* prevent iOS zoom */
-  .fg input,.fg select,.fg textarea{font-size:16px !important;} /* prevent iOS zoom */
-}
-
-
-/* ── KANBAN PIPELINE ── */
-.pipeline-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;scrollbar-width:thin;}
-.pipeline-col{flex:0 0 240px;display:flex;flex-direction:column;gap:8px;}
-.pipeline-col-header{padding:10px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;}
-.pipeline-col-header .col-count{font-size:10px;font-weight:600;opacity:.7;}
-.pipeline-cards{display:flex;flex-direction:column;gap:6px;min-height:60px;padding:4px 0;border-radius:var(--radius-sm);transition:background .15s;}
-.pipeline-cards.drag-over{background:rgba(184,147,90,.08);border:2px dashed var(--gold);}
-.pipeline-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:grab;transition:all .15s;user-select:none;}
-.pipeline-card:active{cursor:grabbing;opacity:.8;transform:scale(.98);}
-.pipeline-card:hover{border-color:var(--gold-lt);box-shadow:var(--shadow);}
-.pipeline-card.dragging{opacity:.4;}
-.pipeline-card-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pipeline-card-sub{font-size:10px;color:var(--muted);}
-.pipeline-card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+/* ── EXTRA SERVICE TAGS ── */
+.extra-tag{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;}
+.extra-tag-label{flex:1;font-size:13px;font-weight:500;color:var(--text);}
+.extra-tag-qty{display:flex;align-items:center;gap:6px;}
+.extra-tag-qty input{width:56px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;text-align:center;background:var(--bg);outline:none;}
+.extra-tag-price{font-size:12px;font-weight:600;color:var(--gold);min-width:64px;text-align:right;}
+.extra-tag-del{width:28px;height:28px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0;}
+.extra-tag-del:hover{background:#FDECEA;border-color:#E57373;color:#B71C1C;}
 
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+
 /* ── RESPONSIVE ── */
 @media(max-width:600px){
   .nav-brand-name{font-size:18px;}
@@ -524,26 +289,18 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   .contract-doc{padding:20px 14px;}
   .action-row{flex-direction:column;}
   .view{padding:20px 14px 60px;}
+  #view-crm .view-hero-title{font-size:28px;}
+  #crm-search{font-size:16px !important;}
+  .fg input,.fg select,.fg textarea{font-size:16px !important;}
 }
-
-/* ── EXTRA SERVICE TAGS ── */
-.extra-tag{
-  display:flex;align-items:center;gap:10px;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-sm);padding:10px 14px;
-}
-.extra-tag-label{flex:1;font-size:13px;font-weight:500;color:var(--text);}
-.extra-tag-qty{display:flex;align-items:center;gap:6px;}
-.extra-tag-qty input{width:56px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;text-align:center;background:var(--bg);outline:none;}
-.extra-tag-price{font-size:12px;font-weight:600;color:var(--gold);min-width:64px;text-align:right;}
-.extra-tag-del{width:28px;height:28px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0;}
-.extra-tag-del:hover{background:#FDECEA;border-color:#E57373;color:#B71C1C;}
-
 </style>
 </head>
 <body>
 
-<div id="debug-panel" style="display:none;position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:10px 12px 10px 12px;max-height:180px;overflow-y:auto;z-index:9999;border-bottom:2px solid #0f0;"><button onclick="document.getElementById('debug-panel').style.display='none'" style="position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:18px;cursor:pointer;line-height:1;">✕</button><div id="debug-log"></div></div>
+<div id="debug-panel" style="display:none;position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:11px;padding:10px 12px;max-height:180px;overflow-y:auto;z-index:9999;border-bottom:2px solid #0f0;">
+  <button onclick="document.getElementById('debug-panel').style.display='none'" style="position:absolute;top:6px;right:10px;background:none;border:none;color:#0f0;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+  <div id="debug-log"></div>
+</div>
 
 <!-- IOS INSTALL MODAL -->
 <div class="ios-modal" id="ios-modal" onclick="if(event.target===this)this.classList.remove('open')">
@@ -589,23 +346,15 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <button class="nav-icon-btn nav-menu-btn" onclick="toggleNavMenu()">···</button>
     </div>
   </div>
-
-  <!-- Dropdown -->
   <div class="nav-dropdown" id="nav-dropdown">
-    <button class="dropdown-item" onclick="switchTab('philosophy');toggleNavMenu()">
-      <span>✦</span> Philosophy
-    </button>
+    <button class="dropdown-item" onclick="switchTab('philosophy');toggleNavMenu()"><span>✦</span> Philosophy</button>
     <div class="dropdown-sep"></div>
-    <button class="dropdown-item" onclick="toggleDebug()">
-      <span>🐛</span> Debug
-    </button>
-    <button class="dropdown-item" id="install-btn" onclick="handleInstall()" style="display:none;">
-      <span>⊕</span> Install App
-    </button>
+    <button class="dropdown-item" onclick="toggleDebug()"><span>🐛</span> Debug</button>
+    <button class="dropdown-item" id="install-btn" onclick="handleInstall()" style="display:none;"><span>⊕</span> Install App</button>
   </div>
 </nav>
 
-<!-- DEAL TOOLBAR (sub-tabs + save) -->
+<!-- DEAL TOOLBAR -->
 <div class="deal-toolbar" id="deal-toolbar">
   <div class="deal-toolbar-inner">
     <button class="deal-sub-tab active" id="sub-drafts" onclick="switchDealTab('drafts')">Drafts</button>
@@ -621,14 +370,13 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </select>
     <button class="save-btn" id="save-btn" onclick="saveToNotion()">Save</button>
     <span id="autosave-status" class="autosave-status"></span>
-    <button id="update-btn" class="save-btn" onclick="applyUpdate()" style="display:none;background:#B8935A;">↑ Update</button>
   </div>
 </div>
 
-<!-- DEAL VIEW (contains drafts / edit / offer / contract) -->
+<!-- DEAL VIEW -->
 <div class="view active" id="view-deal">
 
-  <!-- DRAFTS sub-view -->
+  <!-- DRAFTS -->
   <div id="sub-view-drafts" class="sub-view active">
     <div class="view-hero">
       <div class="view-hero-title">Deals</div>
@@ -642,7 +390,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
   </div>
 
-  <!-- EDIT sub-view -->
+  <!-- EDIT -->
   <div id="sub-view-edit" class="sub-view" style="display:none;">
     <div class="view-hero">
       <div class="view-hero-title">Edit Deal</div>
@@ -650,17 +398,13 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
     <div oninput="markDraftActive()" onchange="markDraftActive()">
 
-      <!-- ── CLIENT ── -->
       <div class="s-section">Client</div>
       <div class="fg-row">
         <div class="fg"><label>Organizer Name</label><input type="text" id="f-name"></div>
         <div class="fg"><label>Company</label><input type="text" id="f-company"></div>
       </div>
-      <!-- More details toggle -->
       <div style="margin-bottom:16px;">
-        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:5px 14px;">
-          + More details
-        </button>
+        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:5px 14px;">+ More details</button>
         <div class="more-details" style="display:none;margin-top:12px;">
           <div class="fg"><label>Address</label><input type="text" id="f-address"></div>
           <div class="fg-row">
@@ -675,7 +419,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         <textarea id="f-intro" rows="3">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
       </div>
 
-      <!-- ── BOOKING ── -->
       <div class="s-section">Booking</div>
       <div class="fg-row">
         <div class="fg"><label>Check-in</label><input type="date" id="f-checkin"></div>
@@ -689,11 +432,8 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <div class="fg-row">
         <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30"></div>
       </div>
-      <!-- Booking advanced -->
       <div style="margin-bottom:16px;">
-        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:5px 14px;">
-          + Dates &amp; contract details
-        </button>
+        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:5px 14px;">+ Dates &amp; contract details</button>
         <div class="more-details" style="display:none;margin-top:12px;">
           <div class="fg-row">
             <div class="fg"><label>Contract / Offer Date</label><input type="date" id="f-contractdate"></div>
@@ -722,7 +462,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         </div>
       </div>
 
-      <!-- ── PRICING ── -->
       <div class="s-section">Pricing</div>
       <div class="accom-block">
         <div class="accom-block-title">Gladaks</div>
@@ -780,7 +519,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         </div>
       </div>
 
-      <!-- ── EXTRAS & NOTE ── -->
       <div class="s-section">Extras &amp; Note</div>
       <div style="margin-bottom:16px;">
         <select id="extras-picker" onchange="addExtraService(this.value);this.value=''"
@@ -833,11 +571,9 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
   </div>
 
-  <!-- OFFER sub-view -->
+  <!-- OFFER -->
   <div id="sub-view-offer" class="sub-view" style="display:none;">
-    <div class="view-hero">
-      <div class="view-hero-title">Offer Preview</div>
-    </div>
+    <div class="view-hero"><div class="view-hero-title">Offer Preview</div></div>
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
       <button class="pill-btn" onclick="switchDealTab('edit')">← Back to Edit</button>
       <button class="pill-btn dark" onclick="printOffer()">Print / Save PDF</button>
@@ -845,11 +581,9 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="email-wrap"><div class="email" id="offer-output"></div></div>
   </div>
 
-  <!-- CONTRACT sub-view -->
+  <!-- CONTRACT -->
   <div id="sub-view-contract" class="sub-view" style="display:none;">
-    <div class="view-hero">
-      <div class="view-hero-title">Contract Preview</div>
-    </div>
+    <div class="view-hero"><div class="view-hero-title">Contract Preview</div></div>
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
       <button class="pill-btn" onclick="switchDealTab('edit')">← Back to Edit</button>
       <button class="pill-btn dark" onclick="printContract()">Print / Save PDF</button>
@@ -875,29 +609,24 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
   <!-- Tabs + view toggle + count -->
   <div style="display:flex;gap:6px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-    <button id="crm-tab-leads" class="pill-btn active" onclick="crmSwitchTab('leads')">Leads</button>
-    <button id="crm-tab-converted" class="pill-btn" onclick="crmSwitchTab('converted')">Converted</button>
+    <button id="crm-tab-email"     class="pill-btn active" onclick="crmSwitchTab('email')">📧 Email</button>
+    <button id="crm-tab-whatsapp"  class="pill-btn"        onclick="crmSwitchTab('whatsapp')">💬 WhatsApp</button>
+    <button id="crm-tab-shala"     class="pill-btn"        onclick="crmSwitchTab('shala')">🏛 Shala</button>
+    <button id="crm-tab-converted" class="pill-btn"        onclick="crmSwitchTab('converted')">⭐ Converted</button>
     <div style="width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;"></div>
-    <button id="crm-view-list" class="pill-btn active" onclick="setCrmView('list')">☰ List</button>
-    <button id="crm-view-pipeline" class="pill-btn" onclick="setCrmView('pipeline')">⊞ Pipeline</button>
+    <button id="crm-view-list"     class="pill-btn active" onclick="setCrmView('list')">☰ List</button>
+    <button id="crm-view-pipeline" class="pill-btn"        onclick="setCrmView('pipeline')">⊞ Pipeline</button>
     <div style="flex:1;"></div>
     <div id="crm-count" style="font-size:11px;color:var(--muted);font-weight:500;"></div>
   </div>
 
-  <!-- Search + filters in one row -->
+  <!-- Search + sort -->
   <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
     <div style="flex:1;min-width:160px;position:relative;">
       <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:13px;pointer-events:none;">🔍</span>
       <input id="crm-search" type="text" placeholder="Search name, company, location…" oninput="crmRender()"
         style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--surface);outline:none;box-sizing:border-box;">
     </div>
-    <select id="crm-source-filter" onchange="crmRender()"
-      style="padding:9px 14px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;">
-      <option value="">All Sources</option>
-      <option value="Instagram">📱 Instagram</option>
-      <option value="WhatsApp">💬 WhatsApp</option>
-      <option value="Shala Rental">🏛 Shala Rental</option>
-    </select>
     <select id="crm-group" onchange="crmRender()"
       style="padding:9px 14px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;">
       <option value="none">↕ Date</option>
@@ -905,7 +634,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <option value="none_location">↕ Location</option>
       <option value="location">⊞ By Location</option>
       <option value="status">⊞ By Status</option>
-      <option value="source">⊞ By Source</option>
       <option value="date">⊞ By Month</option>
     </select>
   </div>
@@ -932,83 +660,42 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="view-hero-title">Tutorials</div>
     <div class="view-hero-sub">Learn how to run and grow Ubuntu Bali</div>
   </div>
-
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:12px;">
-    <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:0;">
-      This section walks you and the team through everything — from how to find and qualify a lead, 
-      to running Ubuntu Flow, to closing a retreat booking. Six modules, designed to get anyone 
-      up to speed fast.
-    </p>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:0;">This section walks you and the team through everything — from how to find and qualify a lead, to running Ubuntu Flow, to closing a retreat booking. Six modules, designed to get anyone up to speed fast.</p>
   </div>
-
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px;">
-    <!-- Module 1 -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Intro to Business Dev</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.5;">The philosophy behind Ubuntu's growth strategy and how to approach retreat leaders.</div>
-      </div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Intro to Business Dev</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">The philosophy behind Ubuntu's growth strategy and how to approach retreat leaders.</div></div>
       <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
     </div>
-
-    <!-- Module 2 -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Ubuntu Flow</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.5;">How to use this app — creating deals, managing leads, generating offers and contracts.</div>
-      </div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Ubuntu Flow</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">How to use this app — creating deals, managing leads, generating offers and contracts.</div></div>
       <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
     </div>
-
-    <!-- Module 3 -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Tech</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Tools we use — Notion, WhatsApp, Instagram, email. How they connect and fit together.</div>
-      </div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Tech</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Tools we use — Notion, WhatsApp, Instagram, email. How they connect and fit together.</div></div>
       <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
     </div>
-
-    <!-- Module 4 -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">4</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Lead Generation</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Where to find retreat leaders, how to qualify them, and how to add them to the CRM.</div>
-      </div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Lead Generation</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Where to find retreat leaders, how to qualify them, and how to add them to the CRM.</div></div>
       <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
     </div>
-
-    <!-- Module 5 -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">5</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Outreach</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Scripts, templates, and timing for reaching out on Instagram, WhatsApp and email.</div>
-      </div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Outreach</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">Scripts, templates, and timing for reaching out on Instagram, WhatsApp and email.</div></div>
       <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
     </div>
-
-    <!-- Module 6 -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;opacity:.6;">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#F5ECD7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">6</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Sale</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.5;">How to run a discovery call, send the offer, follow up, and close the booking.</div>
-      </div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">The Sale</div><div style="font-size:11px;color:var(--muted);line-height:1.5;">How to run a discovery call, send the offer, follow up, and close the booking.</div></div>
       <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:auto;">Coming soon</div>
     </div>
   </div>
-
-  <!-- 3-col responsive fix -->
-  <style>
-    @media(max-width:600px){
-      #view-tutorials .view-grid{grid-template-columns:1fr 1fr !important;}
-    }
-  </style>
+  <style>@media(max-width:600px){#view-tutorials [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr 1fr !important;}}</style>
 </div>
 
 <!-- PHILOSOPHY VIEW -->
@@ -1022,9 +709,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);font-style:italic;margin-top:10px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
     </div>
     <div style="margin-bottom:28px;border-radius:var(--radius);overflow:hidden;">
-      <img src="https://balirescentre.com/wp-content/uploads/2025/12/UbuntuBali.Yoga_.Benjamin.2024_8128.jpg"
-        alt="Ubuntu Bali Yoga"
-        style="width:100%;height:auto;display:block;border-radius:var(--radius);">
+      <img src="https://balirescentre.com/wp-content/uploads/2025/12/UbuntuBali.Yoga_.Benjamin.2024_8128.jpg" alt="Ubuntu Bali Yoga" style="width:100%;height:auto;display:block;border-radius:var(--radius);">
     </div>
     <p style="font-size:15px;color:#D4C4A8;line-height:1.9;margin-bottom:20px;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
     <div style="border-left:3px solid var(--gold);padding:18px 24px;margin:36px 0;background:rgba(184,147,90,.07);border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
@@ -1032,39 +717,21 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <p style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:10px;">Ubuntu</p>
     </div>
     <div style="margin-bottom:40px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div style="width:24px;height:1px;background:var(--gold);opacity:.5;"></div>
-        <h2 style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);">The Illusion of the Individual</h2>
-      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div style="width:24px;height:1px;background:var(--gold);opacity:.5;"></div><h2 style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);">The Illusion of the Individual</h2></div>
       <p style="font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:14px;">In the West, we often follow the Cartesian logic of "I think, therefore I am." It places the center of the universe squarely between our own ears. But if you take a human being and strip away every relationship, every teacher, every parent, every colleague — what is left?</p>
       <p style="font-size:14px;color:#C8B89A;line-height:1.9;">The truth is that none of us exists in a vacuum. A leader is not a leader without a team that chooses to follow. Ubuntu reminds us that we do not find ourselves by looking inward. We find ourselves by looking at the people around us.</p>
     </div>
     <div style="margin-bottom:40px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div style="width:24px;height:1px;background:var(--gold);opacity:.5;"></div>
-        <h2 style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);">The Ecosystem of Humanity</h2>
-      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div style="width:24px;height:1px;background:var(--gold);opacity:.5;"></div><h2 style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);">The Ecosystem of Humanity</h2></div>
       <p style="font-size:14px;color:#C8B89A;line-height:1.9;margin-bottom:24px;">Imagine a forest. We might point to a single, towering oak and marvel at its strength. But beneath the soil, that tree is part of a complex, invisible network. If the forest dies, the tree dies — no matter how strong it thinks it is.</p>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:var(--radius-sm);padding:16px 18px;">
-          <div style="font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:5px;">Your success is my success.</div>
-          <div style="font-size:13px;color:var(--gold);line-height:1.7;">If the team wins, the individual thrives.</div>
-        </div>
-        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:var(--radius-sm);padding:16px 18px;">
-          <div style="font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:5px;">Your suffering is my suffering.</div>
-          <div style="font-size:13px;color:var(--gold);line-height:1.7;">If a member is marginalized, the integrity of the whole is compromised.</div>
-        </div>
-        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:var(--radius-sm);padding:16px 18px;">
-          <div style="font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:5px;">Kindness is a survival strategy.</div>
-          <div style="font-size:13px;color:var(--gold);line-height:1.7;">Treating others with dignity is the only way to sustain the environment that allows us to exist.</div>
-        </div>
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:var(--radius-sm);padding:16px 18px;"><div style="font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:5px;">Your success is my success.</div><div style="font-size:13px;color:var(--gold);line-height:1.7;">If the team wins, the individual thrives.</div></div>
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:var(--radius-sm);padding:16px 18px;"><div style="font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:5px;">Your suffering is my suffering.</div><div style="font-size:13px;color:var(--gold);line-height:1.7;">If a member is marginalized, the integrity of the whole is compromised.</div></div>
+        <div style="background:rgba(184,147,90,.08);border:1px solid rgba(184,147,90,.2);border-radius:var(--radius-sm);padding:16px 18px;"><div style="font-size:11px;font-weight:700;color:#F5ECD7;margin-bottom:5px;">Kindness is a survival strategy.</div><div style="font-size:13px;color:var(--gold);line-height:1.7;">Treating others with dignity is the only way to sustain the environment that allows us to exist.</div></div>
       </div>
     </div>
     <div style="margin-bottom:40px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div style="width:24px;height:1px;background:var(--gold);opacity:.5;"></div>
-        <h2 style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);">Leading with Ubuntu</h2>
-      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div style="width:24px;height:1px;background:var(--gold);opacity:.5;"></div><h2 style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);">Leading with Ubuntu</h2></div>
       <p style="font-size:14px;color:#C8B89A;line-height:1.9;">When a leader says "I am because we are," they acknowledge that their authority is a gift from the people they serve. Their job is not to be the smartest person in the room, but to create a room where everyone feels safe enough to be their best selves.</p>
     </div>
     <div style="text-align:center;padding:36px 0;border-top:1px solid rgba(184,147,90,.2);">
@@ -1093,13 +760,11 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="fg"><label>WhatsApp</label><input type="text" id="nl-whatsapp"></div>
     <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
     <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
-    <div class="fg"><label>Source</label>
-      <select id="nl-source" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;">
-        <option value="Instagram">📱 Instagram</option>
-        <option value="WhatsApp">💬 WhatsApp</option>
-        <option value="Shala Rental">🏛 Shala Rental</option>
-        <option value="Email">📧 Email</option>
-        <option value="In Person">🤝 In Person</option>
+    <div class="fg"><label>Add to Database</label>
+      <select id="nl-db" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;">
+        <option value="email">📧 Retreat Leaders Email</option>
+        <option value="whatsapp">💬 Retreat Leaders WhatsApp</option>
+        <option value="shala">🏛 Shala Rental</option>
       </select>
     </div>
     <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
