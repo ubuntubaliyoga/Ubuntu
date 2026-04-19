@@ -414,59 +414,172 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
       alt="Ubuntu Bali">
 
-    <!-- Warrior 1 SVG figure -->
-    <svg class="splash-figure" width="180" height="220" viewBox="0 0 180 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Glow behind figure -->
-      <ellipse cx="90" cy="185" rx="55" ry="8" fill="#B8935A" opacity="0.15"/>
+    <!-- Warrior 1 — silhouette traced from reference, animated entry -->
+    <svg class="splash-figure" width="230" height="300" viewBox="0 0 230 300" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        /* Sequenced entry: feet → legs → hips/torso → arm sweeps up → head */
+        #f-foot-f  { animation: fu 0.5s ease 0.3s both; }
+        #f-foot-b  { animation: fu 0.5s ease 0.3s both; }
+        #f-shin-f  { transform-origin:85px 252px; animation: shinF 1.1s cubic-bezier(.4,0,.2,1) 0.4s both; }
+        #f-shin-b  { transform-origin:148px 248px; animation: shinB 1.1s cubic-bezier(.4,0,.2,1) 0.4s both; }
+        #f-thigh-f { transform-origin:90px 212px; animation: thighF 1.1s cubic-bezier(.4,0,.2,1) 0.5s both; }
+        #f-thigh-b { transform-origin:112px 208px; animation: thighB 1.1s cubic-bezier(.4,0,.2,1) 0.5s both; }
+        #f-hips    { animation: fu 0.7s ease 0.85s both; }
+        #f-torso   { animation: fu 0.7s ease 0.95s both; }
+        #f-arm-lo  { animation: fu 0.6s ease 1.1s both; }
+        #f-arm-up  { transform-origin:104px 148px; animation: armUp 1s cubic-bezier(.4,0,.2,1) 1.2s both; }
+        #f-head    { animation: fu 0.6s ease 1.8s both; }
 
-      <!-- ── HEAD ── -->
-      <circle cx="90" cy="28" r="13" fill="none" stroke="#B8935A" stroke-width="2.5"/>
+        @keyframes fu {
+          from { opacity:0; transform:translateY(8px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes shinF {
+          from { opacity:0; transform:rotate(28deg); }
+          to   { opacity:1; transform:rotate(0deg); }
+        }
+        @keyframes shinB {
+          from { opacity:0; transform:rotate(-22deg); }
+          to   { opacity:1; transform:rotate(0deg); }
+        }
+        @keyframes thighF {
+          from { opacity:0; transform:rotate(18deg) translateX(12px); }
+          to   { opacity:1; transform:rotate(0deg) translateX(0); }
+        }
+        @keyframes thighB {
+          from { opacity:0; transform:rotate(-22deg) translateX(-12px); }
+          to   { opacity:1; transform:rotate(0deg) translateX(0); }
+        }
+        @keyframes armUp {
+          from { opacity:0; transform:rotate(95deg); }
+          to   { opacity:1; transform:rotate(0deg); }
+        }
+        /* Gentle breath loop after entry */
+        #f-arm-up {
+          animation: armUp 1s cubic-bezier(.4,0,.2,1) 1.2s forwards,
+                     breath 3.5s ease-in-out 2.4s infinite;
+        }
+        @keyframes breath {
+          0%,100% { transform:translateY(0); }
+          50%     { transform:translateY(-4px); }
+        }
+      </style>
 
-      <!-- ── TORSO (upright, slight lean back) ── -->
-      <!-- Neck -->
-      <line x1="90" y1="41" x2="90" y2="52" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Torso body -->
-      <line x1="90" y1="52" x2="90" y2="100" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Mat shadow -->
+      <ellipse cx="110" cy="290" rx="80" ry="7" fill="#B8935A" opacity="0.12"/>
 
-      <!-- ── ARMS (raised overhead in warrior 1) ── -->
-      <!-- Left arm: up and slightly left -->
-      <line x1="90" y1="60" x2="58" y2="30" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Left forearm -->
-      <line x1="58" y1="30" x2="50" y2="8" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- ═══ BACK LEG (right) — extends behind, heel lifted ═══ -->
+      <path id="f-thigh-b" fill="white" opacity="0.93" d="
+        M 116 205 C 124 212 135 222 145 233
+        C 153 242 159 250 160 256
+        C 161 260 159 263 155 263
+        C 151 263 148 260 146 255
+        C 143 248 137 239 129 230
+        C 121 221 113 212 109 207 Z"/>
+      <path id="f-shin-b" fill="white" opacity="0.93" d="
+        M 158 257 C 160 264 161 271 160 277
+        C 159 281 156 283 152 282
+        C 148 281 146 278 147 273
+        C 147 267 147 261 147 256 Z"/>
+      <path id="f-foot-b" fill="white" opacity="0.93" d="
+        M 150 278 C 156 276 164 276 171 277
+        C 177 278 181 280 181 283
+        C 181 286 177 288 170 288
+        C 162 288 153 286 149 283
+        C 147 281 148 279 150 278 Z"/>
 
-      <!-- Right arm: up and slightly right -->
-      <line x1="90" y1="60" x2="122" y2="30" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Right forearm -->
-      <line x1="122" y1="30" x2="130" y2="8" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- ═══ FRONT LEG (left) — deep bent knee, shin vertical ═══ -->
+      <path id="f-thigh-f" fill="white" opacity="0.93" d="
+        M 103 207 C 98 214 92 223 87 233
+        C 83 242 81 251 82 257
+        C 83 261 86 263 90 262
+        C 94 261 96 257 96 252
+        C 96 244 97 235 99 225
+        C 101 216 103 209 104 206 Z"/>
+      <path id="f-shin-f" fill="white" opacity="0.93" d="
+        M 83 258 C 82 266 82 274 83 280
+        C 84 284 87 286 91 285
+        C 95 284 96 281 96 277
+        C 96 270 95 263 94 258 Z"/>
+      <path id="f-foot-f" fill="white" opacity="0.93" d="
+        M 80 282 C 72 282 62 283 54 285
+        C 48 287 45 290 48 292
+        C 51 294 58 293 66 292
+        C 75 290 85 287 90 284
+        C 93 282 92 280 89 280 Z"/>
 
-      <!-- ── HIPS ── -->
-      <line x1="75" y1="100" x2="105" y2="100" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- ═══ HIPS ═══ -->
+      <path id="f-hips" fill="white" opacity="0.92" d="
+        M 94 198 C 90 202 88 208 89 214
+        C 90 220 95 224 101 224
+        L 107 224
+        C 113 224 118 220 119 214
+        C 120 208 118 202 114 198
+        C 110 195 105 194 101 194
+        C 97 194 96 196 94 198 Z"/>
 
-      <!-- ── FRONT LEG (left — bent at knee, lunge forward) ── -->
-      <!-- Upper thigh -->
-      <line x1="78" y1="100" x2="60" y2="148" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Lower leg (vertical, shin) -->
-      <line x1="60" y1="148" x2="60" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Front foot -->
-      <line x1="60" y1="190" x2="38" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- ═══ TORSO — upright core, slight open chest ═══ -->
+      <path id="f-torso" fill="white" opacity="0.95" d="
+        M 89 143 C 85 148 83 156 83 166
+        C 83 179 85 193 90 203
+        C 93 210 97 214 101 214
+        C 106 214 110 210 113 203
+        C 118 193 120 179 120 166
+        C 120 156 118 148 114 143
+        C 110 138 105 136 101 136
+        C 97 136 93 138 89 143 Z"/>
 
-      <!-- ── BACK LEG (right — extended back, straight) ── -->
-      <!-- Upper thigh -->
-      <line x1="102" y1="100" x2="138" y2="148" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Lower leg (straight back) -->
-      <line x1="138" y1="148" x2="148" y2="190" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Back foot (turned out ~45°) -->
-      <line x1="148" y1="190" x2="170" y2="183" stroke="#B8935A" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- ═══ LOW ARM — trailing arm, slightly extended back at waist level ═══ -->
+      <path id="f-arm-lo" fill="white" opacity="0.88" d="
+        M 114 150 C 119 155 124 162 128 170
+        C 132 177 133 184 131 188
+        C 129 192 125 192 122 188
+        C 119 184 117 177 115 169
+        C 113 162 113 155 114 150 Z"/>
 
-      <!-- Subtle floor line -->
-      <line x1="30" y1="194" x2="175" y2="194" stroke="#B8935A" stroke-width="1" opacity="0.25" stroke-linecap="round"/>
+      <!-- ═══ RAISED ARM — one arm straight up, palm faces inward ═══ -->
+      <g id="f-arm-up">
+        <!-- Upper arm — shoulder to elbow, vertical with slight lean right -->
+        <path fill="white" opacity="0.93" d="
+          M 97 140 C 95 128 93 115 92 101
+          C 91 88 92 76 95 67
+          C 97 60 100 57 103 58
+          C 106 59 108 63 109 71
+          C 111 81 111 94 110 107
+          C 109 120 107 133 105 143 Z"/>
+        <!-- Forearm — elbow to wrist, continues upward -->
+        <path fill="white" opacity="0.93" d="
+          M 95 70 C 94 57 95 44 98 33
+          C 100 24 103 18 106 19
+          C 109 20 111 27 112 36
+          C 113 47 112 60 110 72 Z"/>
+        <!-- Hand + prayer gesture at apex -->
+        <path fill="white" opacity="0.90" d="
+          M 99 35 C 98 26 100 18 103 13
+          C 105 9 107 8 109 9
+          C 111 11 112 16 112 22
+          C 112 29 111 36 109 41
+          L 104 43 Z"/>
+      </g>
 
-      <!-- Decorative dots at wrist tips -->
-      <circle cx="50" cy="8" r="2.5" fill="#B8935A" opacity="0.7"/>
-      <circle cx="130" cy="8" r="2.5" fill="#B8935A" opacity="0.7"/>
+      <!-- ═══ HEAD — faces left, eyes closed/forward, hair bun ═══ -->
+      <g id="f-head">
+        <!-- Neck -->
+        <path fill="white" opacity="0.95" d="
+          M 96 132 C 94 137 94 143 96 147
+          C 98 150 104 150 106 147
+          C 108 143 108 137 106 132 Z"/>
+        <!-- Head oval, tilted slightly left (facing direction of front leg) -->
+        <ellipse cx="98" cy="116" rx="14" ry="16" fill="white" opacity="0.95"/>
+        <!-- Hair bun — at back/top of head -->
+        <ellipse cx="110" cy="108" rx="9" ry="7" fill="white" opacity="0.95"/>
+        <!-- Chin definition — small protrusion left -->
+        <ellipse cx="86" cy="120" rx="4" ry="3" fill="white" opacity="0.92"/>
+      </g>
+
     </svg>
 
-    <!-- Decorative rule -->
+            <!-- Decorative rule -->
     <div class="splash-rule"></div>
 
     <!-- Title -->
@@ -808,26 +921,94 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
 <!-- PHILOSOPHY VIEW -->
 <div class="view" id="view-philosophy" style="background:var(--dark);min-height:100vh;padding:0;max-width:100%;">
-  <div style="max-width:680px;margin:0 auto;padding:48px 20px 80px;">
-    <div style="text-align:center;margin-bottom:48px;">
-      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:52px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:24px;display:block;margin-left:auto;margin-right:auto;">
-      <div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Ubuntu Bali · Philosophy</div>
-      <div style="width:40px;height:1px;background:var(--gold);opacity:.4;margin:0 auto 24px;"></div>
-      <h1 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:#F5ECD7;line-height:1.35;">The Strength of the Circle</h1>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);font-style:italic;margin-top:10px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
+  <div style="max-width:680px;margin:0 auto;padding:56px 20px 100px;">
+
+    <!-- ── HERO ── -->
+    <div style="text-align:center;margin-bottom:56px;">
+      <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w"
+        style="height:52px;filter:brightness(0) invert(1);opacity:.9;margin-bottom:28px;display:block;margin-left:auto;margin-right:auto;">
+      <div style="font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;">Ubuntu Bali · Philosophy</div>
+      <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 28px;"></div>
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,6vw,40px);font-weight:300;color:#F5ECD7;line-height:1.25;letter-spacing:-.01em;">The Strength of the Circle</h1>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);font-style:italic;margin-top:14px;line-height:1.6;">Why <em>I Am</em> Requires <em>We Are</em></p>
     </div>
-    <div style="margin-bottom:28px;border-radius:var(--radius);overflow:hidden;">
-      <img src="https://balirescentre.com/wp-content/uploads/2025/12/UbuntuBali.Yoga_.Benjamin.2024_8128.jpg" alt="Ubuntu Bali" style="width:100%;height:auto;display:block;">
+
+    <!-- ── PHOTO ── -->
+    <div style="margin-bottom:48px;border-radius:var(--radius);overflow:hidden;position:relative;">
+      <img src="https://balirescentre.com/wp-content/uploads/2025/12/UbuntuBali.Yoga_.Benjamin.2024_8128.jpg"
+        alt="Ubuntu Bali Yoga" style="width:100%;height:auto;display:block;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(26,14,6,.5) 0%,transparent 50%);pointer-events:none;"></div>
     </div>
-    <p style="font-size:15px;color:#D4C4A8;line-height:1.9;margin-bottom:20px;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
-    <div style="border-left:3px solid var(--gold);padding:18px 24px;margin:32px 0;background:rgba(184,147,90,.07);border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
-      <p style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#F5ECD7;font-style:italic;line-height:1.5;">"I am because we are."</p>
-      <p style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:10px;">Ubuntu</p>
+
+    <!-- ── OPENING ── -->
+    <p style="font-size:16px;color:#D4C4A8;line-height:2;margin-bottom:0;">We live in a culture obsessed with the Self. We celebrate the self-made billionaire, the solo adventurer, and the individual spark of genius. We have been conditioned to believe that our success is a ladder we climb alone. But there is a profound African philosophy that suggests we have been looking at the world through a cracked lens.</p>
+
+    <!-- ── MAIN QUOTE ── -->
+    <div style="margin:48px 0;text-align:center;position:relative;">
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(184,147,90,.08) 0%,transparent 70%);pointer-events:none;"></div>
+      <div style="position:relative;">
+        <div style="font-size:60px;color:var(--gold);opacity:.3;line-height:1;margin-bottom:-10px;font-family:'Cormorant Garamond',serif;">"</div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,5vw,34px);font-weight:300;color:#F5ECD7;font-style:italic;line-height:1.4;letter-spacing:.01em;">I am because we are.</p>
+        <div style="width:32px;height:1px;background:var(--gold);margin:20px auto 16px;opacity:.6;"></div>
+        <p style="font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);opacity:.8;">Ubuntu</p>
+      </div>
     </div>
-    <div style="text-align:center;padding:32px 0;border-top:1px solid rgba(184,147,90,.2);">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#F5ECD7;font-style:italic;line-height:1.5;margin-bottom:14px;">"I am because we are."</div>
-      <div style="font-size:13px;color:#8B7355;line-height:1.9;">It is not just a philosophy.<br>It is a biological and social reality.</div>
+
+    <!-- ── SECTION: Illusion ── -->
+    <div style="margin-bottom:48px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div style="width:28px;height:1px;background:var(--gold);opacity:.5;flex-shrink:0;"></div>
+        <h2 style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);white-space:nowrap;">The Illusion of the Individual</h2>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.2;"></div>
+      </div>
+      <p style="font-size:15px;color:#C8B89A;line-height:2;margin-bottom:16px;">In the West, we often follow the Cartesian logic of "I think, therefore I am." It places the center of the universe squarely between our own ears. But if you take a human being and strip away every relationship, every teacher, every parent, every colleague — what is left?</p>
+      <p style="font-size:15px;color:#C8B89A;line-height:2;">The truth is that none of us exists in a vacuum. A leader is not a leader without a team that chooses to follow. Ubuntu reminds us that we do not find ourselves by looking inward. We find ourselves by looking at the people around us.</p>
     </div>
+
+    <!-- ── SECTION: Ecosystem ── -->
+    <div style="margin-bottom:48px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div style="width:28px;height:1px;background:var(--gold);opacity:.5;flex-shrink:0;"></div>
+        <h2 style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);white-space:nowrap;">The Ecosystem of Humanity</h2>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.2;"></div>
+      </div>
+      <p style="font-size:15px;color:#C8B89A;line-height:2;margin-bottom:28px;">Imagine a forest. We might point to a single, towering oak and marvel at its strength. But beneath the soil, that tree is part of a complex, invisible network. If the forest dies, the tree dies — no matter how strong it thinks it is.</p>
+
+      <!-- Three principles -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:rgba(184,147,90,.07);border:1px solid rgba(184,147,90,.18);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:18px 20px;">
+          <div style="font-size:13px;font-weight:600;color:#F5ECD7;margin-bottom:6px;letter-spacing:.02em;">Your success is my success.</div>
+          <div style="font-size:13px;color:rgba(184,147,90,.8);line-height:1.7;">If the team wins, the individual thrives.</div>
+        </div>
+        <div style="background:rgba(184,147,90,.07);border:1px solid rgba(184,147,90,.18);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:18px 20px;">
+          <div style="font-size:13px;font-weight:600;color:#F5ECD7;margin-bottom:6px;letter-spacing:.02em;">Your suffering is my suffering.</div>
+          <div style="font-size:13px;color:rgba(184,147,90,.8);line-height:1.7;">If a member is marginalized, the integrity of the whole is compromised.</div>
+        </div>
+        <div style="background:rgba(184,147,90,.07);border:1px solid rgba(184,147,90,.18);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:18px 20px;">
+          <div style="font-size:13px;font-weight:600;color:#F5ECD7;margin-bottom:6px;letter-spacing:.02em;">Kindness is a survival strategy.</div>
+          <div style="font-size:13px;color:rgba(184,147,90,.8);line-height:1.7;">Treating others with dignity is the only way to sustain the environment that allows us to exist.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION: Leading ── -->
+    <div style="margin-bottom:56px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div style="width:28px;height:1px;background:var(--gold);opacity:.5;flex-shrink:0;"></div>
+        <h2 style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);white-space:nowrap;">Leading with Ubuntu</h2>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.2;"></div>
+      </div>
+      <p style="font-size:15px;color:#C8B89A;line-height:2;">When a leader says "I am because we are," they acknowledge that their authority is a gift from the people they serve. Their job is not to be the smartest person in the room, but to create a room where everyone feels safe enough to be their best selves.</p>
+    </div>
+
+    <!-- ── CLOSING ── -->
+    <div style="text-align:center;padding:40px 0;border-top:1px solid rgba(184,147,90,.15);">
+      <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 32px;"></div>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,4vw,30px);font-weight:300;color:#F5ECD7;font-style:italic;line-height:1.4;margin-bottom:20px;">"I am because we are."</p>
+      <p style="font-size:13px;color:#6B5B4B;line-height:2;">It is not just a philosophy.<br>It is a biological and social reality.</p>
+      <div style="width:32px;height:1px;background:var(--gold);opacity:.25;margin:28px auto 0;"></div>
+    </div>
+
   </div>
 </div>
 
