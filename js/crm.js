@@ -476,7 +476,7 @@ function startLeadDrag(event, id) {
   event.dataTransfer.effectAllowed = 'move';
 }
 
-async function dropLeadOnTab(id, targetTab) {
+function dropLeadOnTab(id, targetTab) {
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (!lead) return;
   const sourceTab = lead.db === 'converted' ? 'converted'
@@ -484,16 +484,41 @@ async function dropLeadOnTab(id, targetTab) {
   if (sourceTab === targetTab) return;
 
   if (targetTab === 'converted' && sourceTab !== 'converted') {
-    await promoteLead(id, true);
+    const srcKey = lead.db === 'email' ? 'emailLeads' : lead.db === 'whatsapp' ? 'whatsappLeads' : 'shalaLeads';
+    if (crmData[srcKey]) crmData[srcKey] = crmData[srcKey].filter(x => x.id !== id);
+    lead.db = 'converted';
+    crmData.converted = [...(crmData.converted || []), lead];
+    crmSwitchTab('converted');
+    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'promote', pageId: id, name: lead.name, company: lead.company,
+        email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
+    }).catch(e => dbg('Promote failed: ' + e.message));
+
   } else if (targetTab === 'closed' && sourceTab === 'cold') {
     const st = lead.db === 'email' ? 'SALE CLOSED' : 'Converted to Customer';
-    await savePipelineStage(id, lead.db, st);
+    lead.status = st;
     crmSwitchTab('closed');
+    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: st }),
+    }).catch(e => dbg('Status save failed: ' + e.message));
+
   } else if (targetTab === 'cold' && sourceTab === 'converted') {
-    await demoteLead(id);
-  } else if (targetTab === 'cold' && sourceTab === 'closed') {
-    await savePipelineStage(id, lead.db, 'Followed + Engaged');
+    crmData.converted = (crmData.converted || []).filter(x => x.id !== id);
+    lead.db = 'email';
+    lead.status = null;
+    crmData.emailLeads = [...(crmData.emailLeads || []), lead];
     crmSwitchTab('cold');
+    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'demote', pageId: id, name: lead.name, company: lead.company,
+        email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
+    }).catch(e => dbg('Demote failed: ' + e.message));
+
+  } else if (targetTab === 'cold' && sourceTab === 'closed') {
+    lead.status = 'Followed + Engaged';
+    crmSwitchTab('cold');
+    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: 'Followed + Engaged' }),
+    }).catch(e => dbg('Status save failed: ' + e.message));
   }
 }
 
