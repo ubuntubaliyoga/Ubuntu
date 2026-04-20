@@ -17,9 +17,13 @@ async function loadDrafts(){
       const total=d.totalUSD?'USD '+Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—';
       const edited=d.lastEdited?new Date(d.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
       return`<div class="draft-card" id="draft-card-${i}">
-        <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}<span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span></div>
-        <div class="draft-meta">${dateStr} &nbsp;·&nbsp; ${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
-        ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:4px;font-style:italic;">Last edited: ${edited}</div>`:''}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">
+          <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}</div>
+          <span class="draft-status s-${d.status||'Draft'}" style="flex-shrink:0;">${d.status||'Draft'}</span>
+        </div>
+        <div class="draft-meta">${dateStr}</div>
+        <div class="draft-meta">${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
+        ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:8px;font-style:italic;">Last edited: ${edited}</div>`:''}
         <div class="draft-actions">
           ${hasState?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`:`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
           <button class="draft-btn ghost" onclick="toggleRenameRow(${i})" title="Rename">✎ Rename</button>
@@ -164,7 +168,6 @@ if('serviceWorker' in navigator){
       const sw=reg.installing;
       sw.addEventListener('statechange',()=>{
         if(sw.state==='installed' && navigator.serviceWorker.controller){
-          // New version ready — show update button
           pendingSW = sw;
           $('update-btn').style.display='block';
         }

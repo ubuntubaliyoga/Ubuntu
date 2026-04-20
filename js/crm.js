@@ -129,12 +129,9 @@ function buildList(items) {
       firstOut && `<span>🗓 ${firstOut}</span>`,
     ].filter(Boolean);
 
-    // Show reached out chips — deduplicated, skip if same as source badge
-    // (avoids duplicate "WhatsApp" when source is already whatsapp)
-    const srcLabel = src.label.replace(/^\S+\s/, ''); // e.g. "WhatsApp"
+    const srcLabel = src.label.replace(/^\S+\s/, '');
     const reachedChips = reached
-      .filter(r => r !== srcLabel)  // don't duplicate what source badge already shows
-      .slice(0, 2)
+      .filter(r => r !== srcLabel)
       .map(r => `<span class="crm-badge" style="background:var(--bg2);color:var(--muted);">${r}</span>`)
       .join('');
 
@@ -213,7 +210,6 @@ function crmDetailHTML(c) {
   const isLead  = c.db !== 'converted';
   const loc     = cleanLocation(c.location);
 
-  // Build full options list — standard + any custom ones already on lead
   const allOptions = [...REACHED_OUT_OPTIONS];
   reached.forEach(r => { if (!allOptions.includes(r)) allOptions.push(r); });
 
@@ -244,7 +240,6 @@ function crmDetailHTML(c) {
     c.insta      && ['Instagram',    c.insta],
     c.website    && ['Website',      `<a href="${c.website}" target="_blank" style="color:var(--gold);">${c.website}</a>`],
     c.linkedin   && ['LinkedIn',     c.linkedin],
-    // Only show WhatsApp once — skip if source badge already shows WhatsApp
     (c.whatsapp && c.db !== 'whatsapp') && ['WhatsApp', c.whatsapp],
     c.whatsapp2  && ['WhatsApp 2',   c.whatsapp2],
     c.company    && ['Company',      c.company],
@@ -310,18 +305,69 @@ function crmDetailHTML(c) {
 }
 
 function crmEditHTML(c) {
+  const inputStyle = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'DM Sans\',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;';
+  const dateStyle  = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'DM Sans\',sans-serif;font-size:14px;background:var(--bg);outline:none;-webkit-appearance:none;';
+
+  const baseFields = ['name','company','location','email','insta','website'];
+
+  let extraFields = '';
+  if (c.db === 'email') {
+    extraFields = `
+      <div class="crm-section-hd">Additional</div>
+      <div class="fg"><label>LinkedIn</label>
+        <input id="ce-linkedin" type="text" value="${c.linkedin||''}" style="${inputStyle}">
+      </div>
+      <div class="fg"><label>First outreach</label>
+        <input id="ce-engagedFirst" type="date" value="${c.engagedFirst||''}" style="${dateStyle}">
+      </div>
+      <div class="fg"><label>Engage next</label>
+        <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
+      </div>
+      <div class="fg"><label>Suitability</label>
+        <input id="ce-suitability" type="text" value="${c.suitability||''}" style="${inputStyle}">
+      </div>`;
+  } else if (c.db === 'whatsapp') {
+    extraFields = `
+      <div class="crm-section-hd">Additional</div>
+      <div class="fg"><label>WhatsApp 1</label>
+        <input id="ce-whatsapp" type="text" value="${c.whatsapp||''}" style="${inputStyle}">
+      </div>
+      <div class="fg"><label>WhatsApp 2</label>
+        <input id="ce-whatsapp2" type="text" value="${c.whatsapp2||''}" style="${inputStyle}">
+      </div>
+      <div class="fg"><label>Engage next</label>
+        <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
+      </div>
+      <div class="fg"><label>Suitability</label>
+        <input id="ce-suitability" type="text" value="${c.suitability||''}" style="${inputStyle}">
+      </div>`;
+  } else {
+    extraFields = `
+      <div class="crm-section-hd">Additional</div>
+      <div class="fg"><label>WhatsApp</label>
+        <input id="ce-whatsapp" type="text" value="${c.whatsapp||''}" style="${inputStyle}">
+      </div>
+      <div class="fg"><label>Engage next</label>
+        <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
+      </div>
+      <div class="fg"><label>Suitability</label>
+        <input id="ce-suitability" type="text" value="${c.suitability||''}" style="${inputStyle}">
+      </div>`;
+  }
+
   return `
     <div class="modal-header">
       <div class="modal-title">Edit</div>
       <button class="modal-close" onclick="document.getElementById('crm-modal').classList.remove('open')">✕</button>
     </div>
     <div class="crm-section-hd">Details</div>
-    ${['name','company','location','email','insta','website'].map(f => `
+    ${baseFields.map(f => `
       <div class="fg"><label>${f.charAt(0).toUpperCase()+f.slice(1)}</label>
         <input id="ce-${f}" type="text" value="${(f === 'location' ? (cleanLocation(c.location)||'') : (c[f]||''))}"
-          style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;">
+          style="${inputStyle}">
       </div>`).join('')}
-    ${c.db === 'email' ? `<div class="fg"><label>Notes</label>
+    ${extraFields}
+    ${(c.db === 'email' || c.db === 'converted') ? `<div class="fg"><label>Notes</label>
       <textarea id="ce-notes" rows="3" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;resize:vertical;">${c.notes||''}</textarea>
     </div>` : ''}
     <button onclick="saveContactDetails('${c.id}','${c.db}')" class="ios-modal-close" style="margin-top:8px;">Save Changes</button>
@@ -330,11 +376,8 @@ function crmEditHTML(c) {
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
 
-// Reached out — toggles button visually AND saves immediately
 function toggleReachedOut(id, db, btn) {
-  // Toggle visual state
   btn.classList.toggle('active');
-  // Update button styles explicitly (some browsers don't reflow CSS class changes instantly)
   if (btn.classList.contains('active')) {
     btn.style.background = 'var(--gold)';
     btn.style.borderColor = 'var(--gold)';
@@ -344,13 +387,11 @@ function toggleReachedOut(id, db, btn) {
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--muted)';
   }
-  // Collect all active
   const container = btn.closest('#reached-out-tags');
   const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
-  // Update local cache
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
-  // Save to Notion
+  crmRender();
   fetch('/api/crm', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
@@ -374,13 +415,13 @@ function addCustomReachedOut(id, db) {
   const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
+  crmRender();
   fetch('/api/crm', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
 
-// Inline notes save — called on blur/change
 async function saveNotes(id, db, notes) {
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.notes = notes;
@@ -407,13 +448,19 @@ async function savePipelineStage(id, db, status) {
 
 async function saveContactDetails(id, db) {
   const props = {
-    name:     document.getElementById('ce-name')?.value,
-    company:  document.getElementById('ce-company')?.value,
-    location: document.getElementById('ce-location')?.value,
-    email:    document.getElementById('ce-email')?.value,
-    insta:    document.getElementById('ce-insta')?.value,
-    website:  document.getElementById('ce-website')?.value,
-    notes:    document.getElementById('ce-notes')?.value,
+    name:         document.getElementById('ce-name')?.value,
+    company:      document.getElementById('ce-company')?.value,
+    location:     document.getElementById('ce-location')?.value,
+    email:        document.getElementById('ce-email')?.value,
+    insta:        document.getElementById('ce-insta')?.value,
+    website:      document.getElementById('ce-website')?.value,
+    notes:        document.getElementById('ce-notes')?.value,
+    linkedin:     document.getElementById('ce-linkedin')?.value,
+    whatsapp:     document.getElementById('ce-whatsapp')?.value,
+    whatsapp2:    document.getElementById('ce-whatsapp2')?.value,
+    engagedFirst: document.getElementById('ce-engagedFirst')?.value,
+    engageNext:   document.getElementById('ce-engageNext')?.value,
+    suitability:  document.getElementById('ce-suitability')?.value,
   };
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) Object.assign(lead, props);

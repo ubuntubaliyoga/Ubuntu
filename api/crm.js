@@ -65,7 +65,7 @@ function mapWhatsappLead(page) {
     status:       getProp(p, 'Multi-select',                 'select'),
     suitability:  getProp(p, 'Suitability',                  'select'),
     reachedOutOn: ['WhatsApp'],
-    engagedFirst: getProp(p, 'Engaged first',                'text'), // text field, not date
+    engagedFirst: getProp(p, 'Engaged first',                'text'),
     engageNext:   getProp(p, 'Engage Next',                  'date'),
     salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
   };
@@ -88,7 +88,7 @@ function mapShalaLead(page) {
     status:       null,
     suitability:  getProp(p, 'Suitability',                  'select'),
     reachedOutOn: ['WhatsApp'],
-    engagedFirst: getProp(p, 'Engaged first',                'text'), // text field, not date
+    engagedFirst: getProp(p, 'Engaged first',                'text'),
     engageNext:   getProp(p, 'Engage Next',                  'date'),
     salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
   };
@@ -117,7 +117,6 @@ function mapConverted(page) {
   };
 }
 
-// ── Paginated query — fetches ALL pages, not just first 100 ──────────────────
 async function queryDB(dbId, mapper) {
   const results = [];
   let cursor = undefined;
@@ -201,20 +200,37 @@ export default async function handler(req, res) {
     }
 
     if (action === 'updateDetails') {
-      const { pageId, db, name, company, location, email, insta, website, notes } = req.body;
+      const { pageId, db, name, company, location, email, insta, website, notes,
+              linkedin, whatsapp, whatsapp2, engagedFirst, engageNext, suitability } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
       const props = {};
-      if (name     !== undefined) props['Name']     = { title:     [{ text: { content: name } }] };
-      if (company  !== undefined) props['Company']  = { rich_text: [{ text: { content: company } }] };
-      if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location } }] };
-      if (insta    !== undefined) props['Insta']    = { rich_text: [{ text: { content: insta } }] };
-      if (website  !== undefined) props['Website']  = { rich_text: [{ text: { content: website } }] };
+      if (name     !== undefined) props['Name']     = { title:     [{ text: { content: name || '' } }] };
+      if (company  !== undefined) props['Company']  = { rich_text: [{ text: { content: company || '' } }] };
+      if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location || '' } }] };
+      if (insta    !== undefined) props['Insta']    = { rich_text: [{ text: { content: insta || '' } }] };
+      if (website  !== undefined) props['Website']  = { rich_text: [{ text: { content: website || '' } }] };
       if (email !== undefined) {
         if (db === 'email') props['Email'] = { email: email || null };
-        else                props['Mail']  = { rich_text: [{ text: { content: email } }] };
+        else                props['Mail']  = { rich_text: [{ text: { content: email || '' } }] };
       }
-      if (notes !== undefined && db === 'email')
-        props['Notes'] = { rich_text: [{ text: { content: notes } }] };
+      if (notes !== undefined && (db === 'email' || db === 'converted'))
+        props['Notes'] = { rich_text: [{ text: { content: notes || '' } }] };
+      if (linkedin !== undefined && db === 'email')
+        props['Linkydinky'] = { rich_text: [{ text: { content: linkedin || '' } }] };
+      if (whatsapp !== undefined) {
+        if (db === 'whatsapp')                       props['Whatsapp 1'] = { rich_text: [{ text: { content: whatsapp || '' } }] };
+        else if (db === 'shala' || db === 'converted') props['Whatsapp']   = { rich_text: [{ text: { content: whatsapp || '' } }] };
+      }
+      if (whatsapp2 !== undefined && db === 'whatsapp')
+        props['Whatsapp 2'] = { rich_text: [{ text: { content: whatsapp2 || '' } }] };
+      if (engagedFirst !== undefined) {
+        if (db === 'email') props['Engaged first'] = engagedFirst ? { date: { start: engagedFirst } } : { date: null };
+        else                props['Engaged first'] = { rich_text: [{ text: { content: engagedFirst || '' } }] };
+      }
+      if (engageNext !== undefined)
+        props['Engage Next'] = engageNext ? { date: { start: engageNext } } : { date: null };
+      if (suitability !== undefined)
+        props['Suitability'] = suitability ? { select: { name: suitability } } : { select: null };
       await updatePage(pageId, props);
       return res.status(200).json({ success: true });
     }
