@@ -61,7 +61,7 @@ function mapWhatsappLead(page) {
     website:      getProp(p, 'Website',                      'text'),
     whatsapp:     getProp(p, 'Whatsapp 1',                   'text'),
     whatsapp2:    getProp(p, 'Whatsapp 2',                   'text'),
-    notes:        null,
+    notes:        getProp(p, 'Notes',                        'text'),
     status:       getProp(p, 'Multi-select',                 'select'),
     suitability:  getProp(p, 'Suitability',                  'select'),
     reachedOutOn: ['WhatsApp'],
@@ -84,7 +84,7 @@ function mapShalaLead(page) {
     insta:        getProp(p, 'Insta',                        'text'),
     website:      getProp(p, 'Website',                      'text'),
     whatsapp:     getProp(p, 'Whatsapp',                     'text'),
-    notes:        null,
+    notes:        getProp(p, 'Notes',                        'text'),
     status:       null,
     suitability:  getProp(p, 'Suitability',                  'select'),
     reachedOutOn: ['WhatsApp'],
@@ -213,7 +213,7 @@ export default async function handler(req, res) {
         if (db === 'email') props['Email'] = { email: email || null };
         else                props['Mail']  = { rich_text: [{ text: { content: email || '' } }] };
       }
-      if (notes !== undefined && (db === 'email' || db === 'converted'))
+      if (notes !== undefined)
         props['Notes'] = { rich_text: [{ text: { content: notes || '' } }] };
       if (linkedin !== undefined && db === 'email')
         props['Linkydinky'] = { rich_text: [{ text: { content: linkedin || '' } }] };
