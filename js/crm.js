@@ -589,16 +589,23 @@ function initCrmDragDrop() {
   if (!list || list._touchInited) return;
   list._touchInited = true;
 
-  let _lpTimer = null;
+  let _lpTimer = null, _lpStartX = 0, _lpStartY = 0;
 
   list.addEventListener('touchstart', e => {
     const card = e.target.closest('[data-lead-id]');
     if (!card) return;
     const id = card.dataset.leadId;
+    _lpStartX = e.touches[0].clientX;
+    _lpStartY = e.touches[0].clientY;
     _lpTimer = setTimeout(() => { _lpTimer = null; setMoveSelection(id); }, 500);
   }, { passive: true });
 
-  list.addEventListener('touchmove',   () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
+  list.addEventListener('touchmove', e => {
+    if (!_lpTimer) return;
+    const dx = Math.abs(e.touches[0].clientX - _lpStartX);
+    const dy = Math.abs(e.touches[0].clientY - _lpStartY);
+    if (dx > 10 || dy > 10) { clearTimeout(_lpTimer); _lpTimer = null; }
+  }, { passive: true });
   list.addEventListener('touchend',    () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
   list.addEventListener('touchcancel', () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
 
