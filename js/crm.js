@@ -139,7 +139,7 @@ function buildList(items) {
       ? `<div class="crm-card-notes">${c.notes.length > 80 ? c.notes.slice(0, 80) + '…' : c.notes}</div>`
       : '';
 
-    return `<div class="crm-card" onclick="openCrmModal('${c.id}')">
+    return `<div class="crm-card" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="min-width:0;">
           <div class="crm-card-name">${c.name || 'Unnamed'}</div>
@@ -148,9 +148,9 @@ function buildList(items) {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
           <span class="crm-badge" style="background:${src.bg};color:${src.color};">${src.label}</span>
           ${stageBadge}
+          ${reachedChips}
         </div>
       </div>
-      ${reachedChips ? `<div class="crm-card-badges" style="margin-top:6px;">${reachedChips}</div>` : ''}
       ${notePreview}
     </div>`;
   }).join('');
@@ -176,6 +176,7 @@ async function loadCRM(force = false) {
     crmLoaded = true;
     dbg(`CRM: ${(crmData.emailLeads||[]).length} email, ${(crmData.whatsappLeads||[]).length} whatsapp, ${(crmData.shalaLeads||[]).length} shala, ${(crmData.converted||[]).length} converted`);
     crmRender();
+    initCrmDragDrop();
   } catch (e) {
     if (list) list.innerHTML = `<div class="crm-empty" style="color:#B71C1C;">Could not load: ${e.message}</div>`;
     dbg('CRM load failed: ' + e.message);
@@ -213,28 +214,6 @@ function crmDetailHTML(c) {
   const allOptions = [...REACHED_OUT_OPTIONS];
   reached.forEach(r => { if (!allOptions.includes(r)) allOptions.push(r); });
 
-  const emailStatuses = ['Followed + Engaged','Reached out','WARM: Booked a call OR asked for help','HOT: Past client/strong conversation','QUALIFIED TO BUY','SALE CLOSED','GHOSTED','TERMINATED','NOT GOOD FIT'];
-  const waStatuses    = ['Booked a call','Sent an offer','Converted to Customer'];
-  const convStatuses  = ['Face2Face conversation','Responded','Phone call','Booked Venue','Rejected Ubuntu'];
-
-  let statusBlock = '';
-  if (c.db === 'email') {
-    statusBlock = `<div class="crm-section-hd">Pipeline Stage</div>
-      <select class="crm-select" onchange="savePipelineStage('${c.id}','${c.db}',this.value)">
-        ${emailStatuses.map(s => `<option value="${s}"${c.status === s ? ' selected' : ''}>${s}</option>`).join('')}
-      </select>`;
-  } else if (c.db === 'whatsapp') {
-    statusBlock = `<div class="crm-section-hd">Status</div>
-      <select class="crm-select" onchange="savePipelineStage('${c.id}','${c.db}',this.value)">
-        ${waStatuses.map(s => `<option value="${s}"${c.status === s ? ' selected' : ''}>${s}</option>`).join('')}
-      </select>`;
-  } else if (c.db === 'converted') {
-    statusBlock = `<div class="crm-section-hd">Status</div>
-      <select class="crm-select" multiple size="3" onchange="savePipelineStage('${c.id}','${c.db}',Array.from(this.selectedOptions).map(o=>o.value))">
-        ${convStatuses.map(s => `<option value="${s}"${(Array.isArray(c.status)?c.status:[c.status]).includes(s)?' selected':''}>${s}</option>`).join('')}
-      </select>`;
-  }
-
   const fields = [
     c.email      && ['Email',        `<a href="mailto:${c.email}" style="color:var(--gold);">${c.email}</a>`],
     c.insta      && ['Instagram',    c.insta],
@@ -246,7 +225,6 @@ function crmDetailHTML(c) {
     c.engagedFirst && ['First outreach', fmtDateShort(c.engagedFirst)],
     c.engagedLast  && ['Last contact',   fmtD(c.engagedLast)],
     c.engageNext   && ['Engage next',    fmtD(c.engageNext)],
-    c.suitability  && ['Suitability',    `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>`],
   ].filter(Boolean);
 
   return `
@@ -277,22 +255,13 @@ function crmDetailHTML(c) {
         style="padding:9px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap;flex-shrink:0;">Add</button>
     </div>
 
-    ${statusBlock}
-
-    ${c.notes !== null && c.notes !== undefined ? `
-      <div class="crm-section-hd">Notes</div>
-      <textarea id="notes-editor-${c.id}"
-        onchange="saveNotes('${c.id}','${c.db}',this.value)"
-        onblur="saveNotes('${c.id}','${c.db}',this.value)"
-        style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
-      >${c.notes}</textarea>` : isLead && c.db === 'email' ? `
-      <div class="crm-section-hd">Notes</div>
-      <textarea id="notes-editor-${c.id}"
-        onchange="saveNotes('${c.id}','${c.db}',this.value)"
-        onblur="saveNotes('${c.id}','${c.db}',this.value)"
-        placeholder="Add notes…"
-        style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
-      ></textarea>` : ''}
+    <div class="crm-section-hd">Notes</div>
+    <textarea id="notes-editor-${c.id}"
+      onchange="saveNotes('${c.id}','${c.db}',this.value)"
+      onblur="saveNotes('${c.id}','${c.db}',this.value)"
+      placeholder="Add notes…"
+      style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
+    >${c.notes||''}</textarea>
 
     ${fields.length ? `<div class="crm-section-hd">Info</div>
       ${fields.map(([label, val]) => `<div class="crm-field"><div class="crm-field-label">${label}</div><div style="font-size:13px;flex:1;word-break:break-word;">${val}</div></div>`).join('')}` : ''}
@@ -322,9 +291,6 @@ function crmEditHTML(c) {
       </div>
       <div class="fg"><label>Engage next</label>
         <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
-      </div>
-      <div class="fg"><label>Suitability</label>
-        <input id="ce-suitability" type="text" value="${c.suitability||''}" style="${inputStyle}">
       </div>`;
   } else if (c.db === 'whatsapp') {
     extraFields = `
@@ -338,8 +304,8 @@ function crmEditHTML(c) {
       <div class="fg"><label>Engage next</label>
         <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
       </div>
-      <div class="fg"><label>Suitability</label>
-        <input id="ce-suitability" type="text" value="${c.suitability||''}" style="${inputStyle}">
+      <div class="fg"><label>First outreach</label>
+        <input id="ce-engagedFirst" type="text" value="${c.engagedFirst||''}" style="${inputStyle}">
       </div>`;
   } else {
     extraFields = `
@@ -350,8 +316,8 @@ function crmEditHTML(c) {
       <div class="fg"><label>Engage next</label>
         <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
       </div>
-      <div class="fg"><label>Suitability</label>
-        <input id="ce-suitability" type="text" value="${c.suitability||''}" style="${inputStyle}">
+      <div class="fg"><label>First outreach</label>
+        <input id="ce-engagedFirst" type="text" value="${c.engagedFirst||''}" style="${inputStyle}">
       </div>`;
   }
 
@@ -460,7 +426,6 @@ async function saveContactDetails(id, db) {
     whatsapp2:    document.getElementById('ce-whatsapp2')?.value,
     engagedFirst: document.getElementById('ce-engagedFirst')?.value,
     engageNext:   document.getElementById('ce-engageNext')?.value,
-    suitability:  document.getElementById('ce-suitability')?.value,
   };
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) Object.assign(lead, props);
@@ -474,9 +439,9 @@ async function saveContactDetails(id, db) {
   } catch (e) { dbg('Save failed: ' + e.message); }
 }
 
-async function promoteLead(id) {
+async function promoteLead(id, skipConfirm = false) {
   const c = allLeads().find(x => x.id === id);
-  if (!c || !confirm(`Move ${c.name} to Converted?`)) return;
+  if (!c || !skipConfirm && !confirm(`Move ${c.name} to Converted?`)) return;
   try {
     await fetch('/api/crm', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -504,6 +469,65 @@ async function deleteLead(id) {
     document.getElementById('crm-modal').classList.remove('open');
     crmRender();
   } catch (e) { dbg('Delete failed: ' + e.message); }
+}
+
+function startLeadDrag(event, id) {
+  event.dataTransfer.setData('leadId', id);
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+async function dropLeadOnTab(id, targetTab) {
+  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  if (!lead) return;
+  const sourceTab = lead.db === 'converted' ? 'converted'
+                  : getStageKey(lead) === 'closed' ? 'closed' : 'cold';
+  if (sourceTab === targetTab) return;
+
+  if (targetTab === 'converted' && sourceTab !== 'converted') {
+    await promoteLead(id, true);
+  } else if (targetTab === 'closed' && sourceTab === 'cold') {
+    const st = lead.db === 'email' ? 'SALE CLOSED' : 'Converted to Customer';
+    await savePipelineStage(id, lead.db, st);
+    crmSwitchTab('closed');
+  } else if (targetTab === 'cold' && sourceTab === 'converted') {
+    await demoteLead(id);
+  } else if (targetTab === 'cold' && sourceTab === 'closed') {
+    await savePipelineStage(id, lead.db, 'Followed + Engaged');
+    crmSwitchTab('cold');
+  }
+}
+
+async function demoteLead(id) {
+  const c = (crmData.converted || []).find(x => x.id === id);
+  if (!c) return;
+  try {
+    const r = await fetch('/api/crm', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'demote', pageId: id, name: c.name, company: c.company,
+        email: c.email, insta: c.insta, website: c.website, location: c.location, notes: c.notes }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    crmData.converted = (crmData.converted || []).filter(x => x.id !== id);
+    document.getElementById('crm-modal').classList.remove('open');
+    crmSwitchTab('cold');
+    dbg('Demoted: ' + c.name);
+  } catch (e) { dbg('Demote failed: ' + e.message); }
+}
+
+function initCrmDragDrop() {
+  const tabTargets = { 'crm-tab-cold': 'cold', 'crm-tab-converted': 'converted', 'crm-tab-closed': 'closed' };
+  Object.entries(tabTargets).forEach(([elId, tab]) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.addEventListener('dragover', e => { e.preventDefault(); el.style.outline = '2px solid var(--gold)'; el.style.outlineOffset = '2px'; });
+    el.addEventListener('dragleave', () => { el.style.outline = ''; el.style.outlineOffset = ''; });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.style.outline = ''; el.style.outlineOffset = '';
+      const leadId = e.dataTransfer.getData('leadId');
+      if (leadId) dropLeadOnTab(leadId, tab);
+    });
+  });
 }
 
 // ── DUPLICATES ────────────────────────────────────────────────────────────────

@@ -312,6 +312,32 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
+    if (action === 'demote') {
+      const { pageId, name, company, email, insta, website, location, notes } = req.body;
+      if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
+      await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+        method: 'PATCH', headers, body: JSON.stringify({ in_trash: true }),
+      });
+      const resp = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          parent: { database_id: EMAIL_DB },
+          properties: {
+            'Name':     { title:     [{ text: { content: name || '' } }] },
+            'Company':  { rich_text: [{ text: { content: company || '' } }] },
+            'Email':    { email: email || null },
+            'Insta':    { rich_text: [{ text: { content: insta || '' } }] },
+            'Website':  { rich_text: [{ text: { content: website || '' } }] },
+            'Location': { rich_text: [{ text: { content: location || '' } }] },
+            'Notes':    { rich_text: [{ text: { content: notes || '' } }] },
+          },
+        }),
+      });
+      if (!resp.ok) throw new Error(`Demote failed: ${await resp.text()}`);
+      const data = await resp.json();
+      return res.status(200).json({ success: true, pageId: data.id });
+    }
+
     return res.status(400).json({ error: `Unknown action: ${action}` });
 
   } catch (err) {
