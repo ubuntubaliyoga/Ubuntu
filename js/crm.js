@@ -118,6 +118,21 @@ function crmSort(items) {
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
+function updateTabCounts() {
+  const allL = allLeads();
+  const counts = {
+    cold:      allL.filter(c => getStageKey(c) !== 'closed').length,
+    converted: (crmData.converted || []).length,
+    closed:    allL.filter(c => getStageKey(c) === 'closed').length,
+    shala:     (crmData.shalaLeads || []).length,
+  };
+  const names = { cold: 'Cold', converted: 'Warm', closed: 'Closed', shala: 'Shala' };
+  Object.entries(counts).forEach(([tab, n]) => {
+    const el = document.querySelector(`#crm-tab-${tab} .tab-label`);
+    if (el) el.textContent = `${names[tab]} (${n})`;
+  });
+}
+
 function crmRender() {
   const list = document.getElementById('crm-list');
   if (!list) return;
@@ -127,8 +142,7 @@ function crmRender() {
     !search || ((c.name || '') + (c.location || '') + (c.company || '')).toLowerCase().includes(search)
   );
 
-  const countEl = document.getElementById('crm-count');
-  if (countEl) countEl.textContent = `${items.length} of ${tabItems().length}`;
+  updateTabCounts();
 
   items = crmSort(items);
   list.innerHTML = items.length ? buildList(items) : '<div class="crm-empty">No leads found.</div>';
@@ -275,9 +289,9 @@ function crmDetailHTML(c) {
     </div>
     <div style="display:flex;gap:6px;margin-bottom:16px;">
       <input id="custom-reached-input" type="text" placeholder="+ Custom…"
-        style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;min-width:0;-webkit-appearance:none;">
+        style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:100px;font-family:'Inter',sans-serif;font-size:16px;background:var(--bg);outline:none;min-width:0;-webkit-appearance:none;">
       <button onclick="addCustomReachedOut('${c.id}','${c.db}')"
-        style="padding:9px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap;flex-shrink:0;">Add</button>
+        style="padding:9px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap;flex-shrink:0;">Add</button>
     </div>
 
     <div class="crm-section-hd">Notes</div>
@@ -285,7 +299,7 @@ function crmDetailHTML(c) {
       onchange="saveNotes('${c.id}','${c.db}',this.value)"
       onblur="saveNotes('${c.id}','${c.db}',this.value)"
       placeholder="Add notes…"
-      style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
+      style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
     >${c.notes||''}</textarea>
 
     ${fields.length ? `<div class="crm-section-hd">Info</div>
@@ -308,8 +322,8 @@ function crmDetailHTML(c) {
 }
 
 function crmEditHTML(c) {
-  const inputStyle = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'DM Sans\',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;';
-  const dateStyle  = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'DM Sans\',sans-serif;font-size:14px;background:var(--bg);outline:none;-webkit-appearance:none;';
+  const inputStyle = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'Inter\',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;';
+  const dateStyle  = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'Inter\',sans-serif;font-size:14px;background:var(--bg);outline:none;-webkit-appearance:none;';
 
   const baseFields = ['name','company','location','email','insta','website'];
 
@@ -368,7 +382,7 @@ function crmEditHTML(c) {
       </div>`).join('')}
     ${extraFields}
     <button onclick="saveContactDetails('${c.id}','${c.db}')" class="ios-modal-close" style="margin-top:8px;">Save Changes</button>
-    <button onclick="openCrmModal('${c.id}')" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--muted);">Cancel</button>`;
+    <button onclick="openCrmModal('${c.id}')" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'Inter',sans-serif;font-size:14px;cursor:pointer;color:var(--muted);">Cancel</button>`;
 }
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Ubuntu Flow</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Ubuntu%20Flow%22,%22short_name%22:%22Ubuntu%20Flow%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23FAF7F2%22,%22theme_color%22:%22%23221208%22,%22icons%22:[{%22src%22:%22https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w%22,%22sizes%22:%22any%22,%22type%22:%22image/png%22}]}">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -108,7 +108,7 @@
 
 /* Subtitle */
 .splash-sub {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.32em;
@@ -142,15 +142,15 @@
 
 /* ── APP STYLES ────────────────────────────────────────────────────────────── */
 :root{
-  --bg:#FAF7F2;--bg2:#F3EDE3;--surface:#FFFFFF;
-  --border:rgba(184,147,90,.18);--gold:#B8935A;--gold-lt:#D4B483;
-  --dark:#221208;--text:#2C2416;--muted:#8B7355;
-  --radius:16px;--radius-sm:10px;
-  --shadow:0 2px 16px rgba(34,18,8,.08);--shadow-lg:0 8px 40px rgba(34,18,8,.12);
+  --bg:#F9F7F2;--bg2:#EDE9E0;--surface:#FFFFFF;
+  --border:rgba(140,148,118,.2);--gold:#D4A373;--gold-lt:#E8C99A;
+  --dark:#4A3728;--text:#3B2A1A;--muted:#8C9476;
+  --radius:16px;--radius-sm:12px;
+  --shadow:0 2px 12px rgba(74,55,40,.07);--shadow-lg:0 8px 40px rgba(74,55,40,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{-webkit-text-size-adjust:100%;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
 /* ── NAV ── */
 .nav{background:var(--dark);position:sticky;top:0;z-index:200;padding:0 16px;}
@@ -174,7 +174,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nav-brand-sub{font-size:7px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-top:2px;}
 .nav-tabs{display:flex;gap:2px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:100px;background:transparent;border:1px solid rgba(245,236,215,.12);color:rgba(245,236,215,.5);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.nav-tab{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:100px;background:transparent;border:1px solid rgba(245,236,215,.12);color:rgba(245,236,215,.5);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
 .nav-tab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
 .nav-tab:hover{background:rgba(245,236,215,.08);color:rgba(245,236,215,.8);}
 .nav-tab.active{background:var(--gold);color:var(--dark);border-color:var(--gold);font-weight:600;}
@@ -185,7 +185,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ── DROPDOWN ── */
 .nav-dropdown{display:none;position:absolute;top:64px;right:16px;background:var(--dark);border:1px solid rgba(184,147,90,.25);border-radius:var(--radius);padding:10px;min-width:180px;z-index:300;box-shadow:var(--shadow-lg);}
 .nav-dropdown.open{display:block;}
-.dropdown-item{width:100%;padding:10px 12px;border-radius:var(--radius-sm);background:transparent;border:none;color:rgba(245,236,215,.7);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .15s;}
+.dropdown-item{width:100%;padding:10px 12px;border-radius:var(--radius-sm);background:transparent;border:none;color:rgba(245,236,215,.7);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .15s;}
 .dropdown-item:hover{background:rgba(245,236,215,.08);color:#F5ECD7;}
 .dropdown-sep{height:1px;background:rgba(184,147,90,.15);margin:6px 0;}
 
@@ -194,14 +194,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .deal-toolbar.visible{display:flex;}
 .deal-toolbar-inner{display:flex;align-items:center;gap:6px;height:48px;width:100%;max-width:900px;margin:0 auto;overflow-x:auto;scrollbar-width:none;}
 .deal-toolbar-inner::-webkit-scrollbar{display:none;}
-.deal-sub-tab{padding:5px 13px;border-radius:100px;background:transparent;border:1px solid transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.deal-sub-tab{padding:5px 13px;border-radius:100px;background:transparent;border:1px solid transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
 .deal-sub-tab.active{background:var(--bg2);border-color:var(--border);color:var(--text);font-weight:600;}
 .deal-toolbar-spacer{flex:1;min-width:8px;}
-.save-btn{padding:7px 18px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.save-btn{padding:7px 18px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
 .save-btn:hover{background:var(--gold-lt);}
 .save-btn.saved{background:#3D6636;color:#fff;}
 .save-btn.error{background:#8B3A2E;color:#fff;}
-.status-select{padding:6px 12px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;outline:none;cursor:pointer;flex-shrink:0;}
+.status-select{padding:6px 12px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;outline:none;cursor:pointer;flex-shrink:0;}
 .autosave-status{font-size:11px;color:var(--gold);font-style:italic;white-space:nowrap;flex-shrink:0;}
 
 /* ── VIEWS ── */
@@ -217,7 +217,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .s-section:first-child{margin-top:0;padding-top:0;border-top:none;}
 .fg{margin-bottom:12px;}
 .fg label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
-.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;color:var(--text);background:var(--bg);outline:none;transition:all .15s;-webkit-appearance:none;appearance:none;}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:16px;color:var(--text);background:var(--bg);outline:none;transition:all .15s;-webkit-appearance:none;appearance:none;}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(184,147,90,.1);}
 .fg textarea{resize:vertical;line-height:1.6;}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -232,10 +232,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .villa-fields.disabled{opacity:.4;pointer-events:none;}
 .radio-grp{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;}
-.radio-grp label{font-size:13px;text-transform:none;letter-spacing:0;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:400;}
+.radio-grp label{font-size:13px;text-transform:none;letter-spacing:0;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:400;}
 .radio-grp input{width:auto;}
 .action-row{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;}
-.action-btn{flex:1;min-width:130px;padding:14px 20px;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.action-btn{flex:1;min-width:130px;padding:14px 20px;border:none;border-radius:100px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
 .action-btn.dark{background:var(--dark);color:#F5ECD7;}
 .action-btn.gold{background:var(--gold);color:var(--dark);}
 
@@ -325,28 +325,34 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .s-Signed{background:#E3F2E3;color:#1A6A1A;}
 .s-Cancelled{background:#F7E3E3;color:#8A1A1A;}
 .draft-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px;}
-.draft-btn{padding:6px 14px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+.draft-btn{padding:6px 14px;border-radius:100px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
 .draft-btn.load{background:var(--dark);color:#F5ECD7;}
 .draft-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
 .draft-btn.ghost:hover{border-color:#8B3A2E;color:#8B3A2E;}
 .draft-edit-row{display:none;gap:6px;margin-top:10px;flex-wrap:wrap;}
 .draft-edit-row.open{display:flex;}
-.draft-edit-input{flex:1;min-width:120px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;}
-.draft-edit-btn{padding:8px 14px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;}
+.draft-edit-input{flex:1;min-width:120px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;}
+.draft-edit-btn{padding:8px 14px;border-radius:100px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;}
 .draft-edit-btn.confirm{background:var(--dark);color:#F5ECD7;}
 .draft-edit-btn.cancel{background:transparent;border:1px solid var(--border);color:var(--muted);}
 
 /* ── MODALS ── */
 .ios-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
 .ios-modal.open{display:flex;}
-.ios-modal-box{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 48px;width:100%;max-width:560px;font-family:'DM Sans',sans-serif;box-shadow:0 -8px 40px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.ios-modal-box{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 48px;width:100%;max-width:560px;font-family:'Inter',sans-serif;box-shadow:0 -8px 40px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .ios-modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--dark);margin-bottom:18px;text-align:center;}
 .ios-modal-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;font-size:14px;color:var(--text);line-height:1.6;}
 .ios-modal-step .num{font-size:11px;font-weight:700;color:var(--gold);background:var(--bg2);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ios-modal-close{width:100%;margin-top:16px;padding:15px;background:var(--dark);color:#F5ECD7;border:none;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;}
+.ios-modal-close{width:100%;margin-top:16px;padding:15px;background:var(--dark);color:#F5ECD7;border:none;border-radius:100px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;}
 
 /* ── CRM ── */
-.crm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px;}
+.crm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px;}
+/* CRM pipeline tabs */
+.crm-tab{display:inline-flex;align-items:center;gap:5px;padding:8px 13px;border-radius:100px;border:1px solid transparent;background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;letter-spacing:.01em;}
+.crm-tab svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.crm-tab.active{background:var(--dark);color:#F5ECD7;border-color:var(--dark);font-weight:600;}
+.crm-tab:not(.active):hover{color:var(--text);border-color:var(--border);background:var(--bg2);}
+.crm-tab.move-target{border-color:var(--gold)!important;background:rgba(212,163,115,.12)!important;}
 .crm-card:hover{border-color:var(--gold-lt);box-shadow:var(--shadow);}
 .crm-card-selected{border-color:var(--gold)!important;box-shadow:0 0 0 2px var(--gold)!important;}
 .move-target{border-color:var(--gold)!important;background:rgba(184,147,90,.12)!important;}
@@ -368,10 +374,10 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .crm-section-hd{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
 .crm-field{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
 .crm-field-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:90px;padding-top:2px;flex-shrink:0;}
-.crm-select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);outline:none;margin-bottom:8px;-webkit-appearance:none;appearance:none;}
-.reach-btn{padding:7px 14px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;font-family:'DM Sans',sans-serif;}
+.crm-select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:15px;background:var(--bg);outline:none;margin-bottom:8px;-webkit-appearance:none;appearance:none;}
+.reach-btn{padding:7px 14px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;font-family:'Inter',sans-serif;}
 .reach-btn.active{background:var(--gold);border-color:var(--gold);color:var(--dark);}
-.pill-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.pill-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .pill-btn:hover{border-color:var(--gold);color:var(--text);}
 .pill-btn.active{background:var(--gold);border-color:var(--gold);color:var(--dark);}
 .pill-btn.dark{background:var(--dark);border-color:var(--dark);color:#F5ECD7;}
@@ -399,7 +405,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 .extra-tag{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;flex-wrap:wrap;}
 .extra-tag-label{flex:1;font-size:13px;font-weight:500;color:var(--text);min-width:100px;}
 .extra-tag-qty{display:flex;align-items:center;gap:6px;}
-.extra-tag-qty input{width:56px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;text-align:center;background:var(--bg);outline:none;}
+.extra-tag-qty input{width:56px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;text-align:center;background:var(--bg);outline:none;}
 .extra-tag-price{font-size:12px;font-weight:600;color:var(--gold);min-width:64px;text-align:right;}
 .extra-tag-del{width:30px;height:30px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0;}
 .extra-tag-del:hover{background:#FDECEA;border-color:#E57373;color:#B71C1C;}
@@ -497,7 +503,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Tutorials
       </button>
       <div style="flex:1;min-width:6px;"></div>
-      <button id="update-btn-m" onclick="applyUpdate()" style="display:none;padding:6px 12px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">↑ Update</button>
+      <button id="update-btn-m" onclick="applyUpdate()" style="display:none;padding:6px 12px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">↑ Update</button>
       <button class="nav-icon-btn" onclick="toggleNavMenu()" style="font-size:16px;letter-spacing:2px;font-weight:700;flex-shrink:0;">···</button>
     </div>
   </div>
@@ -526,7 +532,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       </button>
     </div>
     <div class="nav-right">
-      <button id="update-btn" onclick="applyUpdate()" style="display:none;padding:7px 14px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;animation:pulse 2s infinite;">↑ Update</button>
+      <button id="update-btn" onclick="applyUpdate()" style="display:none;padding:7px 14px;border-radius:100px;background:var(--gold);border:none;color:var(--dark);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;animation:pulse 2s infinite;">↑ Update</button>
       <button class="nav-icon-btn" onclick="toggleNavMenu()" style="font-size:18px;letter-spacing:2px;font-weight:700;">···</button>
     </div>
   </div><!-- end nav-inner desktop -->
@@ -684,7 +690,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
 
       <div class="s-section">Extras &amp; Note</div>
       <div style="margin-bottom:16px;">
-        <select id="extras-picker" onchange="addExtraService(this.value);this.value=''" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;color:var(--muted);background:var(--surface);outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;">
+        <select id="extras-picker" onchange="addExtraService(this.value);this.value=''" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:16px;color:var(--muted);background:var(--surface);outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;">
           <option value="">＋ Add a service…</option>
           <optgroup label="Airport"><option value="airport|✈ Airport Transfer|20|per transfer">✈ Airport Transfer — USD 20</option></optgroup>
           <optgroup label="Meals">
@@ -751,7 +757,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
   <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
     <div>
       <div class="view-hero-title">CRM</div>
-      <div class="view-hero-sub">Leads &amp; converted clients</div>
+      <div class="view-hero-sub">Leads &amp; pipeline</div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       <button class="pill-btn dark" onclick="openNewLeadModal()">+ New Lead</button>
@@ -759,23 +765,32 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
       <button class="pill-btn" onclick="showDuplicates()">⊕ Dupes</button>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:2px;">
-      <button id="crm-tab-cold"      class="pill-btn active" onclick="crmSwitchTab('cold')" style="flex-shrink:0;">🌱 Cold Leads</button>
-      <button id="crm-tab-converted" class="pill-btn"        onclick="crmSwitchTab('converted')" style="flex-shrink:0;">🔥 Warm Leads</button>
-      <button id="crm-tab-closed"    class="pill-btn"        onclick="crmSwitchTab('closed')" style="flex-shrink:0;">🎉 Sales Closed</button>
-      <button id="crm-tab-shala"     class="pill-btn"        onclick="crmSwitchTab('shala')" style="flex-shrink:0;">🏛 Shala Rental</button>
-    </div>
-    <div id="crm-count" style="font-size:11px;color:var(--muted);font-weight:500;flex-shrink:0;"></div>
+  <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;margin-bottom:14px;">
+    <button id="crm-tab-cold"      class="crm-tab active" onclick="crmSwitchTab('cold')">
+      <svg viewBox="0 0 16 16"><path d="M8 13V8m0 0C8 5 5 3 2 3c0 3 2 5 6 5zm0 0c0-3 3-5 6-5-1 3-3 5-6 5"/></svg>
+      <span class="tab-label">Cold</span>
+    </button>
+    <button id="crm-tab-converted" class="crm-tab"        onclick="crmSwitchTab('converted')">
+      <svg viewBox="0 0 16 16"><path d="M8 13c-2.5 0-4.5-2-4.5-4.5 0-1.5.8-2.5 1.5-3.5 0 1.5 1 2.5 2.5 2.5C6.5 6 7.5 4 9 2c.5 2.5 2.5 3.5 2.5 6S10.5 13 8 13z"/></svg>
+      <span class="tab-label">Warm</span>
+    </button>
+    <button id="crm-tab-closed"    class="crm-tab"        onclick="crmSwitchTab('closed')">
+      <svg viewBox="0 0 16 16"><path d="M3 8l3 3 7-7"/></svg>
+      <span class="tab-label">Closed</span>
+    </button>
+    <button id="crm-tab-shala"     class="crm-tab"        onclick="crmSwitchTab('shala')">
+      <svg viewBox="0 0 16 16"><path d="M2 14h12M4 14V7m8 7V7M8 14V9.5m-5-2.5l5-4 5 4"/></svg>
+      <span class="tab-label">Shala</span>
+    </button>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
     <div style="flex:1;min-width:0;position:relative;">
       <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:14px;pointer-events:none;">🔍</span>
       <input id="crm-search" type="text" placeholder="Search…" oninput="crmRender()"
-        style="width:100%;padding:11px 12px 11px 36px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--surface);outline:none;-webkit-appearance:none;">
+        style="width:100%;padding:11px 12px 11px 36px;border:1px solid var(--border);border-radius:100px;font-family:'Inter',sans-serif;font-size:15px;background:var(--surface);outline:none;-webkit-appearance:none;">
     </div>
     <select id="crm-group" onchange="crmRender()"
-      style="padding:11px 14px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;-webkit-appearance:none;appearance:none;flex-shrink:0;">
+      style="padding:11px 14px;border:1px solid var(--border);border-radius:100px;font-family:'Inter',sans-serif;font-size:13px;background:var(--surface);outline:none;color:var(--muted);cursor:pointer;-webkit-appearance:none;appearance:none;flex-shrink:0;">
       <option value="date">↕ Date</option>
       <option value="name">↕ Name</option>
       <option value="location">↕ Location</option>
@@ -920,7 +935,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     <div class="fg"><label>Location</label><input type="text" id="nl-location"></div>
     <div class="fg"><label>Notes</label><textarea id="nl-notes" rows="2"></textarea></div>
     <div class="fg"><label>Add to Database</label>
-      <select id="nl-db" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;appearance:none;">
+      <select id="nl-db" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;appearance:none;">
         <option value="email">📧 Retreat Leaders (Email)</option>
         <option value="whatsapp">💬 Retreat Leaders (WhatsApp)</option>
         <option value="shala">🏛 Shala Rental</option>
@@ -928,7 +943,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
     </div>
     <button class="ios-modal-close" onclick="saveNewLead()">Save Lead</button>
     <button onclick="document.getElementById('new-lead-modal').classList.remove('open')"
-      style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);">Cancel</button>
+      style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);">Cancel</button>
   </div>
 </div>
 
