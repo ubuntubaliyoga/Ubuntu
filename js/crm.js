@@ -53,10 +53,16 @@ function suitClass(s) {
   return 'crm-suit-4';
 }
 
+// Smart date formatter — handles both ISO date strings AND free text
 function fmtDateShort(s) {
   if (!s) return null;
-  const d = new Date(s + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  // Try ISO date format first (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const d = new Date(s + 'T00:00:00');
+    if (!isNaN(d)) return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+  // Return raw text as-is (e.g. "10/04/2026" or other free text)
+  return s;
 }
 
 // ── TAB ───────────────────────────────────────────────────────────────────────
@@ -118,18 +124,20 @@ function buildList(items) {
       ? `<span class="crm-badge" style="background:#F0EBE3;color:#8B7355;">👻 Dead</span>`
       : '';
 
-    // Meta row: location · first outreach date
     const metaParts = [
       loc      && `<span>📍 ${loc}</span>`,
       firstOut && `<span>🗓 ${firstOut}</span>`,
     ].filter(Boolean);
 
-    // Reached out chips (max 3)
-    const reachedChips = reached.slice(0, 3).map(r =>
-      `<span class="crm-badge" style="background:var(--bg2);color:var(--muted);">${r}</span>`
-    ).join('');
+    // Show reached out chips — deduplicated, skip if same as source badge
+    // (avoids duplicate "WhatsApp" when source is already whatsapp)
+    const srcLabel = src.label.replace(/^\S+\s/, ''); // e.g. "WhatsApp"
+    const reachedChips = reached
+      .filter(r => r !== srcLabel)  // don't duplicate what source badge already shows
+      .slice(0, 2)
+      .map(r => `<span class="crm-badge" style="background:var(--bg2);color:var(--muted);">${r}</span>`)
+      .join('');
 
-    // Notes preview (truncated)
     const notePreview = c.notes
       ? `<div class="crm-card-notes">${c.notes.length > 80 ? c.notes.slice(0, 80) + '…' : c.notes}</div>`
       : '';
@@ -205,7 +213,7 @@ function crmDetailHTML(c) {
   const isLead  = c.db !== 'converted';
   const loc     = cleanLocation(c.location);
 
-  // All options to show — union of standard options + any custom ones already on the lead
+  // Build full options list — standard + any custom ones already on lead
   const allOptions = [...REACHED_OUT_OPTIONS];
   reached.forEach(r => { if (!allOptions.includes(r)) allOptions.push(r); });
 
@@ -232,14 +240,15 @@ function crmDetailHTML(c) {
   }
 
   const fields = [
-    c.email      && ['Email',      `<a href="mailto:${c.email}" style="color:var(--gold);">${c.email}</a>`],
-    c.insta      && ['Instagram',  c.insta],
-    c.website    && ['Website',    `<a href="${c.website}" target="_blank" style="color:var(--gold);">${c.website}</a>`],
-    c.linkedin   && ['LinkedIn',   c.linkedin],
-    c.whatsapp   && ['WhatsApp',   c.whatsapp],
-    c.whatsapp2  && ['WhatsApp 2', c.whatsapp2],
-    c.company    && ['Company',    c.company],
-    c.engagedFirst && ['First outreach', c.engagedFirst],
+    c.email      && ['Email',        `<a href="mailto:${c.email}" style="color:var(--gold);">${c.email}</a>`],
+    c.insta      && ['Instagram',    c.insta],
+    c.website    && ['Website',      `<a href="${c.website}" target="_blank" style="color:var(--gold);">${c.website}</a>`],
+    c.linkedin   && ['LinkedIn',     c.linkedin],
+    // Only show WhatsApp once — skip if source badge already shows WhatsApp
+    (c.whatsapp && c.db !== 'whatsapp') && ['WhatsApp', c.whatsapp],
+    c.whatsapp2  && ['WhatsApp 2',   c.whatsapp2],
+    c.company    && ['Company',      c.company],
+    c.engagedFirst && ['First outreach', fmtDateShort(c.engagedFirst)],
     c.engagedLast  && ['Last contact',   fmtD(c.engagedLast)],
     c.engageNext   && ['Engage next',    fmtD(c.engageNext)],
     c.suitability  && ['Suitability',    `<span class="crm-badge ${suitClass(c.suitability)}">${c.suitability}</span>`],
@@ -275,7 +284,20 @@ function crmDetailHTML(c) {
 
     ${statusBlock}
 
-    ${c.notes ? `<div class="crm-section-hd">Notes</div><div style="font-size:13px;line-height:1.7;color:var(--text);margin-bottom:8px;">${c.notes}</div>` : ''}
+    ${c.notes !== null && c.notes !== undefined ? `
+      <div class="crm-section-hd">Notes</div>
+      <textarea id="notes-editor-${c.id}"
+        onchange="saveNotes('${c.id}','${c.db}',this.value)"
+        onblur="saveNotes('${c.id}','${c.db}',this.value)"
+        style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
+      >${c.notes}</textarea>` : isLead && c.db === 'email' ? `
+      <div class="crm-section-hd">Notes</div>
+      <textarea id="notes-editor-${c.id}"
+        onchange="saveNotes('${c.id}','${c.db}',this.value)"
+        onblur="saveNotes('${c.id}','${c.db}',this.value)"
+        placeholder="Add notes…"
+        style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
+      ></textarea>` : ''}
 
     ${fields.length ? `<div class="crm-section-hd">Info</div>
       ${fields.map(([label, val]) => `<div class="crm-field"><div class="crm-field-label">${label}</div><div style="font-size:13px;flex:1;word-break:break-word;">${val}</div></div>`).join('')}` : ''}
@@ -306,24 +328,31 @@ function crmEditHTML(c) {
     <button onclick="openCrmModal('${c.id}')" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--muted);">Cancel</button>`;
 }
 
-// ── REACHED OUT — fixed: read active state from classList, not a parameter ────
-function toggleReachedOut(id, db, btn) {
-  // Toggle active state
-  const wasActive = btn.classList.contains('active');
-  btn.classList.toggle('active', !wasActive);
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
 
-  // Collect all currently active options
+// Reached out — toggles button visually AND saves immediately
+function toggleReachedOut(id, db, btn) {
+  // Toggle visual state
+  btn.classList.toggle('active');
+  // Update button styles explicitly (some browsers don't reflow CSS class changes instantly)
+  if (btn.classList.contains('active')) {
+    btn.style.background = 'var(--gold)';
+    btn.style.borderColor = 'var(--gold)';
+    btn.style.color = 'var(--dark)';
+  } else {
+    btn.style.background = 'transparent';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--muted)';
+  }
+  // Collect all active
   const container = btn.closest('#reached-out-tags');
   const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
-
   // Update local cache
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
-
-  // Save to Notion (email DB only — others don't have the field)
+  // Save to Notion
   fetch('/api/crm', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
@@ -333,30 +362,37 @@ function addCustomReachedOut(id, db) {
   const val = input?.value?.trim();
   if (!val) return;
   input.value = '';
-
   const container = document.getElementById('reached-out-tags');
-  if (!container) return;
-  if (Array.from(container.querySelectorAll('button')).some(b => b.dataset.opt === val)) return;
-
+  if (!container || Array.from(container.querySelectorAll('button')).some(b => b.dataset.opt === val)) return;
   const btn = document.createElement('button');
   btn.className = 'reach-btn active';
   btn.dataset.opt = val;
   btn.textContent = val;
+  btn.style.cssText = 'background:var(--gold);border-color:var(--gold);color:var(--dark);';
   btn.onclick = function() { toggleReachedOut(id, db, this); };
   container.appendChild(btn);
-
   const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
-
   fetch('/api/crm', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
 
-// ── OTHER ACTIONS ─────────────────────────────────────────────────────────────
+// Inline notes save — called on blur/change
+async function saveNotes(id, db, notes) {
+  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  if (lead) lead.notes = notes;
+  try {
+    await fetch('/api/crm', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', pageId: id, db, notes }),
+    });
+    dbg('Notes saved');
+  } catch (e) { dbg('Notes save failed: ' + e.message); }
+}
+
 async function savePipelineStage(id, db, status) {
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.status = status;
