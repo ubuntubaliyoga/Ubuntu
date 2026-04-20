@@ -358,9 +358,6 @@ function crmEditHTML(c) {
           style="${inputStyle}">
       </div>`).join('')}
     ${extraFields}
-    ${(c.db === 'email' || c.db === 'converted') ? `<div class="fg"><label>Notes</label>
-      <textarea id="ce-notes" rows="3" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);outline:none;resize:vertical;">${c.notes||''}</textarea>
-    </div>` : ''}
     <button onclick="saveContactDetails('${c.id}','${c.db}')" class="ios-modal-close" style="margin-top:8px;">Save Changes</button>
     <button onclick="openCrmModal('${c.id}')" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--muted);">Cancel</button>`;
 }
@@ -445,7 +442,6 @@ async function saveContactDetails(id, db) {
     email:        document.getElementById('ce-email')?.value,
     insta:        document.getElementById('ce-insta')?.value,
     website:      document.getElementById('ce-website')?.value,
-    notes:        document.getElementById('ce-notes')?.value,
     linkedin:     document.getElementById('ce-linkedin')?.value,
     whatsapp:     document.getElementById('ce-whatsapp')?.value,
     whatsapp2:    document.getElementById('ce-whatsapp2')?.value,
