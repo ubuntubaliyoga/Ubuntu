@@ -139,7 +139,7 @@ function buildList(items) {
       ? `<div class="crm-card-notes">${c.notes.length > 80 ? c.notes.slice(0, 80) + '…' : c.notes}</div>`
       : '';
 
-    return `<div class="crm-card" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">
+    return `<div class="crm-card" data-lead-id="${c.id}" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">`
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="min-width:0;">
           <div class="crm-card-name">${c.name || 'Unnamed'}</div>
@@ -471,6 +471,9 @@ async function deleteLead(id) {
   } catch (e) { dbg('Delete failed: ' + e.message); }
 }
 
+// ── DRAG & DROP (desktop HTML5 + mobile touch) ────────────────────────────────
+let _tdId = null, _tdGhost = null, _tdTimer = null;
+
 function startLeadDrag(event, id) {
   event.dataTransfer.setData('leadId', id);
   event.dataTransfer.effectAllowed = 'move';
@@ -540,19 +543,91 @@ async function demoteLead(id) {
 }
 
 function initCrmDragDrop() {
-  const tabTargets = { 'crm-tab-cold': 'cold', 'crm-tab-converted': 'converted', 'crm-tab-closed': 'closed' };
-  Object.entries(tabTargets).forEach(([elId, tab]) => {
+  const TAB_MAP = { 'crm-tab-cold': 'cold', 'crm-tab-converted': 'converted', 'crm-tab-closed': 'closed' };
+
+  // ── Desktop HTML5 drop targets ──
+  Object.entries(TAB_MAP).forEach(([elId, tab]) => {
     const el = document.getElementById(elId);
-    if (!el) return;
-    el.addEventListener('dragover', e => { e.preventDefault(); el.style.outline = '2px solid var(--gold)'; el.style.outlineOffset = '2px'; });
+    if (!el || el._dragInited) return;
+    el._dragInited = true;
+    el.addEventListener('dragover',  e => { e.preventDefault(); el.style.outline = '2px solid var(--gold)'; el.style.outlineOffset = '2px'; });
     el.addEventListener('dragleave', () => { el.style.outline = ''; el.style.outlineOffset = ''; });
     el.addEventListener('drop', e => {
-      e.preventDefault();
-      el.style.outline = ''; el.style.outlineOffset = '';
-      const leadId = e.dataTransfer.getData('leadId');
-      if (leadId) dropLeadOnTab(leadId, tab);
+      e.preventDefault(); el.style.outline = ''; el.style.outlineOffset = '';
+      const id = e.dataTransfer.getData('leadId');
+      if (id) dropLeadOnTab(id, tab);
     });
   });
+
+  // ── Mobile touch drag (hold 400ms then drag to tab) ──
+  const list = document.getElementById('crm-list');
+  if (!list || list._touchDragInited) return;
+  list._touchDragInited = true;
+
+  function clearTabHighlights() {
+    Object.keys(TAB_MAP).forEach(tabId => {
+      const b = document.getElementById(tabId);
+      if (b) { b.style.outline = ''; b.style.outlineOffset = ''; }
+    });
+  }
+  function cancelTouch() {
+    clearTimeout(_tdTimer); _tdTimer = null; _tdId = null;
+    if (_tdGhost) { _tdGhost.remove(); _tdGhost = null; }
+    clearTabHighlights();
+  }
+
+  list.addEventListener('touchstart', e => {
+    const card = e.target.closest('[data-lead-id]');
+    if (!card) return;
+    const id = card.dataset.leadId;
+    _tdTimer = setTimeout(() => {
+      _tdId = id;
+      const rect = card.getBoundingClientRect();
+      _tdGhost = card.cloneNode(true);
+      Object.assign(_tdGhost.style, {
+        position: 'fixed', zIndex: '9999', opacity: '0.88', pointerEvents: 'none',
+        width: rect.width + 'px', left: rect.left + 'px', top: rect.top + 'px',
+        boxShadow: '0 8px 28px rgba(0,0,0,.22)', transform: 'scale(1.03)',
+      });
+      document.body.appendChild(_tdGhost);
+    }, 400);
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (_tdTimer && !_tdId) { clearTimeout(_tdTimer); _tdTimer = null; return; }
+    if (!_tdId) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    if (_tdGhost) {
+      _tdGhost.style.left = (t.clientX - _tdGhost.offsetWidth / 2) + 'px';
+      _tdGhost.style.top  = (t.clientY - 50) + 'px';
+    }
+    _tdGhost.style.display = 'none';
+    const under = document.elementFromPoint(t.clientX, t.clientY);
+    _tdGhost.style.display = '';
+    Object.keys(TAB_MAP).forEach(tabId => {
+      const b = document.getElementById(tabId);
+      if (b) {
+        const hit = !!under?.closest('#' + tabId);
+        b.style.outline = hit ? '2px solid var(--gold)' : '';
+        b.style.outlineOffset = hit ? '2px' : '';
+      }
+    });
+  }, { passive: false });
+
+  document.addEventListener('touchend', e => {
+    clearTimeout(_tdTimer); _tdTimer = null;
+    if (!_tdId) return;
+    const id = _tdId; _tdId = null;
+    if (_tdGhost) { _tdGhost.remove(); _tdGhost = null; }
+    clearTabHighlights();
+    const t = e.changedTouches[0];
+    const under = document.elementFromPoint(t.clientX, t.clientY);
+    const hit = under?.closest('[id]');
+    if (hit && TAB_MAP[hit.id]) dropLeadOnTab(id, TAB_MAP[hit.id]);
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', cancelTouch, { passive: true });
 }
 
 // ── DUPLICATES ────────────────────────────────────────────────────────────────
