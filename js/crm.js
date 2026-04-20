@@ -578,6 +578,14 @@ function initCrmDragDrop() {
       const id = e.dataTransfer.getData('leadId');
       if (id) dropLeadOnTab(id, tab);
     });
+    // Mobile: tap tab while a lead is selected (touchstart fires reliably; click may not after long-press)
+    el.addEventListener('touchstart', e => {
+      if (!_moveLeadId) return;
+      e.stopPropagation(); // prevent document cancel handler
+      const id = _moveLeadId;
+      clearMoveSelection();
+      dropLeadOnTab(id, tab);
+    }, { passive: true });
   });
 
   // ── Mobile: long-press card (500ms) → card selected → tap tab to move ──
