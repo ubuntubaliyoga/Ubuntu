@@ -139,7 +139,7 @@ function buildList(items) {
       ? `<div class="crm-card-notes">${c.notes.length > 80 ? c.notes.slice(0, 80) + '…' : c.notes}</div>`
       : '';
 
-    return `<div class="crm-card" data-lead-id="${c.id}" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">`
+    return `<div class="crm-card" data-lead-id="${c.id}" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="min-width:0;">
           <div class="crm-card-name">${c.name || 'Unnamed'}</div>
