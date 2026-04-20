@@ -5,6 +5,7 @@ let crmData = { emailLeads: [], whatsappLeads: [], shalaLeads: [], converted: []
 let crmTab = 'cold';
 let crmCollapsed = {};
 let crmLoaded = false;
+let _moveLeadId = null; // id of lead selected for tab-move (long-press pattern)
 
 const REACHED_OUT_OPTIONS = ['Email', 'Instagram', 'LinkedIn', 'WhatsApp', 'In Person', 'Cold Call'];
 
@@ -67,11 +68,35 @@ function fmtDateShort(s) {
 
 // ── TAB ───────────────────────────────────────────────────────────────────────
 function crmSwitchTab(tab) {
+  if (_moveLeadId) {
+    const id = _moveLeadId;
+    clearMoveSelection();
+    dropLeadOnTab(id, tab);
+    return;
+  }
   crmTab = tab;
   ['cold', 'converted', 'closed', 'shala'].forEach(t => {
     document.getElementById('crm-tab-' + t)?.classList.toggle('active', t === tab);
   });
   crmRender();
+}
+
+function setMoveSelection(id) {
+  _moveLeadId = id;
+  if (navigator.vibrate) navigator.vibrate(40);
+  ['crm-tab-cold','crm-tab-converted','crm-tab-closed'].forEach(tabId => {
+    document.getElementById(tabId)?.classList.add('move-target');
+  });
+  const card = document.querySelector(`[data-lead-id="${id}"]`);
+  if (card) card.classList.add('crm-card-selected');
+}
+
+function clearMoveSelection() {
+  _moveLeadId = null;
+  ['crm-tab-cold','crm-tab-converted','crm-tab-closed'].forEach(tabId => {
+    document.getElementById(tabId)?.classList.remove('move-target');
+  });
+  document.querySelectorAll('.crm-card-selected').forEach(c => c.classList.remove('crm-card-selected'));
 }
 
 function tabItems() {
@@ -545,7 +570,7 @@ async function demoteLead(id) {
 function initCrmDragDrop() {
   const TAB_MAP = { 'crm-tab-cold': 'cold', 'crm-tab-converted': 'converted', 'crm-tab-closed': 'closed' };
 
-  // ── Desktop HTML5 drop targets ──
+  // ── Desktop: HTML5 drag onto tab buttons ──
   Object.entries(TAB_MAP).forEach(([elId, tab]) => {
     const el = document.getElementById(elId);
     if (!el || el._dragInited) return;
@@ -559,75 +584,29 @@ function initCrmDragDrop() {
     });
   });
 
-  // ── Mobile touch drag (hold 400ms then drag to tab) ──
+  // ── Mobile: long-press card (500ms) → card selected → tap tab to move ──
   const list = document.getElementById('crm-list');
-  if (!list || list._touchDragInited) return;
-  list._touchDragInited = true;
+  if (!list || list._touchInited) return;
+  list._touchInited = true;
 
-  function clearTabHighlights() {
-    Object.keys(TAB_MAP).forEach(tabId => {
-      const b = document.getElementById(tabId);
-      if (b) { b.style.outline = ''; b.style.outlineOffset = ''; }
-    });
-  }
-  function cancelTouch() {
-    clearTimeout(_tdTimer); _tdTimer = null; _tdId = null;
-    if (_tdGhost) { _tdGhost.remove(); _tdGhost = null; }
-    clearTabHighlights();
-  }
+  let _lpTimer = null;
 
   list.addEventListener('touchstart', e => {
     const card = e.target.closest('[data-lead-id]');
     if (!card) return;
     const id = card.dataset.leadId;
-    _tdTimer = setTimeout(() => {
-      _tdId = id;
-      const rect = card.getBoundingClientRect();
-      _tdGhost = card.cloneNode(true);
-      Object.assign(_tdGhost.style, {
-        position: 'fixed', zIndex: '9999', opacity: '0.88', pointerEvents: 'none',
-        width: rect.width + 'px', left: rect.left + 'px', top: rect.top + 'px',
-        boxShadow: '0 8px 28px rgba(0,0,0,.22)', transform: 'scale(1.03)',
-      });
-      document.body.appendChild(_tdGhost);
-    }, 400);
+    _lpTimer = setTimeout(() => { _lpTimer = null; setMoveSelection(id); }, 500);
   }, { passive: true });
 
-  document.addEventListener('touchmove', e => {
-    if (_tdTimer && !_tdId) { clearTimeout(_tdTimer); _tdTimer = null; return; }
-    if (!_tdId) return;
-    e.preventDefault();
-    const t = e.touches[0];
-    if (_tdGhost) {
-      _tdGhost.style.left = (t.clientX - _tdGhost.offsetWidth / 2) + 'px';
-      _tdGhost.style.top  = (t.clientY - 50) + 'px';
-    }
-    _tdGhost.style.display = 'none';
-    const under = document.elementFromPoint(t.clientX, t.clientY);
-    _tdGhost.style.display = '';
-    Object.keys(TAB_MAP).forEach(tabId => {
-      const b = document.getElementById(tabId);
-      if (b) {
-        const hit = !!under?.closest('#' + tabId);
-        b.style.outline = hit ? '2px solid var(--gold)' : '';
-        b.style.outlineOffset = hit ? '2px' : '';
-      }
-    });
-  }, { passive: false });
+  list.addEventListener('touchmove',   () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
+  list.addEventListener('touchend',    () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
+  list.addEventListener('touchcancel', () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
 
-  document.addEventListener('touchend', e => {
-    clearTimeout(_tdTimer); _tdTimer = null;
-    if (!_tdId) return;
-    const id = _tdId; _tdId = null;
-    if (_tdGhost) { _tdGhost.remove(); _tdGhost = null; }
-    clearTabHighlights();
-    const t = e.changedTouches[0];
-    const under = document.elementFromPoint(t.clientX, t.clientY);
-    const hit = under?.closest('[id]');
-    if (hit && TAB_MAP[hit.id]) dropLeadOnTab(id, TAB_MAP[hit.id]);
+  // Tap anywhere outside tab buttons cancels selection
+  document.addEventListener('touchstart', e => {
+    if (!_moveLeadId) return;
+    if (!e.target.closest('[id^="crm-tab-"]')) clearMoveSelection();
   }, { passive: true });
-
-  document.addEventListener('touchcancel', cancelTouch, { passive: true });
 }
 
 // ── DUPLICATES ────────────────────────────────────────────────────────────────
