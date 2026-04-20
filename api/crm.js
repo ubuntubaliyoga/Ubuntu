@@ -1,9 +1,9 @@
 // api/crm.js
 
-const EMAIL_DB    = '8e5622d3e57482ba950081ac7695672e'; // Retreat Leaders Kevin (email)
-const WHATSAPP_DB = '320622d3e5748066b6dfcea95816fad2'; // Retreat Leaders WhatsApp
-const SHALA_DB    = '320622d3e57480608324f0eb4d3b8a2c'; // Shala Rental WhatsApp Kevin
-const CONV_DB     = '325622d3e57481bbbaaedeb47e377f2c'; // Retreat Leaders 2026 (converted)
+const EMAIL_DB    = '8e5622d3e57482ba950081ac7695672e';
+const WHATSAPP_DB = '320622d3e5748066b6dfcea95816fad2';
+const SHALA_DB    = '320622d3e57480608324f0eb4d3b8a2c';
+const CONV_DB     = '325622d3e57481bbbaaedeb47e377f2c';
 
 const headers = {
   'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
@@ -65,7 +65,7 @@ function mapWhatsappLead(page) {
     status:       getProp(p, 'Multi-select',                 'select'),
     suitability:  getProp(p, 'Suitability',                  'select'),
     reachedOutOn: ['WhatsApp'],
-    engagedFirst: getProp(p, 'Engaged first',                'text'),
+    engagedFirst: getProp(p, 'Engaged first',                'text'), // text field, not date
     engageNext:   getProp(p, 'Engage Next',                  'date'),
     salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
   };
@@ -88,7 +88,7 @@ function mapShalaLead(page) {
     status:       null,
     suitability:  getProp(p, 'Suitability',                  'select'),
     reachedOutOn: ['WhatsApp'],
-    engagedFirst: getProp(p, 'Engaged first',                'text'),
+    engagedFirst: getProp(p, 'Engaged first',                'text'), // text field, not date
     engageNext:   getProp(p, 'Engage Next',                  'date'),
     salesCall:    getProp(p, 'Sales Call/Visit Booked Date', 'date'),
   };
@@ -117,18 +117,30 @@ function mapConverted(page) {
   };
 }
 
+// ── Paginated query — fetches ALL pages, not just first 100 ──────────────────
 async function queryDB(dbId, mapper) {
-  const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
+  const results = [];
+  let cursor = undefined;
+
+  do {
+    const body = {
       sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
       page_size: 100,
-    }),
-  });
-  if (!resp.ok) throw new Error(`DB query failed (${dbId}): ${await resp.text()}`);
-  const data = await resp.json();
-  return data.results.map(mapper);
+    };
+    if (cursor) body.start_cursor = cursor;
+
+    const resp = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) throw new Error(`DB query failed (${dbId}): ${await resp.text()}`);
+    const data = await resp.json();
+    results.push(...data.results.map(mapper));
+    cursor = data.has_more ? data.next_cursor : undefined;
+  } while (cursor);
+
+  return results;
 }
 
 async function updatePage(pageId, properties) {
@@ -147,7 +159,6 @@ export default async function handler(req, res) {
 
   try {
 
-    // ── LOAD ──────────────────────────────────────────────────────────────────
     if (action === 'load') {
       const [emailLeads, whatsappLeads, shalaLeads, converted] = await Promise.all([
         queryDB(EMAIL_DB,    mapEmailLead),
@@ -158,7 +169,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ emailLeads, whatsappLeads, shalaLeads, converted });
     }
 
-    // ── UPDATE STATUS / NOTES / ENGAGE NEXT ───────────────────────────────────
     if (action === 'update') {
       const { pageId, db, status, notes, engageNext } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
@@ -179,7 +189,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // ── UPDATE REACHED OUT ON ─────────────────────────────────────────────────
     if (action === 'updateReachedOut') {
       const { pageId, db, reachedOutOn } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
@@ -191,7 +200,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // ── UPDATE DETAILS ────────────────────────────────────────────────────────
     if (action === 'updateDetails') {
       const { pageId, db, name, company, location, email, insta, website, notes } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
@@ -201,7 +209,7 @@ export default async function handler(req, res) {
       if (location !== undefined) props['Location'] = { rich_text: [{ text: { content: location } }] };
       if (insta    !== undefined) props['Insta']    = { rich_text: [{ text: { content: insta } }] };
       if (website  !== undefined) props['Website']  = { rich_text: [{ text: { content: website } }] };
-      if (email    !== undefined) {
+      if (email !== undefined) {
         if (db === 'email') props['Email'] = { email: email || null };
         else                props['Mail']  = { rich_text: [{ text: { content: email } }] };
       }
@@ -211,7 +219,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // ── CREATE ────────────────────────────────────────────────────────────────
     if (action === 'create') {
       const { db: targetDb, name, company, email, insta, whatsapp, location, notes, status } = req.body;
       let dbId, properties;
@@ -255,19 +262,16 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, pageId: data.id });
     }
 
-    // ── DELETE ────────────────────────────────────────────────────────────────
     if (action === 'delete') {
       const { pageId } = req.body;
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
       const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers,
-        body: JSON.stringify({ in_trash: true }),
+        method: 'PATCH', headers, body: JSON.stringify({ in_trash: true }),
       });
       if (!resp.ok) throw new Error(`Delete failed: ${await resp.text()}`);
       return res.status(200).json({ success: true });
     }
 
-    // ── PROMOTE ───────────────────────────────────────────────────────────────
     if (action === 'promote') {
       const { pageId, name, company, email, insta, website, location, notes } = req.body;
       await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
