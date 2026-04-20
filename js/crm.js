@@ -291,11 +291,20 @@ function crmDetailHTML(c) {
     ${fields.length ? `<div class="crm-section-hd">Info</div>
       ${fields.map(([label, val]) => `<div class="crm-field"><div class="crm-field-label">${label}</div><div style="font-size:13px;flex:1;word-break:break-word;">${val}</div></div>`).join('')}` : ''}
 
-    <div class="modal-actions">
-      <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;">✎ Edit</button>
-      ${isLead ? `<button onclick="promoteLead('${c.id}')" class="pill-btn dark" style="flex:1;">→ Convert</button>` : ''}
+    <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
+      <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;min-width:80px;">✎ Edit</button>
       <button onclick="if(confirm('Delete?'))deleteLead('${c.id}')" class="pill-btn" style="color:#B71C1C;border-color:#FDECEA;flex-shrink:0;">🗑</button>
-    </div>`;
+    </div>
+    ${(() => {
+      const stage = c.db === 'converted' ? 'converted' : getStageKey(c) === 'closed' ? 'closed' : 'cold';
+      const closeModal = `document.getElementById('crm-modal').classList.remove('open');`;
+      const btn = (label, tab) => `<button onclick="${closeModal}dropLeadOnTab('${c.id}','${tab}')" class="pill-btn" style="flex:1;min-width:120px;">${label}</button>`;
+      const rows = [];
+      if (stage !== 'converted') rows.push(btn('🔥 Move to Warm Leads', 'converted'));
+      if (stage !== 'cold')      rows.push(btn('🌱 Move to Cold Leads', 'cold'));
+      if (stage !== 'closed')    rows.push(btn('🎉 Move to Sales Closed', 'closed'));
+      return rows.length ? `<div class="modal-actions" style="flex-wrap:wrap;gap:8px;">${rows.join('')}</div>` : '';
+    })()}`;
 }
 
 function crmEditHTML(c) {
