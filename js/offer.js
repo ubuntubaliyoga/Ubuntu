@@ -101,7 +101,7 @@ function buildOfferHTML(){
     ${company||address?`<p>${company||''}${address?'<br>'+address:''}</p>`:''}
     ${name?`<p>Dear ${name},</p>`:''}
     ${introPara}
-    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
+    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}</p>
   </div>
   ${ebBadge}
   <div class="e-package">
