@@ -178,6 +178,11 @@ function buildList(items) {
       ? `<div class="crm-card-notes">${c.notes.length > 80 ? c.notes.slice(0, 80) + '…' : c.notes}</div>`
       : '';
 
+    const offerCount = (window._drafts || []).filter(d => d.linkedLeadId === c.id).length;
+    const offerBadge = offerCount
+      ? `<span class="crm-badge" style="background:var(--bg2);color:var(--dark);border:1px solid var(--border);">✦ ${offerCount} offer${offerCount > 1 ? 's' : ''}</span>`
+      : '';
+
     return `<div class="crm-card" data-lead-id="${c.id}" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="min-width:0;">
@@ -187,6 +192,7 @@ function buildList(items) {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
           <span class="crm-badge" style="background:${src.bg};color:${src.color};">${src.label}</span>
           ${stageBadge}
+          ${offerBadge}
           ${reachedChips}
         </div>
       </div>
@@ -214,7 +220,7 @@ async function loadCRM(force = false) {
     crmData = await r.json();
     crmLoaded = true;
     dbg(`CRM: ${(crmData.emailLeads||[]).length} email, ${(crmData.whatsappLeads||[]).length} whatsapp, ${(crmData.shalaLeads||[]).length} shala, ${(crmData.converted||[]).length} converted`);
-    crmRender();
+    fetchDraftsData().then(() => crmRender());
     initCrmDragDrop();
   } catch (e) {
     if (list) list.innerHTML = `<div class="crm-empty" style="color:#B71C1C;">Could not load: ${e.message}</div>`;
@@ -305,8 +311,26 @@ function crmDetailHTML(c) {
     ${fields.length ? `<div class="crm-section-hd">Info</div>
       ${fields.map(([label, val]) => `<div class="crm-field"><div class="crm-field-label">${label}</div><div style="font-size:13px;flex:1;word-break:break-word;">${val}</div></div>`).join('')}` : ''}
 
+    ${(() => {
+      const linked = (window._drafts || []).map((d, i) => ({ ...d, _i: i })).filter(d => d.linkedLeadId === c.id);
+      if (!linked.length) return '';
+      return `<div class="crm-section-hd">Offers</div>` + linked.map(d => {
+        const total = d.totalUSD ? 'USD ' + Number(d.totalUSD).toLocaleString('en-US') : '—';
+        const dates = d.checkin ? fmtDateShort(d.checkin) + ' → ' + fmtDateShort(d.checkout) : 'No dates';
+        const statusColor = { Draft:'#8C9476', Sent:'#1565C0', Signed:'#2E7D32', Cancelled:'#B71C1C' }[d.status] || '#8C9476';
+        return `<div onclick="loadDraftFromCrm(${d._i})" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;gap:8px;">
+          <div style="min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px;">${d.retreatName || d.organizer || 'Unnamed offer'}</div>
+            <div style="font-size:11px;color:var(--muted);">${dates} · ${total}</div>
+          </div>
+          <span style="font-size:10px;font-weight:600;color:${statusColor};white-space:nowrap;flex-shrink:0;">${d.status || 'Draft'}</span>
+        </div>`;
+      }).join('');
+    })()}
+
     <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
-      <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;min-width:80px;">✎ Edit</button>
+      <button onclick="newDraftFromLead('${c.id}','${(c.name||'').replace(/'/g,"\\'")}');" class="pill-btn dark" style="flex:1;min-width:140px;">✦ Create new offer</button>
+      <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;min-width:60px;">✎ Edit</button>
       <button onclick="if(confirm('Delete?'))deleteLead('${c.id}')" class="pill-btn" style="color:#B71C1C;border-color:#FDECEA;flex-shrink:0;">🗑</button>
     </div>
     ${(() => {
@@ -499,6 +523,11 @@ async function promoteLead(id, skipConfirm = false) {
     crmRender();
     dbg('Promoted: ' + c.name);
   } catch (e) { dbg('Promote failed: ' + e.message); }
+}
+
+function loadDraftFromCrm(i) {
+  document.getElementById('crm-modal')?.classList.remove('open');
+  if (typeof loadDraftByIndex === 'function') { loadDraftByIndex(i); switchTab('deal'); }
 }
 
 async function deleteLead(id) {

@@ -1,3 +1,23 @@
+function _parseDraftLinks(drafts) {
+  return drafts.map(d => {
+    try {
+      const s = d.formState ? JSON.parse(d.formState) : {};
+      d.linkedLeadId = s['_linkedLeadId'] || null;
+      d.linkedLeadName = s['_linkedLeadName'] || null;
+    } catch(e) {}
+    return d;
+  });
+}
+
+async function fetchDraftsData() {
+  try {
+    const r = await fetch('/api/notion', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'load'}) });
+    if (!r.ok) return;
+    const data = await r.json();
+    window._drafts = _parseDraftLinks(data.drafts || []);
+  } catch(e) { /* silent — CRM still works without draft data */ }
+}
+
 async function loadDrafts(){
   const list=$('drafts-list');
   if(!list) return;
@@ -10,7 +30,7 @@ async function loadDrafts(){
       list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;font-style:italic;">No drafts saved yet. Click + New Deal to start.</div>`;
       return;
     }
-    window._drafts=data.drafts;
+    window._drafts=_parseDraftLinks(data.drafts);
     list.innerHTML=data.drafts.map((d,i)=>{
       const hasState=d.formState&&d.formState!=='null';
       const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set';

@@ -34,6 +34,7 @@ function getFormState(){
   s['extra-services']=getExtraServicesState();
 
   s['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
+  if (window._linkedLeadId) { s['_linkedLeadId'] = window._linkedLeadId; s['_linkedLeadName'] = window._linkedLeadName || ''; }
   return s;
 }
 

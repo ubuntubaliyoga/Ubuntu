@@ -89,7 +89,19 @@ function markDraftActive(){
   if(!draftActive){draftActive=true;startAutosave();}
 }
 
+function newDraftFromLead(leadId, leadName) {
+  window._linkedLeadId = leadId;
+  window._linkedLeadName = leadName;
+  document.getElementById('crm-modal')?.classList.remove('open');
+  switchTab('deal');
+  newDraft();
+  const el = $('f-name');
+  if (el) { el.value = leadName; markDraftActive(); }
+}
+
 function newDraft(){
+  window._linkedLeadId = null;
+  window._linkedLeadName = null;
   currentPageId=null;
   ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{
     const el=$(id);if(el)el.value='';
