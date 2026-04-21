@@ -70,9 +70,13 @@ function buildOfferHTML(){
   const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
   const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
   const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
-  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Total Investment</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl. tax &amp; service</td></tr>`:'';
+  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Nightly Rate</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl.</td></tr>`:'';
   const divBlock=showDaily&&showTotal?`<tr class="pt-divider"><td colspan="3"><div class="pt-divline">&nbsp;</div></td></tr>`:'';
-  const totalBlock=showTotal?`<tr class="pt-grand"><td class="col-item">Total for ${P.nights} Nights</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
+  const extTotal=extraServicesTotal();
+  const hasExtras=extraServices.length>0;
+  const totalLabel=hasExtras?`Package Total (${P.nights} Nights)`:`Total for ${P.nights} Nights`;
+  const totalBlock=showTotal?`<tr class="pt-grand"><td class="col-item">${totalLabel}</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
+  const extrasBlock=hasExtras?`${extraServicesHTML()}<tr class="pt-subtotal"><td class="col-item">Extras Subtotal</td><td></td><td class="col-sub">USD ${fmtN(extTotal,0)}</td></tr><tr class="pt-grand" style="background:#3D2410;"><td class="col-item">Grand Total</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx+extTotal,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn+extTotal*1.15,0)} incl. tax &amp; service</td></tr>`:'';
   const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
   const validLine=hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
   const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (USD ${fmtN(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
@@ -96,9 +100,9 @@ function buildOfferHTML(){
     <div class="e-pkg-body"><table class="ptable">
       <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate</td><td class="col-sub">Subtotal</td></tr>
       ${baleRow}${parvRow}${buddRow}${pkgRow}
-      ${extraServicesHTML()}
-      <tr class="pt-subtotal"><td class="col-item">Standard Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
+      <tr class="pt-subtotal"><td class="col-item">Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
       ${ebRow}${rdRow}${dailyBlock}${divBlock}${totalBlock}
+      ${extrasBlock}
     </table></div>
   </div>
   <div class="e-note">${notePara}${validLine}${depositLine}</div>
