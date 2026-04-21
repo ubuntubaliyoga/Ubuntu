@@ -26,7 +26,7 @@ function payments(total,checkin,depositPct){
 }
 
 function getFormState(){
-  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note'];
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note','f-included','f-also','f-signoff'];
   const s={};
   ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
   s['f-parvati-on']=$('f-parvati-on').checked;
@@ -64,6 +64,7 @@ function buildOfferHTML(){
   const vLbl=(orig,disc,pct)=>pct>0?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)} (${pct}% off)`:`USD ${fmtN(disc)}`;
   const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
   const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
+  const bodyText=$('f-body')?.value.trim()||'Kindly open the attached brochure for pictures of the full property.';
   const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
   const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
   const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
@@ -76,7 +77,11 @@ function buildOfferHTML(){
   const hasExtras=extraServices.length>0;
   const totalLabel=hasExtras?`Package Total (${P.nights} Nights)`:`Total for ${P.nights} Nights`;
   const totalBlock=showTotal?`<tr class="pt-grand"><td class="col-item">${totalLabel}</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
-  const extrasBlock=hasExtras?`${extraServicesHTML()}<tr class="pt-subtotal"><td class="col-item">Extras Subtotal</td><td></td><td class="col-sub">USD ${fmtN(extTotal,0)}</td></tr><tr class="pt-grand" style="background:#3D2410;"><td class="col-item">Grand Total</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx+extTotal,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn+extTotal*1.15,0)} incl. tax &amp; service</td></tr>`:'';
+  const extrasBlock=hasExtras?`${extraServicesHTML()}<tr class="pt-grand" style="background:#3D2410;"><td class="col-item">Grand Total</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx+extTotal,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn+extTotal*1.15,0)} incl. tax &amp; service</td></tr>`:'';
+  const includedLines=($('f-included')?.value.trim()||'2 organic meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
+  const includedRows=[];for(let i=0;i<includedLines.length;i+=2){includedRows.push(`<tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>${includedLines[i]}</td><td>${includedLines[i+1]?`<span style="color:#c8b89a;">&middot;&nbsp;</span>${includedLines[i+1]}`:''}</td></tr>`);}
+  const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
+  const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
   const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
   const validLine=hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
   const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (USD ${fmtN(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
@@ -91,7 +96,7 @@ function buildOfferHTML(){
     ${company||address?`<p>${company||''}${address?'<br>'+address:''}</p>`:''}
     ${name?`<p>Dear ${name},</p>`:''}
     ${introPara}
-    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} Kindly open the attached brochure for pictures of the full property.${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
+    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}${facilitators>0?` The ${facilitators} facilitator${facilitators>1?'s':''} will be accommodated at a preferential rate.`:''}</p>
   </div>
   ${ebBadge}
   <div class="e-package">
@@ -107,19 +112,14 @@ function buildOfferHTML(){
   </div>
   <div class="e-note">${notePara}${validLine}${depositLine}</div>
   <div class="e-included"><div class="e-included-label">What's Included</div>
-    <table><tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>2 organic meals per day</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Tea &amp; afternoon snack</td></tr>
-    <tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Shala of your choice + cleaning</td><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Full staff support</td></tr>
-    <tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>Dedicated contact person</td><td></td></tr></table>
+    <table>${includedRows.join('')}</table>
   </div>
   <div class="e-also"><div class="e-also-label">Also of Interest</div>
-    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Ayurvedic or Balinese menus available on request.</p>
-    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Day trips and activities around Bali can be arranged.</p>
-    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Massages, rituals, and photography available.</p>
-    <p><span style="color:#c8b89a;">&rarr;&nbsp;</span>Airport pick-up available on request.</p>
+    ${alsoLines.map(l=>`<p><span style="color:#c8b89a;">&rarr;&nbsp;</span>${l}</p>`).join('')}
   </div>
-  <div class="e-closing"><p>For any further questions, please don't hesitate to reach out.</p><p>Warmly,<br><strong>Kevin</strong></p></div>
+  <div class="e-closing"><p>For any further questions, please don't hesitate to reach out.</p><p>Warmly,<br><strong>${signoff}</strong></p></div>
   <div class="e-footer-band"><div class="e-footer-tagline">I am, because we are.</div>
-  <div class="e-footer-contact">Ubuntu Bali &nbsp;·&nbsp; namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</div></div>`;
+  <div class="e-footer-contact">namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</div></div>`;
 }
 
 function buildContractHTML(){

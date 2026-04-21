@@ -600,9 +600,18 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
           <div class="fg"><label>Contact Title / Role</label><input type="text" id="f-title"></div>
         </div>
       </div>
-      <div class="fg">
-        <label style="color:var(--muted);font-size:10px;">Intro paragraph</label>
-        <textarea id="f-intro" rows="3">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
+      <div style="margin-bottom:16px;">
+        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:6px 14px;">+ Offer Text</button>
+        <div class="more-details" style="display:none;margin-top:12px;">
+          <div class="fg">
+            <label style="color:var(--muted);font-size:10px;">Intro paragraph</label>
+            <textarea id="f-intro" rows="3">It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.</textarea>
+          </div>
+          <div class="fg" style="margin-top:12px;">
+            <label style="color:var(--muted);font-size:10px;">Body paragraph</label>
+            <textarea id="f-body" rows="2">Kindly open the attached brochure for pictures of the full property.</textarea>
+          </div>
+        </div>
       </div>
 
       <div class="s-section">Booking</div>
@@ -732,6 +741,35 @@ table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
         <label style="color:var(--muted);font-size:10px;">Package note</label>
         <textarea id="f-note" rows="3">The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.</textarea>
         <div class="hint">Use {guests} to auto-insert guest count.</div>
+      </div>
+      <div style="margin-top:12px;margin-bottom:4px;">
+        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:6px 14px;">+ What's Included</button>
+        <div class="more-details" style="display:none;margin-top:12px;">
+          <div class="fg">
+            <label style="color:var(--muted);font-size:10px;">One item per line</label>
+            <textarea id="f-included" rows="5">2 organic meals per day
+Tea &amp; afternoon snack
+Shala of your choice + cleaning
+Full staff support
+Dedicated contact person</textarea>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px;margin-bottom:4px;">
+        <button type="button" onclick="toggleMoreDetails(this)" class="pill-btn" style="font-size:11px;padding:6px 14px;">+ Also of Interest</button>
+        <div class="more-details" style="display:none;margin-top:12px;">
+          <div class="fg">
+            <label style="color:var(--muted);font-size:10px;">One item per line</label>
+            <textarea id="f-also" rows="4">Ayurvedic or Balinese menus available on request.
+Day trips and activities around Bali can be arranged.
+Massages, rituals, and photography available.
+Airport pick-up available on request.</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:12px;">
+        <label style="color:var(--muted);font-size:10px;">Sign-off name</label>
+        <input type="text" id="f-signoff" value="Andréa and Tari">
       </div>
       <div class="action-row">
         <button class="action-btn gold" onclick="switchDealTab('offer')">Preview Offer →</button>
