@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Ubuntu Flow</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Ubuntu%20Flow%22,%22short_name%22:%22Ubuntu%20Flow%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23FAF7F2%22,%22theme_color%22:%22%23221208%22,%22icons%22:[{%22src%22:%22https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w%22,%22sizes%22:%22any%22,%22type%22:%22image/png%22}]}">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -242,47 +242,72 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .action-btn.gold{background:var(--gold);color:var(--dark);}
 
 /* ── OFFER / CONTRACT ── */
-.email-wrap{background:#e8e3dc;padding:16px 10px;border-radius:var(--radius);overflow-x:auto;}
-.email{background:#fff;width:560px;margin:0 auto;font-family:Verdana,Geneva,sans-serif;font-size:10px;color:#2a2520;}
-.e-header{background:#3a3228;text-align:center;padding:22px 32px 18px;}
-.e-logo{max-width:56px;margin:0 auto 11px;display:block;filter:brightness(0) invert(1);}
-.e-header-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c8b89a;margin-bottom:4px;}
-.e-header-line{width:34px;height:1px;background:#c8b89a;margin:6px auto;opacity:.6;}
-.e-header-date,.e-header-dates{font-size:9px;color:#c8b89a;margin-top:3px;}
-.e-body{padding:16px 32px 0;line-height:1.9;color:#2a2520;}
-.e-body p{margin-bottom:9px;}
-.e-badge{margin:11px 32px 0;background:#f7f2ec;border:1px solid #c8b89a;border-radius:4px;padding:7px 12px;text-align:center;font-size:10px;color:#3a3228;}
-.e-package{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;overflow:hidden;}
-.e-pkg-hd{background:#3a3228;padding:10px 14px;}
-.e-pkg-hd-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c8b89a;margin-bottom:3px;}
-.e-pkg-hd-title{font-size:11px;font-weight:bold;color:#fff;}
-.e-pkg-body{padding:0 14px;}
-table.ptable{width:100%;border-collapse:collapse;font-size:10px;}
-.pt-colhead td{padding:7px 0 3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;}
-.pt-item td{padding:5px 0;border-top:1px solid #eee;}
-.pt-subtotal td{padding:5px 0;border-top:1px solid #d8d0c4;font-style:italic;color:#777;}
-.pt-discount td{padding:5px 0;border-top:1px solid #eee;color:#7a6a52;}
-.pt-total td{padding:7px 0 2px;border-top:2px solid #3a3228;font-weight:bold;}
-.pt-taxnote td{padding:2px 0 8px;font-size:9px;color:#888;}
-.pt-divider td{padding:0 0 5px;}
-.pt-divline{height:1px;background:#eee;font-size:1px;}
-.pt-grand td{padding:2px 0;font-weight:bold;}
-.pt-grandnote td{padding:2px 0 9px;font-size:9px;color:#888;}
-.col-item{width:50%}.col-rate{width:25%;text-align:center}.col-sub{width:25%;text-align:right}
-.e-note{margin:9px 32px 0;border-left:3px solid #c8b89a;padding:5px 10px;line-height:1.8;color:#4a3e34;font-size:10px;background:#faf7f3;}
+.email-wrap{background:#DDD8D0;padding:20px 12px;border-radius:var(--radius);overflow-x:auto;}
+.email{background:#FDFCFB;width:560px;margin:0 auto;font-family:'Montserrat','Inter',sans-serif;font-size:10px;color:#3D3935;line-height:1.6;}
+/* Header — refined, no heavy dark block */
+.e-header{background:#FDFCFB;text-align:center;padding:32px 40px 22px;border-bottom:1px solid #E2D9CE;}
+.e-logo{max-width:52px;margin:0 auto 16px;display:block;opacity:.9;}
+.e-header-label{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:#C5A27D;margin-bottom:6px;font-weight:400;}
+.e-header-line{width:36px;height:1px;background:#C5A27D;margin:8px auto;opacity:.55;}
+.e-header-date,.e-header-dates{font-size:8.5px;color:#9E948A;margin-top:5px;letter-spacing:1.5px;text-transform:uppercase;}
+/* Body */
+.e-body{padding:24px 40px 4px;line-height:2;color:#3D3935;font-size:10px;}
+.e-body p{margin-bottom:10px;}
+/* Early bird badge */
+.e-badge{margin:14px 40px 0;background:#FAF6F0;border:1px solid #C5A27D;border-radius:2px;padding:9px 14px;text-align:center;font-size:9px;color:#7A6248;letter-spacing:.4px;}
+/* Package section */
+.e-package{margin:22px 40px 0;}
+.e-pkg-hd{padding-bottom:12px;border-bottom:2px solid #C5A27D;}
+.e-pkg-hd-label{font-size:7.5px;letter-spacing:3px;text-transform:uppercase;color:#C5A27D;margin-bottom:5px;font-family:'Montserrat',sans-serif;font-weight:500;}
+.e-pkg-hd-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:#3D3935;letter-spacing:.02em;line-height:1.2;}
+.e-pkg-hd-sub{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#9E948A;margin-top:4px;}
+.e-pkg-body{padding:0 0 16px;}
+/* Pricing table — breathable, horizontal rules only */
+table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Montserrat',sans-serif;}
+.pt-colhead td{padding:12px 0 6px;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#B5AAA0;border-bottom:1px solid #E8E2DA;}
+.pt-item td{padding:9px 0;border-bottom:1px solid #F0EBE3;}
+.pt-subtotal td{padding:8px 0 4px;border-top:1px solid #D8D0C4;font-size:8.5px;letter-spacing:.5px;color:#9E948A;text-transform:uppercase;}
+.pt-discount td{padding:5px 0;font-size:9px;color:#C5A27D;}
+.pt-total td{padding:10px 0 4px;border-top:2px solid #3D3935;font-weight:600;font-size:10px;}
+.pt-taxnote td{padding:1px 0 10px;font-size:8px;color:#B5AAA0;letter-spacing:.3px;}
+.pt-divider td{padding:2px 0 6px;}
+.pt-divline{height:1px;background:#F0EBE3;}
+.pt-grand td{padding:3px 0;font-weight:700;font-size:11px;}
+.pt-grandnote td{padding:2px 0 10px;font-size:8px;color:#B5AAA0;}
+.col-item{width:52%}.col-rate{width:26%;text-align:right;padding-right:16px!important}.col-sub{width:22%;text-align:right;}
+/* Discount display in rate cells */
+.rate-orig{display:block;color:#C0B8B0;font-size:8.5px;text-decoration:line-through;}
+.rate-disc{display:block;color:#3D3935;font-weight:500;}
+.rate-pct{display:inline-block;color:#C5A27D;font-size:8px;margin-left:3px;}
+/* Investment summary block */
+.e-investment{background:#FAF6F0;border:1px solid #E2D9CE;border-radius:2px;padding:14px 18px 16px;margin-top:14px;}
+.e-invest-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-size:9.5px;color:#6A5E54;font-family:'Montserrat',sans-serif;}
+.e-invest-section-label{font-size:7.5px;letter-spacing:2.5px;text-transform:uppercase;color:#C5A27D;padding-top:10px;padding-bottom:2px;font-family:'Montserrat',sans-serif;}
+.e-invest-addon{font-size:9px;color:#8A7E74;padding:3px 0;}
+.e-invest-addon-total{font-weight:500;color:#3D3935;border-top:1px solid #E2D9CE;margin-top:4px;padding-top:8px!important;}
+.e-invest-grand{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0 4px;border-top:1px solid #C5A27D;margin-top:10px;}
+.e-invest-grand-lbl{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#3D3935;letter-spacing:.02em;}
+.e-invest-grand-val{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:#3D3935;}
+.e-invest-note{font-size:7.5px;color:#B5AAA0;text-align:right;letter-spacing:.5px;margin-top:2px;}
+/* Note */
+.e-note{margin:16px 40px 0;padding:9px 14px;line-height:1.9;color:#6A5E54;font-size:9.5px;border-left:2px solid #C5A27D;background:#FAF6F0;}
 .e-note p{margin-bottom:5px;}
-.e-included{margin:13px 32px 0;border:1px solid #d8d0c4;border-radius:4px;padding:10px 14px 6px;}
-.e-included-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}
-.e-included table{width:100%;border-collapse:collapse;font-size:10px;}
-.e-included td{padding:2px 0;vertical-align:top;width:50%;}
-.e-also{margin:13px 32px 0;}
-.e-also-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#7a6a52;margin-bottom:7px;}
-.e-also p{padding:2px 0;line-height:1.8;font-size:10px;}
-.e-closing{padding:18px 32px 0;line-height:1.9;font-size:10px;}
-.e-closing p{margin-bottom:5px;}
-.e-footer-band{background:#3a3228;margin-top:24px;padding:14px 32px 18px;text-align:center;}
-.e-footer-tagline{font-size:9px;font-style:italic;color:#c8b89a;margin-bottom:5px;letter-spacing:1px;}
-.e-footer-contact{font-size:9px;color:#a89880;line-height:1.8;}
+/* What's Included */
+.e-included{margin:18px 40px 0;padding:14px 18px 10px;border:1px solid #E2D9CE;border-radius:2px;}
+.e-included-label{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#3D3935;margin-bottom:9px;letter-spacing:.02em;}
+.e-included table{width:100%;border-collapse:collapse;font-size:9px;font-family:'Montserrat',sans-serif;}
+.e-included td{padding:4px 0;vertical-align:top;width:50%;color:#6A5E54;line-height:1.7;}
+/* Also of Interest */
+.e-also{margin:16px 40px 0;}
+.e-also-label{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#3D3935;margin-bottom:9px;letter-spacing:.02em;}
+.e-also p{padding:3px 0;line-height:1.9;font-size:9px;color:#6A5E54;font-family:'Montserrat',sans-serif;}
+/* Closing */
+.e-closing{padding:24px 40px 0;line-height:2;font-size:10px;color:#3D3935;font-family:'Montserrat',sans-serif;}
+.e-closing p{margin-bottom:6px;}
+/* Footer */
+.e-footer-band{background:#3D3935;margin-top:32px;padding:18px 40px 22px;text-align:center;}
+.e-footer-tagline{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:#C5A27D;margin-bottom:6px;letter-spacing:1px;}
+.e-footer-contact{font-size:8px;color:#9A8878;line-height:2;letter-spacing:.5px;}
 .contract-wrap{max-width:760px;margin:0 auto;}
 .contract-doc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:32px 24px;color:var(--text);font-size:12.5px;line-height:1.75;box-shadow:var(--shadow);}
 .c-hd{text-align:center;margin-bottom:24px;border-bottom:2px solid var(--dark);padding-bottom:18px;}

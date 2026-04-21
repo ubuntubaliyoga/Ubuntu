@@ -61,25 +61,30 @@ function buildOfferHTML(){
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
-  const vLbl=(orig,disc,pct)=>pct>0?`<span style="text-decoration:line-through;opacity:.55;">USD ${fmtN(orig)}</span> &rarr; USD ${fmtN(disc)} (${pct}% off)`:`USD ${fmtN(disc)}`;
+  const vLbl=(orig,disc,pct)=>pct>0?`<span class="rate-orig">USD ${fmtN(orig)}</span><span class="rate-disc">USD ${fmtN(disc)}</span><span class="rate-pct">−${pct}%</span>`:`USD ${fmtN(disc)}`;
   const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
   const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
   const bodyText=$('f-body')?.value.trim()||'Kindly open the attached brochure for pictures of the full property.';
-  const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
-  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
-  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate" style="color:#555;">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
-  const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package — ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate" style="color:#555;">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
-  const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">- USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</td><td class="col-rate">- USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">- USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
-  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Nightly Rate</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl.</td></tr>`:'';
-  const divBlock=showDaily&&showTotal?`<tr class="pt-divider"><td colspan="3"><div class="pt-divline">&nbsp;</div></td></tr>`:'';
+  const baleRow=P.bales>0?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`:'';
+  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
+  const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Retreat Package &mdash; ${P.pkgCount} ${P.pkgCount===1?'person':'people'} (Meals, Shala, Staff)</td><td class="col-rate">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
+  const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">− USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">− USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} &mdash; ${P.discRoomPct}% Special Rate</td><td class="col-rate">− USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">− USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
+  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Nightly Rate</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl.</td></tr>`:'';
   const extTotal=extraServicesTotal();
   const hasExtras=extraServices.length>0;
-  const totalLabel=hasExtras?`Package Total (${P.nights} Nights)`:`Total for ${P.nights} Nights`;
-  const totalBlock=showTotal?`<tr class="pt-grand"><td class="col-item">${totalLabel}</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn,0)} incl. tax &amp; service</td></tr>`:'';
-  const extrasBlock=hasExtras?`${extraServicesHTML()}<tr class="pt-grand" style="background:#3D2410;"><td class="col-item">Grand Total</td><td class="col-rate"></td><td class="col-sub" style="font-size:12px;">USD ${fmtN(P.totalEx+extTotal,0)}</td></tr><tr class="pt-grandnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.totalIn+extTotal*1.15,0)} incl. tax &amp; service</td></tr>`:'';
+  const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal*1.15;
+  const investAddonRows=hasExtras?extraServices.map(s=>{
+    const t=s.unitUsd*s.qty;
+    const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
+    return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label}${qtyStr}</span><span>USD ${fmtN(t,0)}</span></div>`;
+  }).join(''):'';
+  const investmentBlock=(showTotal||hasExtras)?`<div class="e-investment">${showTotal?`<div class="e-invest-row"><span>Package Total (${P.nights} Nights)</span><span>USD ${fmtN(P.totalEx,0)}</span></div>`:''
+  }${hasExtras?`<div class="e-invest-section-label">Enhancements</div>${investAddonRows}<div class="e-invest-row e-invest-addon-total"><span>Add-ons Total</span><span>+ USD ${fmtN(extTotal,0)}</span></div>`:''
+  }<div class="e-invest-grand"><span class="e-invest-grand-lbl">Total Investment</span><span class="e-invest-grand-val">USD ${fmtN(hasExtras?grandEx:P.totalEx,0)}</span></div><div class="e-invest-note">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(hasExtras?grandIn:P.totalIn,0)} all-inclusive</div></div>`:'';
   const includedLines=($('f-included')?.value.trim()||'2 organic meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
-  const includedRows=[];for(let i=0;i<includedLines.length;i+=2){includedRows.push(`<tr><td><span style="color:#c8b89a;">&middot;&nbsp;</span>${includedLines[i]}</td><td>${includedLines[i+1]?`<span style="color:#c8b89a;">&middot;&nbsp;</span>${includedLines[i+1]}`:''}</td></tr>`);}
+  const includedRows=[];for(let i=0;i<includedLines.length;i+=2){includedRows.push(`<tr><td><span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i]}</td><td>${includedLines[i+1]?`<span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i+1]}`:''}</td></tr>`);}
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
   const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
   const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
@@ -100,22 +105,25 @@ function buildOfferHTML(){
   </div>
   ${ebBadge}
   <div class="e-package">
-    <div class="e-pkg-hd"><div class="e-pkg-hd-label">Package</div>
-    <div class="e-pkg-hd-title">${retreatName} &nbsp;·&nbsp; ${P.nights} Nights, ${days} Days &nbsp;·&nbsp; ${totalPeople} People</div></div>
+    <div class="e-pkg-hd">
+      <div class="e-pkg-hd-label">Package</div>
+      <div class="e-pkg-hd-title">${retreatName}</div>
+      <div class="e-pkg-hd-sub">${P.nights} Nights, ${days} Days &middot; ${totalPeople} Guests</div>
+    </div>
     <div class="e-pkg-body"><table class="ptable">
-      <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate</td><td class="col-sub">Subtotal</td></tr>
+      <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate / Night</td><td class="col-sub">Subtotal</td></tr>
       ${baleRow}${parvRow}${buddRow}${pkgRow}
       <tr class="pt-subtotal"><td class="col-item">Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
-      ${ebRow}${rdRow}${dailyBlock}${divBlock}${totalBlock}
-      ${extrasBlock}
-    </table></div>
+      ${ebRow}${rdRow}${dailyBlock}
+    </table>
+    ${investmentBlock}</div>
   </div>
   <div class="e-note">${notePara}${validLine}${depositLine}</div>
   <div class="e-included"><div class="e-included-label">What's Included</div>
     <table>${includedRows.join('')}</table>
   </div>
   <div class="e-also"><div class="e-also-label">Also of Interest</div>
-    ${alsoLines.map(l=>`<p><span style="color:#c8b89a;">&rarr;&nbsp;</span>${l}</p>`).join('')}
+    ${alsoLines.map(l=>`<p><span style="color:#C5A27D;">&rarr;&nbsp;</span>${l}</p>`).join('')}
   </div>
   <div class="e-closing"><p>For any further questions, please don't hesitate to reach out.</p><p>Warmly,<br><strong>${signoff}</strong></p></div>
   <div class="e-footer-band"><div class="e-footer-tagline">I am, because we are.</div>
