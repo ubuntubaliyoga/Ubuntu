@@ -114,7 +114,7 @@ function buildOfferHTML(){
       <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate / Night</td><td class="col-sub">Subtotal</td></tr>
       ${baleRow}${parvRow}${buddRow}${pkgRow}
       <tr class="pt-subtotal"><td class="col-item">Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
-      ${ebRow}${rdRow}${dailyBlock}
+      ${ebRow}${rdRow}
     </table>
     ${investmentBlock}</div>
   </div>
