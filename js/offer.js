@@ -57,7 +57,7 @@ function buildOfferHTML(){
   const P=pricing(), totalPeople=guests+facilitators, days=P.nights+1;
   const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
-  const depositAmt=depositPct>0?P.totalEx*(depositPct/100):0;
+  const depositAmt=depositPct>0?P.totalIn*(depositPct/100):0;
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
