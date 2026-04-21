@@ -140,18 +140,23 @@ function buildContractHTML(){
   const contractDate=$('f-contractdate').value||todayStr(), validUntil=$('f-validuntil').value||addDays(contractDate,7);
   const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
   const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
-  const P=pricing(), nights=P.nights, days=nights+1, idrTotal=P.totalIn*idrRate;
-  const PMT=payments(P.totalIn,checkin,depositPct);
+  const P=pricing(), nights=P.nights, days=nights+1;
+  const extTotal=extraServicesTotal(), hasExtrasC=extraServices.length>0;
+  const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal*1.15;
+  const finalTotal=hasExtrasC?grandInC:P.totalIn;
+  const idrTotal=finalTotal*idrRate;
+  const PMT=payments(finalTotal,checkin,depositPct);
   const BANK={Currency:'IDR','Account Holder':'PT PURUSA YOGA BALI',Bank:'PT Bank Permata, Tbk','Account Number':'4122048077','BIC / SWIFT':'BBBAIDJAXXX','Bank Address':'Jalan Subak Sari No. 1, Badung, Bali'};
   const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
   const bR=P.bales>0?`<tr><td>Accommodation — ${P.bales} Gladak${P.bales>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.bales*P.roomRate*nights,2)}</td></tr>`:'';
   const pR=P.parvOn?`<tr><td>Parvati Villa × ${nights} nights × USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc*nights,2)}</td></tr>`:'';
   const buR=P.buddOn?`<tr><td>Buddha Villa × ${nights} nights × USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc*nights,2)}</td></tr>`:'';
   const pkR=P.pkgCount>0?`<tr><td>Retreat Package — ${P.pkgCount} people × ${nights} nights × USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgSub*nights,2)}</td></tr>`:'';
-  const txR=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(P.totalIn-P.totalEx,2)}</td></tr>`;
+  const extR=hasExtrasC?`<tr><td colspan="3" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 11px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return`<tr><td>${s.label}${qtyStr}</td><td>USD ${fmtN(s.unitUsd,0)}</td><td>USD ${fmtN(t,0)}</td></tr>`;}).join('')}`:'';
+  const txR=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(finalTotal-(hasExtrasC?grandExC:P.totalEx),2)}</td></tr>`;
   const ebR=P.discPct>0?`<tr><td><strong>${P.discPct}% Early Bird Discount</strong></td><td></td><td><strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong></td></tr>`:'';
   const rdR=P.discRooms>0&&P.discRoomPct>0?`<tr><td><strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong></td><td></td><td><strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong></td></tr>`:'';
-  const totR=`<tr style="background:#F5ECD7;"><td colspan="2">Total incl. tax &amp; service</td><td>USD ${fmtN(P.totalIn,2)}</td></tr>`;
+  const totR=`<tr style="background:#F5ECD7;"><td colspan="2">Total incl. tax &amp; service</td><td>USD ${fmtN(finalTotal,2)}</td></tr>`;
   const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td colspan="2" style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;">IDR for transaction (rate: 1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue)</td><td style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
   return`<div class="contract-doc">
   <div class="c-hd">
@@ -176,7 +181,7 @@ function buildContractHTML(){
     <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
     <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
     <table class="c-table"><thead><tr><th>ITEM</th><th>RATE</th><th>SUBTOTAL</th></tr></thead>
-    <tbody>${bR}${pR}${buR}${pkR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
+    <tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
     <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
     <p><strong>What's Included:</strong></p>
     <ul><li>2 organic plant-based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
