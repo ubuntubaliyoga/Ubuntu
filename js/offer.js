@@ -188,7 +188,7 @@ function buildContractHTML(){
     <tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
     <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
     <p><strong>What's Included:</strong></p>
-    <ul><li>2 organic plant-based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
+    <ul><li>2 plant based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
     <p>The package price is fixed for ${totalPeople} guests. Should the group exceed ${totalPeople} people, the room rate remains the same — only meals would be added for each additional guest.</p></div>
   <div class="c-sec"><div class="c-sec-hd">C) Payments & Bank Details</div>
     <p>Payments must be made to the following account:</p>
@@ -213,7 +213,7 @@ function buildContractHTML(){
   <div class="c-sec"><div class="c-sec-hd">G) Property Use & Conduct</div>
     <ul><li>Quiet hours: 9:30pm – 7:00am</li><li>No smoking, alcohol, drugs, or intoxicants on the premises</li><li>Yoga Shala must be left tidied, fans and lights switched off</li><li>Participant-caused property damage will be charged to the Retreat Organizer</li></ul></div>
   <div class="c-sec"><div class="c-sec-hd">H) Meals</div>
-    <p>Two organic plant-based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance.</p></div>
+    <p>Two plant based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance.</p></div>
   <div class="c-sec"><div class="c-sec-hd">I) Swimming Pool</div>
     <p>Available to all registered retreat participants. All users must shower before entering.</p></div>
   <div class="c-sec"><div class="c-sec-hd">J) Wi-Fi</div>
