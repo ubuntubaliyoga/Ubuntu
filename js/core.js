@@ -21,6 +21,13 @@ function dbg(msg){
   const p=$('debug-panel');if(p)p.scrollTop=p.scrollHeight;
 }
 
+function dbgWarn(msg){
+  const l=$('debug-log');if(!l)return;
+  const t=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  l.innerHTML+=`<div style="color:#ffaa00">[${t}] ${msg}</div>`;
+  const p=$('debug-panel');if(p)p.scrollTop=p.scrollHeight;
+}
+
 let _agentOn=localStorage.getItem('debugAgentOn')==='1';
 function toggleAgent(){
   _agentOn=!_agentOn;
@@ -31,6 +38,23 @@ function toggleAgent(){
 window.addEventListener('load',()=>{
   const btn=$('agent-toggle');
   if(btn){btn.textContent='AGENT: '+(_agentOn?'ON':'OFF');btn.classList.toggle('on',_agentOn);}
+
+  // Schema drift check — at most once per 24h, runs 3s after load so it never blocks UI
+  const lastCheck=parseInt(localStorage.getItem('driftCheckedAt')||'0');
+  if(Date.now()-lastCheck>86400000){
+    setTimeout(async()=>{
+      try{
+        const r=await fetch('/api/drift-detector');
+        const d=await r.json();
+        localStorage.setItem('driftCheckedAt',String(Date.now()));
+        if(d.drifts?.length>0){
+          const p=$('debug-panel');if(p)p.style.display='block';
+          dbgWarn(`[DRIFT] ${d.drifts.length} schema issue(s) found — Notion properties changed`);
+          d.drifts.forEach(dr=>dbgWarn(`[DRIFT] ${dr.db} · "${dr.property}" — ${dr.issue}`));
+        }
+      }catch{}
+    },3000);
+  }
 });
 
 // Client-side filename → repo path for JS errors
