@@ -33,23 +33,52 @@ window.addEventListener('load',()=>{
   if(btn){btn.textContent='AGENT: '+(_agentOn?'ON':'OFF');btn.classList.toggle('on',_agentOn);}
 });
 
+// Client-side filename → repo path for JS errors
+const _jsFileMap={'core.js':'js/core.js','drafts.js':'js/drafts.js','offer.js':'js/offer.js','crm.js':'js/crm.js'};
+
+function _agentPost(url, entry, onResult){
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)})
+    .then(r=>r.json()).then(onResult)
+    .catch(e=>dbg(`[AGENT] network error: ${e.message}`));
+}
+
+function _logResult(d, level){
+  const p=level===2?'[AGENT-2]':'[AGENT]';
+  if(d.action==='fixed')          dbg(`${p} fixed: ${d.file}`);
+  else if(d.action==='pr_created')dbg(`${p} PR opened — review needed: ${d.pr}`);
+  else if(d.action==='no_fix')    dbg(`${p} no fix: ${d.reason}`);
+  else if(d.action==='skipped')   dbg(`${p} skipped: ${d.reason}`);
+  else if(d.action==='circuit_open'){
+    dbg(`${p} escalating to deep agent...`);
+    _agentPost('/api/debug-agent-deep', d._entry||{}, r=>_logResult(r,2));
+  }
+  else dbg(`${p} ${JSON.stringify(d)}`);
+}
+
 function dbgStructured(obj){
   const entry={...obj,ts:Date.now(),tab:typeof activeTab!=='undefined'?activeTab:null};
   window._errorLog.push(entry);
   const loc=obj.file?` (${obj.file}:${obj.line||'?'})`:obj.url?` → ${obj.url}`:'';
   dbg(`[${(obj.type||'ERR').toUpperCase()}] ${obj.message||'?'}${loc}`);
-  if(_agentOn&&(obj.type==='api')&&obj.notion_code){
-    dbg('[AGENT] sending to debug agent...');
-    fetch('/api/debug-agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)})
-      .then(r=>r.json())
-      .then(d=>{
-        if(d.action==='fixed')dbg(`[AGENT] fixed: ${d.file} (attempt ${d.attempts})`);
-        else if(d.action==='circuit_open')dbg(`[AGENT] circuit open after ${d.attempts} attempts — needs manual review`);
-        else if(d.action==='skipped')dbg(`[AGENT] skipped: ${d.reason}`);
-        else if(d.action==='no_fix')dbg(`[AGENT] no fix (${d.reason}) — attempt ${d.attempts}/2`);
-        else dbg(`[AGENT] ${JSON.stringify(d)}`);
-      })
-      .catch(e=>dbg(`[AGENT] error: ${e.message}`));
+  if(!_agentOn) return;
+
+  // API errors with a Notion code → Level 1 first, escalate on circuit_open
+  if(obj.type==='api'&&obj.notion_code){
+    dbg('[AGENT] analyzing...');
+    _agentPost('/api/debug-agent', entry, d=>{
+      if(d.action==='circuit_open'){
+        dbg('[AGENT] circuit open — escalating to deep agent...');
+        _agentPost('/api/debug-agent-deep', entry, r=>_logResult(r,2));
+      } else _logResult(d,1);
+    });
+    return;
+  }
+
+  // JS / promise errors in known client files → deep agent directly
+  if((obj.type==='js'||obj.type==='promise')&&_jsFileMap[obj.file]){
+    const enriched={...entry,filePath:_jsFileMap[obj.file]};
+    dbg('[AGENT-2] analyzing JS error...');
+    _agentPost('/api/debug-agent-deep', enriched, r=>_logResult(r,2));
   }
 }
 
