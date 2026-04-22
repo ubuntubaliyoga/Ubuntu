@@ -26,7 +26,7 @@ function payments(total,checkin,depositPct){
 }
 
 function getFormState(){
-  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note','f-included','f-also','f-signoff'];
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note','f-included','f-also','f-signoff','f-signoff2'];
   const s={};
   ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
   s['f-parvati-on']=$('f-parvati-on').checked;
@@ -240,7 +240,7 @@ function buildContractHTML(){
         <p style="font-size:12px;margin-bottom:16px;">Date: ${fmtDS(contractDate)}</p>
         <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
         <div class="c-sig-line"></div>
-        <div class="c-sig-note">Tari, as representative of Andréa Drottholm</div></div>
+        <div class="c-sig-note">${$('f-signoff2')?.value.trim()||'Tari, as representative of Andréa Drottholm'}</div></div>
       <div><div class="c-sig-party">For Retreat Organizer</div>
         <p style="font-size:12px;margin-bottom:3px;">Name: ${name}</p>
         <p style="font-size:12px;margin-bottom:3px;">Title: ${contactTitle}</p>

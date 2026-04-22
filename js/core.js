@@ -9,7 +9,7 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 window._templateMode=false;
-const TEMPLATE_FIELDS=['f-intro','f-body','f-included','f-also','f-signoff','f-note','f-roomrate','f-pkgrate','f-deposit'];
+const TEMPLATE_FIELDS=['f-intro','f-body','f-included','f-also','f-signoff','f-signoff2','f-note','f-roomrate','f-pkgrate','f-deposit'];
 // crmData, crmTab, crmLoaded declared in crm.js — do NOT redeclare here
 
 window._errorLog=[];
@@ -258,6 +258,7 @@ function newDraft(){
   const _finc=$('f-included');if(_finc)_finc.value='2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person';
   const _fal=$('f-also');if(_fal)_fal.value='Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.';
   const _fso=$('f-signoff');if(_fso)_fso.value='Andréa and Tari';
+  const _fso2=$('f-signoff2');if(_fso2)_fso2.value='Tari, as representative of Andréa Drottholm';
   draftActive=false;intentionalDraft=true;
   autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
   const s=$('autosave-status');if(s)s.textContent='';
@@ -277,7 +278,7 @@ function openTemplateEdit(){
   ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{const el=$(id);if(el)el.value='';});
   $('f-contractdate').value=todayStr();$('f-validuntil').value=addDays(todayStr(),7);$('f-offervalid').value='';$('notion-status').value='Draft';
   const tmpl=JSON.parse(localStorage.getItem('masterTemplate')||'null');
-  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate':'60','f-pkgrate':'30.25','f-deposit':''};
+  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-signoff2':'Tari, as representative of Andréa Drottholm','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate':'60','f-pkgrate':'30.25','f-deposit':''};
   TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)el.value=tmpl?.[id]??defs[id]??'';});
   draftActive=false;intentionalDraft=false;autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
   const sv=$('autosave-status');if(sv)sv.textContent='';
