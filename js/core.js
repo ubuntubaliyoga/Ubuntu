@@ -245,7 +245,7 @@ function newDraft(){
   $('notion-status').value='Draft';
   const _fi=$('f-intro');if(_fi)_fi.value='It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.';
   const _fb=$('f-body');if(_fb)_fb.value='Kindly open the attached brochure for pictures of the full property.';
-  const _finc=$('f-included');if(_finc)_finc.value='2 organic meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person';
+  const _finc=$('f-included');if(_finc)_finc.value='2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person';
   const _fal=$('f-also');if(_fal)_fal.value='Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.';
   const _fso=$('f-signoff');if(_fso)_fso.value='Andréa and Tari';
   draftActive=false;intentionalDraft=true;

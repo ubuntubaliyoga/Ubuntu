@@ -27,7 +27,7 @@ async function loadDrafts(){
     if(!r.ok) throw new Error();
     const data=await r.json();
     if(!data.drafts||data.drafts.length===0){
-      list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;font-style:italic;">No drafts saved yet. Click + New Deal to start.</div>`;
+      list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;font-style:italic;">No drafts saved yet. Tap + to create your first deal.</div>`;
       return;
     }
     window._drafts=_parseDraftLinks(data.drafts);
