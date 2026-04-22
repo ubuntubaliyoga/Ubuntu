@@ -82,6 +82,9 @@ function loadDraftByIndex(i){
     const d=window._drafts[i];
     if(!d||!d.formState) return;
     setFormState(JSON.parse(d.formState));
+    // Migrate legacy meal text
+    const _fi=$('f-included');
+    if(_fi)_fi.value=_fi.value.replace(/2 organic meals per day/g,'2 plant based meals per day');
     currentPageId=d.pageId;
     draftActive=true;
     intentionalDraft=true;
