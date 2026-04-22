@@ -33,7 +33,7 @@ const EXPECTED = [
     },
   },
   {
-    id:     'REPLACE_WITH_NEW_DB_ID',
+    id:     '34a622d3e57481738b3ce70824a6adf7',
     label:  'CRM DB (unified)',
     source: 'api/crm.js',
     props: {
