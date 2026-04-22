@@ -771,9 +771,12 @@ Airport pick-up available on request.</textarea>
           </div>
         </div>
       </div>
-      <div class="fg" style="margin-top:12px;">
-        <label style="color:var(--muted);font-size:10px;">Sign-off name</label>
-        <input type="text" id="f-signoff" value="Andréa and Tari">
+      <button onclick="toggleMoreDetails(this)" style="background:none;border:none;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 0 4px;letter-spacing:.03em;font-family:'Inter',sans-serif;">+ Sign-off names</button>
+      <div style="display:none;">
+        <div class="fg" style="margin-top:4px;">
+          <label style="color:var(--muted);font-size:10px;">Sign-off name</label>
+          <input type="text" id="f-signoff" value="Andréa and Tari">
+        </div>
       </div>
       <div class="action-row">
         <button class="action-btn gold" onclick="switchDealTab('offer')">Preview Offer →</button>

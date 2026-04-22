@@ -82,7 +82,7 @@ function buildOfferHTML(){
     const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
     return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label}${qtyStr}</span><span>USD ${fmtN(t,0)}</span></div>`;
   }).join(''):'';
-  const investmentBlock=(showTotal||hasExtras)?`<div class="e-investment">${showTotal?`<div class="e-invest-row"><div><span>Package Total (${P.nights} Nights)</span><div style="font-size:7.5px;color:#B5AAA0;letter-spacing:.3px;margin-top:1px;">excl. tax &amp; service fee</div></div><span>USD ${fmtN(P.totalEx,0)}</span></div>`:''
+  const investmentBlock=(showTotal||hasExtras)?`<div class="e-investment">${showTotal?`<div class="e-invest-row"><span>Package Total (${P.nights} Nights)<br><span style="font-size:7px;color:#B5AAA0;letter-spacing:.3px;font-weight:400;">excl. tax &amp; service fee</span></span><span>USD ${fmtN(P.totalEx,0)}</span></div>`:''
   }${hasExtras?`<div class="e-invest-section-label">Enhancements</div>${investAddonRows}<div class="e-invest-row e-invest-addon-total"><span>Add-ons Total</span><span>+ USD ${fmtN(extTotal,0)}</span></div>`:''
   }<div class="e-invest-grand"><span class="e-invest-grand-lbl">Total Investment</span><div style="text-align:right;"><span class="e-invest-grand-val">USD ${fmtN(hasExtras?grandIn:P.totalIn,0)}</span><div class="e-invest-grand-sub">incl. tax &amp; service charge</div></div></div></div>`:'';
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
