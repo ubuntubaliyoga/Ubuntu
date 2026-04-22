@@ -130,7 +130,7 @@ async function runMigration(){
   if(btn){btn.textContent='MIGRATING…';btn.disabled=true;}
   dbg('[MIGRATE] starting…');
   try{
-    const r=await fetch('/api/migrate-crm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    const r=await fetch('/api/migrate-crm?force=true',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
     const d=await r.json();
     if(d.success){
       dbg(`[MIGRATE] done — created:${d.created} failed:${d.failed} total:${d.total}`);

@@ -133,13 +133,26 @@ export default async function handler(req, res) {
   if (CRM_DB === 'REPLACE_WITH_NEW_DB_ID') return res.status(400).json({ error: 'Replace CRM_DB placeholder in migrate-crm.js first' });
 
   try {
-    // Safety: refuse if new DB already has pages
+    const force = req.query?.force === 'true';
+
     if (!dryRun) {
       const check = await fetch(`${NOTION_API}/databases/${CRM_DB}/query`, {
         method: 'POST', headers: hdrs, body: JSON.stringify({ page_size: 1 }),
       });
-      if (check.ok && (await check.json()).results?.length > 0) {
-        return res.status(409).json({ error: 'New CRM_DB already has data. Clear it first or use GET for a dry run.' });
+      const existing = check.ok ? await check.json() : null;
+      if (existing?.results?.length > 0) {
+        if (!force) {
+          return res.status(409).json({ error: 'New CRM_DB already has data. Use ?force=true to clear and re-migrate.' });
+        }
+        // Clear all existing pages in parallel
+        console.log('[migrate-crm] force=true — clearing existing data…');
+        const allExisting = await readAll(CRM_DB);
+        await Promise.all(allExisting.map(page =>
+          fetch(`${NOTION_API}/pages/${page.id}`, {
+            method: 'PATCH', headers: hdrs, body: JSON.stringify({ in_trash: true }),
+          })
+        ));
+        console.log(`[migrate-crm] cleared ${allExisting.length} existing pages`);
       }
     }
 
@@ -168,11 +181,15 @@ export default async function handler(req, res) {
       });
     }
 
+    // Create in parallel batches of 20 to stay well within Vercel timeout
     let created = 0, failed = 0;
     const errors = [];
-    for (const lead of all) {
-      try { await createPage(lead); created++; }
-      catch (e) { failed++; errors.push({ name: lead.name, error: e.message }); }
+    const BATCH = 20;
+    for (let i = 0; i < all.length; i += BATCH) {
+      await Promise.all(all.slice(i, i + BATCH).map(async lead => {
+        try { await createPage(lead); created++; }
+        catch (e) { failed++; errors.push({ name: lead.name, error: e.message }); }
+      }));
     }
 
     console.log(`[migrate-crm] done — created: ${created}, failed: ${failed}`);
