@@ -124,6 +124,28 @@ function dbgStructured(obj){
   };
 })();
 
+async function runMigration(){
+  const btn=$('migrate-btn');
+  if(!confirm('Run CRM migration? This writes 329 leads to the new database.'))return;
+  if(btn){btn.textContent='MIGRATING…';btn.disabled=true;}
+  dbg('[MIGRATE] starting…');
+  try{
+    const r=await fetch('/api/migrate-crm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    const d=await r.json();
+    if(d.success){
+      dbg(`[MIGRATE] done — created:${d.created} failed:${d.failed} total:${d.total}`);
+      if(d.errors?.length)d.errors.forEach(e=>dbgWarn(`[MIGRATE] failed: ${e.name} — ${e.error}`));
+      if(btn){btn.textContent='DONE ✓';btn.style.borderColor='#0f0';btn.style.color='#0f0';}
+    }else{
+      dbgWarn('[MIGRATE] error: '+(d.error||JSON.stringify(d)));
+      if(btn){btn.textContent='MIGRATE CRM';btn.disabled=false;}
+    }
+  }catch(e){
+    dbgWarn('[MIGRATE] network error: '+e.message);
+    if(btn){btn.textContent='MIGRATE CRM';btn.disabled=false;}
+  }
+}
+
 function toggleDebug(){
   const p=$('debug-panel');
   if(p)p.style.display=p.style.display==='block'?'none':'block';
