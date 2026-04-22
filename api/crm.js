@@ -117,6 +117,16 @@ function mapConverted(page) {
   };
 }
 
+async function notionThrow(resp, label) {
+  let body;
+  try { body = await resp.json(); } catch { body = {}; }
+  const msg = body.message || `HTTP ${resp.status}`;
+  const err = new Error(`${label}: ${msg}`);
+  err.notion_code = body.code || null;
+  err.notion_status = resp.status;
+  throw err;
+}
+
 async function queryDB(dbId, mapper) {
   const results = [];
   let cursor = undefined;
@@ -133,7 +143,7 @@ async function queryDB(dbId, mapper) {
       headers,
       body: JSON.stringify(body),
     });
-    if (!resp.ok) throw new Error(`DB query failed (${dbId}): ${await resp.text()}`);
+    if (!resp.ok) await notionThrow(resp, `DB query failed (${dbId})`);
     const data = await resp.json();
     results.push(...data.results.map(mapper));
     cursor = data.has_more ? data.next_cursor : undefined;
@@ -148,7 +158,7 @@ async function updatePage(pageId, properties) {
     headers,
     body: JSON.stringify({ properties }),
   });
-  if (!resp.ok) throw new Error(`Update failed: ${await resp.text()}`);
+  if (!resp.ok) await notionThrow(resp, 'Update failed');
   return resp.json();
 }
 
@@ -273,7 +283,7 @@ export default async function handler(req, res) {
         method: 'POST', headers,
         body: JSON.stringify({ parent: { database_id: dbId }, properties }),
       });
-      if (!resp.ok) throw new Error(`Create failed: ${await resp.text()}`);
+      if (!resp.ok) await notionThrow(resp, 'Create failed');
       const data = await resp.json();
       return res.status(200).json({ success: true, pageId: data.id });
     }
@@ -284,7 +294,7 @@ export default async function handler(req, res) {
       const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
         method: 'PATCH', headers, body: JSON.stringify({ in_trash: true }),
       });
-      if (!resp.ok) throw new Error(`Delete failed: ${await resp.text()}`);
+      if (!resp.ok) await notionThrow(resp, 'Delete failed');
       return res.status(200).json({ success: true });
     }
 
@@ -308,7 +318,7 @@ export default async function handler(req, res) {
           },
         }),
       });
-      if (!resp.ok) throw new Error(`Promote failed: ${await resp.text()}`);
+      if (!resp.ok) await notionThrow(resp, 'Promote failed');
       return res.status(200).json({ success: true });
     }
 
@@ -333,7 +343,7 @@ export default async function handler(req, res) {
           },
         }),
       });
-      if (!resp.ok) throw new Error(`Demote failed: ${await resp.text()}`);
+      if (!resp.ok) await notionThrow(resp, 'Demote failed');
       const data = await resp.json();
       return res.status(200).json({ success: true, pageId: data.id });
     }
@@ -341,7 +351,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Unknown action: ${action}` });
 
   } catch (err) {
-    console.error('[crm]', err.message);
-    return res.status(500).json({ error: err.message });
+    console.error('[crm]', err.message, err.notion_code || '');
+    return res.status(err.notion_status || 500).json({
+      error: err.message,
+      notion_code: err.notion_code || null,
+      notion_status: err.notion_status || null,
+    });
   }
 }

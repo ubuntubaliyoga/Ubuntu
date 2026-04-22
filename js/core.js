@@ -10,8 +10,9 @@ let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 // crmData, crmTab, crmLoaded declared in crm.js — do NOT redeclare here
 
-window.onerror=(msg,src,line)=>{dbg('ERR: '+msg+' ('+String(src).split('/').pop()+':'+line+')');};
-window.onunhandledrejection=e=>{dbg('PROMISE ERR: '+(e.reason?.message||e.reason||'?'));};
+window._errorLog=[];
+window.onerror=(msg,src,line,col,error)=>{dbgStructured({type:'js',message:String(msg),file:String(src).split('/').pop(),line,col,stack:error?.stack||null});};
+window.onunhandledrejection=e=>{const err=e.reason;dbgStructured({type:'promise',message:err?.message||String(err)||'?',stack:err?.stack||null});};
 
 function dbg(msg){
   const l=$('debug-log');if(!l)return;
@@ -19,6 +20,31 @@ function dbg(msg){
   l.innerHTML+=`<div>[${t}] ${msg}</div>`;
   const p=$('debug-panel');if(p)p.scrollTop=p.scrollHeight;
 }
+
+function dbgStructured(obj){
+  const entry={...obj,ts:Date.now(),tab:typeof activeTab!=='undefined'?activeTab:null};
+  window._errorLog.push(entry);
+  const loc=obj.file?` (${obj.file}:${obj.line||'?'})`:obj.url?` → ${obj.url}`:'';
+  dbg(`[${(obj.type||'ERR').toUpperCase()}] ${obj.message||'?'}${loc}`);
+}
+
+(()=>{
+  const _orig=window.fetch;
+  window.fetch=async function(url,opts){
+    let res;
+    try{res=await _orig(url,opts);}
+    catch(e){dbgStructured({type:'network',message:e.message,url:String(url)});throw e;}
+    if(!res.ok&&String(url).startsWith('/api/')){
+      const label=String(url).replace(/^\/api\//,'');
+      res.clone().json().then(body=>{
+        dbgStructured({type:'api',status:res.status,url:label,message:body.error||body.message||`HTTP ${res.status}`,notion_code:body.notion_code||null});
+      }).catch(()=>{
+        dbgStructured({type:'api',status:res.status,url:label,message:`HTTP ${res.status}`});
+      });
+    }
+    return res;
+  };
+})();
 
 function toggleDebug(){
   const p=$('debug-panel');

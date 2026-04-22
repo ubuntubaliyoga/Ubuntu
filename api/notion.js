@@ -44,6 +44,15 @@ function buildProperties(body) {
   };
 }
 
+async function notionError(resp) {
+  try {
+    const body = await resp.json();
+    return { error: body.message || `HTTP ${resp.status}`, notion_code: body.code || null, notion_status: resp.status };
+  } catch {
+    return { error: `HTTP ${resp.status}`, notion_code: null, notion_status: resp.status };
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -65,9 +74,9 @@ export default async function handler(req, res) {
         }),
       });
       if (!resp.ok) {
-        const text = await resp.text();
-        console.error('[notion] load failed:', resp.status, text);
-        return res.status(resp.status).json({ error: text });
+        const err = await notionError(resp);
+        console.error('[notion] load failed:', err.notion_status, err.notion_code, err.error);
+        return res.status(resp.status).json(err);
       }
       const data = await resp.json();
 
@@ -113,9 +122,9 @@ export default async function handler(req, res) {
         }),
       });
       if (!resp.ok) {
-        const text = await resp.text();
-        console.error('[notion] create failed:', resp.status, text);
-        return res.status(resp.status).json({ error: text });
+        const err = await notionError(resp);
+        console.error('[notion] create failed:', err.notion_status, err.notion_code, err.error);
+        return res.status(resp.status).json(err);
       }
       const data = await resp.json();
       console.log('[notion] created:', data.id);
@@ -133,9 +142,9 @@ export default async function handler(req, res) {
         body: JSON.stringify({ properties: props }),
       });
       if (!resp.ok) {
-        const text = await resp.text();
-        console.error('[notion] update failed:', resp.status, text);
-        return res.status(resp.status).json({ error: text });
+        const err = await notionError(resp);
+        console.error('[notion] update failed:', err.notion_status, err.notion_code, err.error);
+        return res.status(resp.status).json(err);
       }
       console.log('[notion] updated:', pageId);
       return res.status(200).json({ success: true, pageId });
@@ -150,9 +159,9 @@ export default async function handler(req, res) {
         body: JSON.stringify({ in_trash: true }),
       });
       if (!resp.ok) {
-        const text = await resp.text();
-        console.error('[notion] delete failed:', resp.status, text);
-        return res.status(resp.status).json({ error: text });
+        const err = await notionError(resp);
+        console.error('[notion] delete failed:', err.notion_status, err.notion_code, err.error);
+        return res.status(resp.status).json(err);
       }
       console.log('[notion] deleted:', pageId);
       return res.status(200).json({ success: true });
