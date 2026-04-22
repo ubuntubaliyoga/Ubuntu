@@ -28,7 +28,7 @@ function dbgWarn(msg){
   const p=$('debug-panel');if(p)p.scrollTop=p.scrollHeight;
 }
 
-let _agentOn=localStorage.getItem('debugAgentOn')==='1';
+let _agentOn=localStorage.getItem('debugAgentOn')!=='0';
 function toggleAgent(){
   _agentOn=!_agentOn;
   localStorage.setItem('debugAgentOn',_agentOn?'1':'0');
