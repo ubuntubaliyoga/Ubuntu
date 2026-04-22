@@ -21,11 +21,36 @@ function dbg(msg){
   const p=$('debug-panel');if(p)p.scrollTop=p.scrollHeight;
 }
 
+let _agentOn=localStorage.getItem('debugAgentOn')==='1';
+function toggleAgent(){
+  _agentOn=!_agentOn;
+  localStorage.setItem('debugAgentOn',_agentOn?'1':'0');
+  const btn=$('agent-toggle');
+  if(btn){btn.textContent='AGENT: '+(_agentOn?'ON':'OFF');btn.classList.toggle('on',_agentOn);}
+}
+window.addEventListener('load',()=>{
+  const btn=$('agent-toggle');
+  if(btn){btn.textContent='AGENT: '+(_agentOn?'ON':'OFF');btn.classList.toggle('on',_agentOn);}
+});
+
 function dbgStructured(obj){
   const entry={...obj,ts:Date.now(),tab:typeof activeTab!=='undefined'?activeTab:null};
   window._errorLog.push(entry);
   const loc=obj.file?` (${obj.file}:${obj.line||'?'})`:obj.url?` → ${obj.url}`:'';
   dbg(`[${(obj.type||'ERR').toUpperCase()}] ${obj.message||'?'}${loc}`);
+  if(_agentOn&&(obj.type==='api')&&obj.notion_code){
+    dbg('[AGENT] sending to debug agent...');
+    fetch('/api/debug-agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.action==='fixed')dbg(`[AGENT] fixed: ${d.file} (attempt ${d.attempts})`);
+        else if(d.action==='circuit_open')dbg(`[AGENT] circuit open after ${d.attempts} attempts — needs manual review`);
+        else if(d.action==='skipped')dbg(`[AGENT] skipped: ${d.reason}`);
+        else if(d.action==='no_fix')dbg(`[AGENT] no fix (${d.reason}) — attempt ${d.attempts}/2`);
+        else dbg(`[AGENT] ${JSON.stringify(d)}`);
+      })
+      .catch(e=>dbg(`[AGENT] error: ${e.message}`));
+  }
 }
 
 (()=>{
@@ -34,7 +59,7 @@ function dbgStructured(obj){
     let res;
     try{res=await _orig(url,opts);}
     catch(e){dbgStructured({type:'network',message:e.message,url:String(url)});throw e;}
-    if(!res.ok&&String(url).startsWith('/api/')){
+    if(!res.ok&&String(url).startsWith('/api/')&&!String(url).includes('debug-agent')){
       const label=String(url).replace(/^\/api\//,'');
       res.clone().json().then(body=>{
         dbgStructured({type:'api',status:res.status,url:label,message:body.error||body.message||`HTTP ${res.status}`,notion_code:body.notion_code||null});
