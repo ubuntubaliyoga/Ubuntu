@@ -173,10 +173,16 @@ function buildList(items) {
       ? `<span style="font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--dark);background:var(--bg2);border:1px solid var(--border);padding:2px 7px;border-radius:100px;">${offerCount} offer${offerCount > 1 ? 's' : ''}</span>`
       : '';
 
+    const channels = Array.isArray(c.reachedOutOn) && c.reachedOutOn.length
+      ? 'via ' + c.reachedOutOn.join(', ') : null;
     const subParts = [
-      loc && loc,
+      loc,
       c.engagedFirst && fmtDateShort(c.engagedFirst),
+      channels,
     ].filter(Boolean);
+    const notesTrunc = c.notes && c.notes.trim()
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;">${c.notes.trim().slice(0,80)}</div>`
+      : '';
 
     return `<div class="crm-card" data-lead-id="${c.id}" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">
       <div class="crm-card-main">
@@ -185,6 +191,7 @@ function buildList(items) {
           <span class="crm-card-name">${c.name || 'Unnamed'}</span>
         </div>
         ${subParts.length ? `<div class="crm-card-sub">${subParts.join(' · ')}</div>` : ''}
+        ${notesTrunc}
         ${stagePill || offerPill ? `<div style="display:flex;gap:5px;margin-top:6px;">${stagePill}${offerPill}</div>` : ''}
       </div>
       <div class="crm-card-right">
@@ -248,68 +255,74 @@ function closeCrmModal(e) {
 function crmDetailHTML(c) {
   const src     = SRC_CFG[c.db] || SRC_CFG.email;
   const reached = Array.isArray(c.reachedOutOn) ? c.reachedOutOn : [];
-  const isLead  = c.db !== 'converted';
   const loc     = cleanLocation(c.location);
 
   const allOptions = [...REACHED_OUT_OPTIONS];
   reached.forEach(r => { if (!allOptions.includes(r)) allOptions.push(r); });
 
-  const fields = [
-    c.email      && ['Email',        `<a href="mailto:${c.email}" style="color:var(--gold);">${c.email}</a>`],
-    c.insta      && ['Instagram',    c.insta],
-    c.website    && ['Website',      `<a href="${c.website}" target="_blank" style="color:var(--gold);">${c.website}</a>`],
-    c.linkedin   && ['LinkedIn',     c.linkedin],
-    (c.whatsapp && c.db !== 'whatsapp') && ['WhatsApp', c.whatsapp],
-    c.whatsapp2  && ['WhatsApp 2',   c.whatsapp2],
-    c.company    && ['Company',      c.company],
-    c.engagedFirst && ['First outreach', fmtDateShort(c.engagedFirst)],
-    c.engagedLast  && ['Last contact',   fmtD(c.engagedLast)],
-    c.engageNext   && ['Engage next',    fmtD(c.engageNext)],
+  const initials = (c.name || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const srcLabel = src.label.replace(/^[^\s]+\s/, '');
+
+  const props = [
+    loc              && ['Location',      loc],
+    c.company        && ['Company',       c.company],
+    c.engagedFirst   && ['First contact', fmtDateShort(c.engagedFirst)],
+    c.engagedLast    && ['Last contact',  fmtD(c.engagedLast)],
+    c.engageNext     && ['Follow up',     fmtD(c.engageNext)],
+    c.suitability    && ['Suitability',   c.suitability],
+    c.email          && ['Email',         `<a href="mailto:${c.email}" style="color:var(--gold)">${c.email}</a>`],
+    c.insta          && ['Instagram',     c.insta],
+    c.website        && ['Website',       `<a href="${c.website}" target="_blank" style="color:var(--gold)">${c.website}</a>`],
+    c.linkedin       && ['LinkedIn',      c.linkedin],
+    c.whatsapp       && ['WhatsApp',      c.whatsapp],
+    c.whatsapp2      && ['WhatsApp 2',    c.whatsapp2],
   ].filter(Boolean);
 
+  const rowStyle = 'display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);align-items:baseline;';
+  const lblStyle = 'font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:86px;flex-shrink:0;padding-top:1px;';
+  const valStyle = 'font-size:13px;color:var(--text);word-break:break-word;flex:1;';
+
   return `
-    <div class="modal-header">
-      <div>
-        <div class="modal-title">${c.name || 'Unnamed'}</div>
-        ${loc ? `<div class="modal-sub">📍 ${loc}</div>` : ''}
+    <div class="modal-header" style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--dark);flex-shrink:0;">${initials}</div>
+        <div style="min-width:0;">
+          <div class="modal-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name || 'Unnamed'}</div>
+          <div class="modal-sub">${[loc, srcLabel].filter(Boolean).join(' · ')}</div>
+        </div>
       </div>
       <button class="modal-close" onclick="document.getElementById('crm-modal').classList.remove('open')">✕</button>
     </div>
 
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
-      <span class="crm-badge" style="background:${src.bg};color:${src.color};">${src.label}</span>
+    ${props.length ? `<div style="margin-bottom:18px;">${props.map(([l, v]) =>
+      `<div style="${rowStyle}"><span style="${lblStyle}">${l}</span><span style="${valStyle}">${v}</span></div>`
+    ).join('')}</div>` : ''}
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Reached out via</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;" id="reached-out-tags">
+        ${allOptions.map(opt => {
+          const active = reached.includes(opt);
+          return `<button class="reach-btn${active ? ' active' : ''}" data-opt="${opt}"
+            onclick="toggleReachedOut('${c.id}','${c.db}',this)">${opt}</button>`;
+        }).join('')}
+      </div>
     </div>
 
-    <div class="crm-section-hd">Reached Out On</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="reached-out-tags">
-      ${allOptions.map(opt => {
-        const active = reached.includes(opt);
-        return `<button class="reach-btn${active ? ' active' : ''}" data-opt="${opt}"
-          onclick="toggleReachedOut('${c.id}','${c.db}',this)">${opt}</button>`;
-      }).join('')}
+    <div style="margin-bottom:18px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Notes</div>
+      <textarea id="notes-editor-${c.id}"
+        onchange="saveNotes('${c.id}','${c.db}',this.value)"
+        onblur="saveNotes('${c.id}','${c.db}',this.value)"
+        placeholder="Add notes…"
+        style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:72px;line-height:1.6;"
+      >${c.notes||''}</textarea>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:16px;">
-      <input id="custom-reached-input" type="text" placeholder="+ Custom…"
-        style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:100px;font-family:'Inter',sans-serif;font-size:16px;background:var(--bg);outline:none;min-width:0;-webkit-appearance:none;">
-      <button onclick="addCustomReachedOut('${c.id}','${c.db}')"
-        style="padding:9px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap;flex-shrink:0;">Add</button>
-    </div>
-
-    <div class="crm-section-hd">Notes</div>
-    <textarea id="notes-editor-${c.id}"
-      onchange="saveNotes('${c.id}','${c.db}',this.value)"
-      onblur="saveNotes('${c.id}','${c.db}',this.value)"
-      placeholder="Add notes…"
-      style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;background:var(--bg);outline:none;resize:vertical;min-height:70px;line-height:1.6;"
-    >${c.notes||''}</textarea>
-
-    ${fields.length ? `<div class="crm-section-hd">Info</div>
-      ${fields.map(([label, val]) => `<div class="crm-field"><div class="crm-field-label">${label}</div><div style="font-size:13px;flex:1;word-break:break-word;">${val}</div></div>`).join('')}` : ''}
 
     ${(() => {
       const linked = (window._drafts || []).map((d, i) => ({ ...d, _i: i })).filter(d => d.linkedLeadId === c.id);
       if (!linked.length) return '';
-      return `<div class="crm-section-hd">Offers</div>` + linked.map(d => {
+      return `<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Offers</div>` + linked.map(d => {
         const total = d.totalUSD ? 'USD ' + Number(d.totalUSD).toLocaleString('en-US') : '—';
         const dates = d.checkin ? fmtDateShort(d.checkin) + ' → ' + fmtDateShort(d.checkout) : 'No dates';
         const statusColor = { Draft:'#8C9476', Sent:'#1565C0', Signed:'#2E7D32', Cancelled:'#B71C1C' }[d.status] || '#8C9476';
@@ -320,23 +333,23 @@ function crmDetailHTML(c) {
           </div>
           <span style="font-size:10px;font-weight:600;color:${statusColor};white-space:nowrap;flex-shrink:0;">${d.status || 'Draft'}</span>
         </div>`;
-      }).join('');
+      }).join('') + '<div style="margin-bottom:14px;"></div>';
     })()}
 
-    <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
-      <button onclick="newDraftFromLead('${c.id}','${(c.name||'').replace(/'/g,"\\'")}');" class="pill-btn dark" style="flex:1;min-width:140px;">✦ Create new offer</button>
-      <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;min-width:60px;">✎ Edit</button>
-      <button onclick="if(confirm('Delete?'))deleteLead('${c.id}')" class="pill-btn" style="color:#B71C1C;border-color:#FDECEA;flex-shrink:0;">🗑</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button onclick="newDraftFromLead('${c.id}','${(c.name||'').replace(/'/g,"\\'")}');" class="pill-btn dark" style="flex:1;">+ New Offer</button>
+      <button onclick="openCrmModalEdit('${c.id}')" class="pill-btn" style="flex:1;">Edit</button>
+      <button onclick="if(confirm('Delete?'))deleteLead('${c.id}')" class="pill-btn" style="color:#B71C1C;border-color:#FDECEA;flex-shrink:0;padding:10px 14px;">✕</button>
     </div>
     ${(() => {
       const stage = c.db === 'converted' ? 'converted' : getStageKey(c) === 'closed' ? 'closed' : 'cold';
       const closeModal = `document.getElementById('crm-modal').classList.remove('open');`;
-      const btn = (label, tab) => `<button onclick="${closeModal}dropLeadOnTab('${c.id}','${tab}')" class="pill-btn" style="flex:1;min-width:120px;">${label}</button>`;
+      const btn = (label, tab) => `<button onclick="${closeModal}dropLeadOnTab('${c.id}','${tab}')" class="pill-btn" style="flex:1;">${label}</button>`;
       const rows = [];
-      if (stage !== 'converted') rows.push(btn('🔥 Move to Warm Leads', 'converted'));
-      if (stage !== 'cold')      rows.push(btn('🌱 Move to Cold Leads', 'cold'));
-      if (stage !== 'closed')    rows.push(btn('🎉 Move to Sales Closed', 'closed'));
-      return rows.length ? `<div class="modal-actions" style="flex-wrap:wrap;gap:8px;">${rows.join('')}</div>` : '';
+      if (stage !== 'converted') rows.push(btn('Move to Warm', 'converted'));
+      if (stage !== 'cold')      rows.push(btn('Move to Cold', 'cold'));
+      if (stage !== 'closed')    rows.push(btn('Move to Closed', 'closed'));
+      return rows.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;">${rows.join('')}</div>` : '';
     })()}`;
 }
 
