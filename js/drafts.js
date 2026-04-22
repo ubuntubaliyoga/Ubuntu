@@ -33,22 +33,24 @@ async function loadDrafts(){
     window._drafts=_parseDraftLinks(data.drafts);
     list.innerHTML=data.drafts.map((d,i)=>{
       const hasState=d.formState&&d.formState!=='null';
-      const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates set';
+      const dateStr=d.checkin?fmtD(d.checkin)+' → '+fmtD(d.checkout):'No dates';
       const total=d.totalUSD?'USD '+Number(d.totalUSD).toLocaleString('en-US',{minimumFractionDigits:0}):'—';
-      const edited=d.lastEdited?new Date(d.lastEdited).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
-      return`<div class="draft-card" id="draft-card-${i}">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">
-          <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?` · ${d.retreatName}`:''}</div>
-          <span class="draft-status s-${d.status||'Draft'}" style="flex-shrink:0;">${d.status||'Draft'}</span>
+      const onclick=hasState?`loadDraftByIndex(${i})`:'';
+      return`<div class="draft-card" id="draft-card-${i}" ${onclick?`onclick="${onclick}"`:'style="opacity:.6;cursor:default;"'}>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+          <div style="min-width:0;flex:1;">
+            <div class="draft-name">${d.organizer||'Unnamed'}${d.retreatName?`<span style="font-weight:400;color:var(--muted);"> · ${d.retreatName}</span>`:''}</div>
+            <div class="draft-meta" style="margin-top:4px;">${dateStr} &nbsp;·&nbsp; ${total}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span class="draft-status s-${d.status||'Draft'}">${d.status||'Draft'}</span>
+            <button class="draft-more-btn" onclick="event.stopPropagation();toggleDraftMenu(${i})">···</button>
+          </div>
         </div>
-        <div class="draft-meta">${dateStr}</div>
-        <div class="draft-meta">${d.nights||'?'} nights &nbsp;·&nbsp; ${d.guests||'?'} guests &nbsp;·&nbsp; ${total}</div>
-        ${edited?`<div style="font-family:'Lora',serif;font-size:10px;color:#B8935A;margin-top:8px;font-style:italic;">Last edited: ${edited}</div>`:''}
-        <div class="draft-actions">
-          ${hasState?`<button class="draft-btn load" onclick="loadDraftByIndex(${i})">Load</button>`:`<span style="font-size:10px;color:#B8935A;font-family:'Lora',serif;font-style:italic;">No state</span>`}
-          <button class="draft-btn ghost" onclick="toggleRenameRow(${i})" title="Rename">✎ Rename</button>
-          ${hasState?`<button class="draft-btn ghost" onclick="duplicateDraft(${i})" title="Duplicate">⧉ Duplicate</button>`:''}
-          <button class="draft-btn ghost" onclick="deleteDraft(${i})" title="Delete">🗑 Delete</button>
+        <div class="draft-more-menu" id="draft-menu-${i}">
+          <button onclick="event.stopPropagation();toggleRenameRow(${i})">✎ Rename</button>
+          ${hasState?`<button onclick="event.stopPropagation();duplicateDraft(${i})">⧉ Duplicate</button>`:''}
+          <button onclick="event.stopPropagation();deleteDraft(${i})" style="color:#B71C1C;">Delete</button>
         </div>
         <div class="draft-edit-row" id="rename-row-${i}">
           <input class="draft-edit-input" id="rename-input-${i}" placeholder="Organizer name" value="${d.organizer||''}">
@@ -63,6 +65,17 @@ async function loadDrafts(){
     list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;">Could not load drafts: ${e.message}</div>`;
   }
 }
+
+function toggleDraftMenu(i){
+  document.querySelectorAll('.draft-more-menu').forEach((m,idx)=>{
+    m.classList.toggle('open',idx===i&&!m.classList.contains('open'));
+  });
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.draft-more-btn')&&!e.target.closest('.draft-more-menu')){
+    document.querySelectorAll('.draft-more-menu').forEach(m=>m.classList.remove('open'));
+  }
+});
 
 function loadDraftByIndex(i){
   try{

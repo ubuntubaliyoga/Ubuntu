@@ -146,22 +146,27 @@ async function runMigration(){
   }
 }
 
+function openFABSheet(){
+  $('fab-sheet')?.classList.add('open');
+  $('fab-overlay')?.classList.add('open');
+}
+function closeFABSheet(){
+  $('fab-sheet')?.classList.remove('open');
+  $('fab-overlay')?.classList.remove('open');
+}
+function openDrawer(){
+  $('side-drawer')?.classList.add('open');
+  $('drawer-overlay')?.classList.add('open');
+}
+function closeDrawer(){
+  $('side-drawer')?.classList.remove('open');
+  $('drawer-overlay')?.classList.remove('open');
+}
+
 function toggleDebug(){
   const p=$('debug-panel');
   if(p)p.style.display=p.style.display==='block'?'none':'block';
-  const d=$('nav-dropdown');if(d)d.classList.remove('open');
 }
-
-function toggleNavMenu(){
-  const d=$('nav-dropdown');
-  if(d)d.classList.toggle('open');
-}
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#main-nav')){
-    const d=$('nav-dropdown');
-    if(d)d.classList.remove('open');
-  }
-});
 
 function switchTab(t){
   activeTab=t;
@@ -169,7 +174,10 @@ function switchTab(t){
     const el=$('view-'+v);
     if(el)el.classList.toggle('active',v===t);
   });
-  document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  // Bottom nav active state (only deal/crm)
+  ['deal','crm'].forEach(v=>{
+    $('bn-'+v)?.classList.toggle('active',v===t);
+  });
   const tb=$('deal-toolbar');
   if(tb)tb.classList.toggle('visible',t==='deal');
   if(t==='deal')switchDealTab(activeDealTab);
@@ -177,7 +185,6 @@ function switchTab(t){
     if(typeof loadCRM==='function') loadCRM();
     if(typeof crmSwitchTab==='function') crmSwitchTab(typeof crmTab!=='undefined'?crmTab:'cold');
   }
-  const d=$('nav-dropdown');if(d)d.classList.remove('open');
 }
 
 function switchDealTab(t){
@@ -252,7 +259,7 @@ let deferredPrompt=null;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
 const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
 if(!isStandalone){
-  if(isIOS){const b=$('install-btn');if(b)b.style.display='flex';}
+  if(isIOS){const b=$('install-btn');if(b)b.style.display='flex';const b2=$('install-btn');if(b2)b2.style.display='flex';}
   else window.addEventListener('beforeinstallprompt',e=>{
     e.preventDefault();deferredPrompt=e;
     const b=$('install-btn');if(b)b.style.display='flex';

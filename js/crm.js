@@ -75,7 +75,7 @@ function crmSwitchTab(tab) {
     return;
   }
   crmTab = tab;
-  ['cold', 'converted', 'closed', 'shala'].forEach(t => {
+  ['cold', 'converted', 'closed'].forEach(t => {
     document.getElementById('crm-tab-' + t)?.classList.toggle('active', t === tab);
   });
   crmRender();
@@ -100,8 +100,7 @@ function clearMoveSelection() {
 }
 
 function tabItems() {
-  if (crmTab === 'shala')     return crmData.shalaLeads || [];
-  if (crmTab === 'converted') return crmData.converted  || [];
+  if (crmTab === 'converted') return crmData.converted || [];
   if (crmTab === 'closed')    return allLeads().filter(c => getStageKey(c) === 'closed');
   return allLeads().filter(c => {
     const s = getStageKey(c);
@@ -124,9 +123,8 @@ function updateTabCounts() {
     cold:      allL.filter(c => getStageKey(c) !== 'closed').length,
     converted: (crmData.converted || []).length,
     closed:    allL.filter(c => getStageKey(c) === 'closed').length,
-    shala:     (crmData.shalaLeads || []).length,
   };
-  const names = { cold: 'Cold', converted: 'Warm', closed: 'Closed', shala: 'Shala' };
+  const names = { cold: 'Cold', converted: 'Warm', closed: 'Closed' };
   Object.entries(counts).forEach(([tab, n]) => {
     const el = document.querySelector(`#crm-tab-${tab} .tab-label`);
     if (el) el.textContent = `${names[tab]} (${n})`;
@@ -149,54 +147,51 @@ function crmRender() {
 }
 
 // ── CARD LIST ─────────────────────────────────────────────────────────────────
+function waLink(num) {
+  if (!num) return null;
+  const clean = num.replace(/[\s\-\(\)]/g, '');
+  return `https://wa.me/${clean}`;
+}
+
 function buildList(items) {
   return items.map(c => {
-    const src      = SRC_CFG[c.db] || SRC_CFG.email;
-    const reached  = c.reachedOutOn || [];
-    const loc      = cleanLocation(c.location);
-    const stage    = getStageKey(c);
-    const firstOut = c.engagedFirst ? fmtDateShort(c.engagedFirst) : null;
+    const src   = SRC_CFG[c.db] || SRC_CFG.email;
+    const loc   = cleanLocation(c.location);
+    const stage = getStageKey(c);
+    const wa    = c.whatsapp ? waLink(c.whatsapp) : null;
 
-    const stageBadge = stage === 'warm'
-      ? `<span class="crm-badge" style="background:#E3F2FD;color:#1565C0;">🔥 Warm</span>`
+    const srcDot = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${src.color};flex-shrink:0;"></span>`;
+
+    const stagePill = stage === 'warm'
+      ? `<span style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1565C0;background:#E3F2FD;padding:2px 7px;border-radius:100px;">Warm</span>`
       : stage === 'dead'
-      ? `<span class="crm-badge" style="background:#F0EBE3;color:#8B7355;">👻 Dead</span>`
-      : '';
-
-    const metaParts = [
-      loc      && `<span>📍 ${loc}</span>`,
-      firstOut && `<span>🗓 ${firstOut}</span>`,
-    ].filter(Boolean);
-
-    const srcLabel = src.label.replace(/^\S+\s/, '');
-    const reachedChips = reached
-      .filter(r => r !== srcLabel)
-      .map(r => `<span class="crm-badge" style="background:var(--bg2);color:var(--muted);">${r}</span>`)
-      .join('');
-
-    const notePreview = c.notes
-      ? `<div class="crm-card-notes">${c.notes.length > 80 ? c.notes.slice(0, 80) + '…' : c.notes}</div>`
+      ? `<span style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8B7355;background:#F0EBE3;padding:2px 7px;border-radius:100px;">Dead</span>`
       : '';
 
     const offerCount = (window._drafts || []).filter(d => d.linkedLeadId === c.id).length;
-    const offerBadge = offerCount
-      ? `<span class="crm-badge" style="background:var(--bg2);color:var(--dark);border:1px solid var(--border);">✦ ${offerCount} offer${offerCount > 1 ? 's' : ''}</span>`
+    const offerPill = offerCount
+      ? `<span style="font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--dark);background:var(--bg2);border:1px solid var(--border);padding:2px 7px;border-radius:100px;">${offerCount} offer${offerCount > 1 ? 's' : ''}</span>`
       : '';
 
+    const subParts = [
+      loc && loc,
+      c.engagedFirst && fmtDateShort(c.engagedFirst),
+    ].filter(Boolean);
+
     return `<div class="crm-card" data-lead-id="${c.id}" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div style="min-width:0;">
-          <div class="crm-card-name">${c.name || 'Unnamed'}</div>
-          ${metaParts.length ? `<div class="crm-card-meta">${metaParts.join('<span style="margin:0 4px;opacity:.4;">·</span>')}</div>` : ''}
+      <div class="crm-card-main">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          ${srcDot}
+          <span class="crm-card-name">${c.name || 'Unnamed'}</span>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-          <span class="crm-badge" style="background:${src.bg};color:${src.color};">${src.label}</span>
-          ${stageBadge}
-          ${offerBadge}
-          ${reachedChips}
-        </div>
+        ${subParts.length ? `<div class="crm-card-sub">${subParts.join(' · ')}</div>` : ''}
+        ${stagePill || offerPill ? `<div style="display:flex;gap:5px;margin-top:6px;">${stagePill}${offerPill}</div>` : ''}
       </div>
-      ${notePreview}
+      <div class="crm-card-right">
+        ${wa ? `<a class="crm-wa-btn" href="${wa}" target="_blank" onclick="event.stopPropagation()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          WA</a>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
