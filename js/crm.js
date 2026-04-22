@@ -346,52 +346,9 @@ function crmDetailHTML(c) {
 }
 
 function crmEditHTML(c) {
-  const inputStyle = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'Inter\',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;';
-  const dateStyle  = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'Inter\',sans-serif;font-size:14px;background:var(--bg);outline:none;-webkit-appearance:none;';
-
-  const baseFields = ['name','company','location','email','insta','website'];
-
-  let extraFields = '';
-  if (c.db === 'email') {
-    extraFields = `
-      <div class="crm-section-hd">Additional</div>
-      <div class="fg"><label>LinkedIn</label>
-        <input id="ce-linkedin" type="text" value="${c.linkedin||''}" style="${inputStyle}">
-      </div>
-      <div class="fg"><label>First outreach</label>
-        <input id="ce-engagedFirst" type="date" value="${c.engagedFirst||''}" style="${dateStyle}">
-      </div>
-      <div class="fg"><label>Engage next</label>
-        <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
-      </div>`;
-  } else if (c.db === 'whatsapp') {
-    extraFields = `
-      <div class="crm-section-hd">Additional</div>
-      <div class="fg"><label>WhatsApp 1</label>
-        <input id="ce-whatsapp" type="text" value="${c.whatsapp||''}" style="${inputStyle}">
-      </div>
-      <div class="fg"><label>WhatsApp 2</label>
-        <input id="ce-whatsapp2" type="text" value="${c.whatsapp2||''}" style="${inputStyle}">
-      </div>
-      <div class="fg"><label>Engage next</label>
-        <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
-      </div>
-      <div class="fg"><label>First outreach</label>
-        <input id="ce-engagedFirst" type="text" value="${c.engagedFirst||''}" style="${inputStyle}">
-      </div>`;
-  } else {
-    extraFields = `
-      <div class="crm-section-hd">Additional</div>
-      <div class="fg"><label>WhatsApp</label>
-        <input id="ce-whatsapp" type="text" value="${c.whatsapp||''}" style="${inputStyle}">
-      </div>
-      <div class="fg"><label>Engage next</label>
-        <input id="ce-engageNext" type="date" value="${c.engageNext||''}" style="${dateStyle}">
-      </div>
-      <div class="fg"><label>First outreach</label>
-        <input id="ce-engagedFirst" type="text" value="${c.engagedFirst||''}" style="${inputStyle}">
-      </div>`;
-  }
+  const iS = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'Inter\',sans-serif;font-size:16px;background:var(--bg);outline:none;-webkit-appearance:none;';
+  const dS = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:\'Inter\',sans-serif;font-size:14px;background:var(--bg);outline:none;-webkit-appearance:none;';
+  const f  = (id, label, type, val) => `<div class="fg"><label>${label}</label><input id="ce-${id}" type="${type}" value="${val||''}" style="${type==='date'?dS:iS}"></div>`;
 
   return `
     <div class="modal-header">
@@ -399,12 +356,18 @@ function crmEditHTML(c) {
       <button class="modal-close" onclick="document.getElementById('crm-modal').classList.remove('open')">✕</button>
     </div>
     <div class="crm-section-hd">Details</div>
-    ${baseFields.map(f => `
-      <div class="fg"><label>${f.charAt(0).toUpperCase()+f.slice(1)}</label>
-        <input id="ce-${f}" type="text" value="${(f === 'location' ? (cleanLocation(c.location)||'') : (c[f]||''))}"
-          style="${inputStyle}">
-      </div>`).join('')}
-    ${extraFields}
+    ${f('name',     'Name',     'text', c.name)}
+    ${f('company',  'Company',  'text', c.company)}
+    ${f('location', 'Location', 'text', cleanLocation(c.location))}
+    ${f('email',    'Email',    'text', c.email)}
+    ${f('insta',    'Instagram','text', c.insta)}
+    ${f('website',  'Website',  'text', c.website)}
+    <div class="crm-section-hd">Additional</div>
+    ${f('linkedin',     'LinkedIn',      'text', c.linkedin)}
+    ${f('whatsapp',     'WhatsApp',      'text', c.whatsapp)}
+    ${f('whatsapp2',    'WhatsApp 2',    'text', c.whatsapp2)}
+    ${f('engagedFirst', 'First outreach','date', c.engagedFirst)}
+    ${f('engageNext',   'Engage next',   'date', c.engageNext)}
     <button onclick="saveContactDetails('${c.id}','${c.db}')" class="ios-modal-close" style="margin-top:8px;">Save Changes</button>
     <button onclick="openCrmModal('${c.id}')" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:1px solid var(--border);border-radius:100px;font-family:'Inter',sans-serif;font-size:14px;cursor:pointer;color:var(--muted);">Cancel</button>`;
 }
