@@ -8,6 +8,8 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 
 let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
+window._templateMode=false;
+const TEMPLATE_FIELDS=['f-intro','f-body','f-included','f-also','f-signoff','f-note','f-roomrate','f-pkgrate','f-deposit'];
 // crmData, crmTab, crmLoaded declared in crm.js — do NOT redeclare here
 
 window._errorLog=[];
@@ -198,7 +200,15 @@ function switchDealTab(t){
   });
   if(t==='offer')renderOffer();
   if(t==='contract')renderContract();
-  if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;}
+  if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;window._templateMode=false;}
+  if(t==='edit'&&!window._templateMode){
+    const title=document.querySelector('#sub-view-edit .view-hero-title');
+    if(title)title.textContent='Edit Deal';
+    const sub=document.querySelector('#sub-view-edit .view-hero-sub');
+    if(sub)sub.textContent='Fill in retreat details to generate offer & contract';
+    const btn=$('save-btn');if(btn){btn.textContent='Save';btn.className='save-btn';}
+    const ns=$('notion-status');if(ns)ns.style.display='';
+  }
 }
 
 function toggleVilla(n){
@@ -252,8 +262,44 @@ function newDraft(){
   autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
   const s=$('autosave-status');if(s)s.textContent='';
   if(typeof extraServices!=='undefined'){extraServices=[];renderExtraServices();}
+  // Apply master template overrides
+  const _tmpl=JSON.parse(localStorage.getItem('masterTemplate')||'null');
+  if(_tmpl)TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el&&_tmpl[id]!==undefined)el.value=_tmpl[id];});
   switchDealTab('edit');
 }
+
+function openTemplateEdit(){
+  window._templateMode=true;
+  window._linkedLeadId=null;window._linkedLeadName=null;currentPageId=null;
+  ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  $('f-contractdate').value=todayStr();$('f-validuntil').value=addDays(todayStr(),7);$('f-offervalid').value='';$('notion-status').value='Draft';
+  const tmpl=JSON.parse(localStorage.getItem('masterTemplate')||'null');
+  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate':'60','f-pkgrate':'30.25','f-deposit':''};
+  TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)el.value=tmpl?.[id]??defs[id]??'';});
+  draftActive=false;intentionalDraft=false;autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
+  const sv=$('autosave-status');if(sv)sv.textContent='';
+  if(typeof extraServices!=='undefined'){extraServices=[];renderExtraServices();}
+  switchDealTab('edit');
+  // Update UI for template mode (after switchDealTab)
+  const title=document.querySelector('#sub-view-edit .view-hero-title');if(title)title.textContent='Master Template';
+  const sub=document.querySelector('#sub-view-edit .view-hero-sub');if(sub)sub.textContent='Set default text & pricing for all new deals';
+  const btn=$('save-btn');if(btn){btn.textContent='Save as Default';btn.className='save-btn';}
+  const ns=$('notion-status');if(ns)ns.style.display='none';
+}
+
+function showTemplateConfirm(){$('template-confirm')?.classList.add('open');}
+function closeTemplateConfirm(){$('template-confirm')?.classList.remove('open');}
+function confirmSaveTemplate(){
+  const tmpl={};
+  TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)tmpl[id]=el.value;});
+  localStorage.setItem('masterTemplate',JSON.stringify(tmpl));
+  closeTemplateConfirm();
+  const btn=$('save-btn');if(btn){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save as Default';btn.className='save-btn';},3000);}
+  dbg('[TEMPLATE] Master template saved');
+}
+
+function openMarketing(){$('marketing-overlay')?.classList.add('open');}
+function closeMarketing(e){if(!e||e.target===$('marketing-overlay'))$('marketing-overlay')?.classList.remove('open');}
 
 let deferredPrompt=null;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
@@ -276,7 +322,8 @@ if('serviceWorker' in navigator){
       const sw=reg.installing;
       sw.addEventListener('statechange',()=>{
         if(sw.state==='installed'&&navigator.serviceWorker.controller){
-          const b=$('update-btn');if(b)b.style.display='block';
+          const b=$('update-btn');if(b){b.style.display='flex';b.classList.add('update-glow');}
+          $('avatar-btn')?.classList.add('update-glow');
         }
       });
     });
