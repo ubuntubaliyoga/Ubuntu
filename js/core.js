@@ -269,6 +269,9 @@ function newDraft(){
 }
 
 function openTemplateEdit(){
+  // Activate deal tab first (this resets _templateMode via switchDealTab('drafts'), which is fine)
+  switchTab('deal');
+  // Now set template mode and load form
   window._templateMode=true;
   window._linkedLeadId=null;window._linkedLeadName=null;currentPageId=null;
   ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{const el=$(id);if(el)el.value='';});
@@ -280,7 +283,7 @@ function openTemplateEdit(){
   const sv=$('autosave-status');if(sv)sv.textContent='';
   if(typeof extraServices!=='undefined'){extraServices=[];renderExtraServices();}
   switchDealTab('edit');
-  // Update UI for template mode (after switchDealTab)
+  // Update UI for template mode
   const title=document.querySelector('#sub-view-edit .view-hero-title');if(title)title.textContent='Master Template';
   const sub=document.querySelector('#sub-view-edit .view-hero-sub');if(sub)sub.textContent='Set default text & pricing for all new deals';
   const btn=$('save-btn');if(btn){btn.textContent='Save as Default';btn.className='save-btn';}
