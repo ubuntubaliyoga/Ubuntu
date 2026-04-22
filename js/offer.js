@@ -150,18 +150,20 @@ function buildContractHTML(){
   const PMT=payments(finalTotal,checkin,depositPct);
   const BANK={Currency:'IDR','Account Holder':'PT PURUSA YOGA BALI',Bank:'PT Bank Permata, Tbk','Account Number':'4122048077','BIC / SWIFT':'BBBAIDJAXXX','Bank Address':'Jalan Subak Sari No. 1, Badung, Bali'};
   const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
+  const cR=(label,sub,amt)=>`<tr><td>${label}${sub?`<span style="display:block;font-size:9px;color:#9E948A;margin-top:2px;">${sub}</span>`:''}</td><td style="text-align:right;white-space:nowrap;">${amt}</td></tr>`;
   const bR=P.bales<=0?'':P.bales<=5
-    ?`<tr><td>Accommodation — ${P.bales} Gladak${P.bales>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.bales*P.roomRate*nights,2)}</td></tr>`
-    :`<tr><td>Accommodation — 5 Gladaks × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(5*P.roomRate*nights,2)}</td></tr><tr><td>Accommodation — ${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''} × ${nights} nights × USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN(P.roomRate,2)}/night</td><td>USD ${fmtN((P.bales-5)*P.roomRate*nights,2)}</td></tr>`;
-  const pR=P.parvOn?`<tr><td>Parvati Villa × ${nights} nights × USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc,2)}/night</td><td>USD ${fmtN(P.parvDisc*nights,2)}</td></tr>`:'';
-  const buR=P.buddOn?`<tr><td>Buddha Villa × ${nights} nights × USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc,2)}/night</td><td>USD ${fmtN(P.buddDisc*nights,2)}</td></tr>`:'';
-  const pkR=P.pkgCount>0?`<tr><td>Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people × ${nights} nights × USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgRate,2)}/night</td><td>USD ${fmtN(P.pkgSub*nights,2)}</td></tr>`:'';
-  const extR=hasExtrasC?`<tr><td colspan="3" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 11px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return`<tr><td>${s.label}${qtyStr}</td><td>USD ${fmtN(s.unitUsd,0)}</td><td>USD ${fmtN(t,0)}</td></tr>`;}).join('')}`:'';
-  const txR=`<tr><td>Tax (10%) + Service (5%)</td><td></td><td>USD ${fmtN(finalTotal-(hasExtrasC?grandExC:P.totalEx),2)}</td></tr>`;
-  const ebR=P.discPct>0?`<tr><td><strong>${P.discPct}% Early Bird Discount</strong></td><td></td><td><strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong></td></tr>`:'';
-  const rdR=P.discRooms>0&&P.discRoomPct>0?`<tr><td><strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong></td><td></td><td><strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong></td></tr>`:'';
-  const totR=`<tr style="background:#F5ECD7;"><td colspan="2">Total incl. tax &amp; service</td><td>USD ${fmtN(finalTotal,2)}</td></tr>`;
-  const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td colspan="2" style="font-family:'Libre Baskerville',serif;font-size:9.5px;font-weight:700;">IDR for transaction (rate: 1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue)</td><td style="font-family:'Libre Baskerville',serif;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
+    ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`USD ${fmtN(P.roomRate,0)}/night · ${nights} nights`,`USD ${fmtN(P.bales*P.roomRate*nights,2)}`)
+    :cR('5 Gladaks',`USD ${fmtN(P.roomRate,0)}/night · ${nights} nights`,`USD ${fmtN(5*P.roomRate*nights,2)}`)
+     +cR(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`USD ${fmtN(P.roomRate,0)}/night · ${nights} nights`,`USD ${fmtN((P.bales-5)*P.roomRate*nights,2)}`);
+  const pR=P.parvOn?cR('Parvati Villa',`USD ${fmtN(P.parvDisc,0)}/night · ${nights} nights`,`USD ${fmtN(P.parvDisc*nights,2)}`):'';
+  const buR=P.buddOn?cR('Buddha Villa',`USD ${fmtN(P.buddDisc,0)}/night · ${nights} nights`,`USD ${fmtN(P.buddDisc*nights,2)}`):'';
+  const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`USD ${fmtN(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,`USD ${fmtN(P.pkgSub*nights,2)}`):'';
+  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',`USD ${fmtN(t,0)}`);}).join('')}`:'';
+  const txR=cR('Tax (10%) + Service charge (5%)','',`USD ${fmtN(finalTotal-(hasExtrasC?grandExC:P.totalEx),2)}`);
+  const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong>`):'';
+  const rdR=P.discRooms>0&&P.discRoomPct>0?cR(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong>`):'';
+  const totR=`<tr style="background:#F5ECD7;font-weight:700;"><td>Total incl. tax &amp; service charge</td><td style="text-align:right;white-space:nowrap;">USD ${fmtN(finalTotal,2)}</td></tr>`;
+  const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td style="font-size:9.5px;font-weight:700;">IDR equivalent<span style="display:block;font-size:8px;font-weight:400;opacity:.75;margin-top:2px;">1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue</span></td><td style="text-align:right;white-space:nowrap;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
   return`<div class="contract-doc">
   <div class="c-hd">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
@@ -184,7 +186,7 @@ function buildContractHTML(){
     <p>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
     <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
     <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
-    <table class="c-table"><thead><tr><th>ITEM</th><th>RATE</th><th>SUBTOTAL</th></tr></thead>
+    <table class="c-table"><thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead>
     <tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
     <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
     <p><strong>What's Included:</strong></p>
