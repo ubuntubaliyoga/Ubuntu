@@ -141,20 +141,31 @@ async function b2Research(city, log) {
   return candidates.filter(c => c.bio || c.website);
 }
 
-// ─── DUCKDUCKGO SEARCH via Jina (free) ───────────────────────────────────────
+// ─── WEB SEARCH via Jina (free) ──────────────────────────────────────────────
+// DuckDuckGo blocks Vercel IPs. Use Google then Bing as fallback.
 async function ddgSearch(query) {
-  try {
-    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-    const r = await fetch(`https://r.jina.ai/${ddgUrl}`, {
-      headers: { Accept: 'text/plain', 'X-Return-Format': 'text' },
-      signal: AbortSignal.timeout(12000),
-    });
-    const text = await r.text();
-    return parseDDGResults(text);
-  } catch (e) {
-    console.error('[ddgSearch]', e.message);
-    return [];
+  const engines = [
+    `https://www.google.com/search?q=${encodeURIComponent(query)}&num=10&hl=en`,
+    `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`,
+  ];
+  for (const url of engines) {
+    try {
+      const r = await fetch(`https://r.jina.ai/${url}`, {
+        headers: {
+          Accept: 'text/plain',
+          'X-Return-Format': 'text',
+          'X-With-Links-Summary': 'true',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      const text = await r.text();
+      const results = parseDDGResults(text);
+      if (results.length) return results;
+    } catch (e) {
+      console.error('[search]', e.message);
+    }
   }
+  return [];
 }
 
 function parseDDGResults(text) {
@@ -291,33 +302,45 @@ async function instagramProfileScrape(usernames, log) {
   }
 }
 
-// ─── GOOGLE MAPS FALLBACK (Apify) ────────────────────────────────────────────
+// ─── GOOGLE MAPS FALLBACK (Apify — try known actor slugs) ────────────────────
 async function googleMapsLeads(city, limit, log) {
-  try {
-    const items = await apifyRun('apify~google-maps-scraper', {
-      searchStringsArray: [`yoga retreat ${city}`, `yoga studio ${city}`],
-      maxCrawledPlacesPerSearch: Math.ceil(limit / 2) + 2,
-      language: 'en',
-    });
-    return (Array.isArray(items) ? items : [])
-      .filter(i => i.title)
-      .map(i => ({
-        source:   'google_maps',
-        name:     i.title,
-        website:  i.website  || null,
-        insta:    null,
-        phone:    i.phone    || null,
-        email:    null,
-        bio:      i.description || '',
-        retreat:  null,
-        firstname: null,
-        variant:  null,
-        location: i.url || null,
-      }));
-  } catch (e) {
-    log(`Maps error: ${e.message}`);
-    return [];
+  const input = {
+    searchStringsArray: [`yoga retreat ${city}`, `yoga studio ${city}`],
+    maxCrawledPlacesPerSearch: Math.ceil(limit / 2) + 2,
+    language: 'en',
+  };
+  // Try known actor slugs in order
+  const slugs = [
+    'apify~google-maps-scraper',
+    'compass~crawler-google-places',
+    'apify~google-places-scraper',
+  ];
+  for (const slug of slugs) {
+    try {
+      const items = await apifyRun(slug, input);
+      if (Array.isArray(items) && items.length) {
+        log(`Maps: ${slug} returned ${items.length} places`);
+        return items
+          .filter(i => i.title)
+          .map(i => ({
+            source:   'google_maps',
+            name:     i.title,
+            website:  i.website  || null,
+            insta:    null,
+            phone:    i.phone    || null,
+            email:    null,
+            bio:      i.description || '',
+            retreat:  null,
+            firstname: null,
+            variant:  null,
+            location: i.url || null,
+          }));
+      }
+    } catch (e) {
+      log(`Maps: ${slug} failed: ${e.message.slice(0, 80)}`);
+    }
   }
+  return [];
 }
 
 // ─── CONTACT ENRICHMENT ──────────────────────────────────────────────────────
