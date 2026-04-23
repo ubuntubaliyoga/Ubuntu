@@ -1,4 +1,4 @@
-// js/bizdev.js
+// js/bizdev.js — Leadgen tab
 
 const LG_CITIES = [
   'Amsterdam', 'London', 'Berlin', 'New York', 'Los Angeles', 'Sydney',
@@ -9,129 +9,92 @@ const LG_CITIES = [
   'Bali', 'Chiang Mai', 'Playa del Carmen', 'Nosara', 'Sedona',
 ];
 
-let _lgVariant = 'a';
-let _lgGenerated = false;
+let _lgRunning = false;
 
 function lgRandomCity() {
-  const city = LG_CITIES[Math.floor(Math.random() * LG_CITIES.length)];
   const el = document.getElementById('lg-city');
-  if (el) { el.value = city; lgOnCityInput(); }
+  if (el) el.value = LG_CITIES[Math.floor(Math.random() * LG_CITIES.length)];
 }
 
-function lgOnCityInput() {
-  // Reset generated state if city changes
-  if (_lgGenerated) {
-    const city = document.getElementById('lg-city')?.value.trim() || '';
-    const label = document.getElementById('lg-city-label');
-    if (label) label.textContent = city || 'your city';
-    lgUpdate();
+async function lgGenerate() {
+  if (_lgRunning) return;
+  const city = (document.getElementById('lg-city')?.value || '').trim();
+  if (!city) { lgStatus('Enter a city first.', 'warn'); return; }
+
+  _lgRunning = true;
+  const btn = document.getElementById('lg-generate-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Searching…'; }
+  lgStatus(`🔍 Scanning Instagram for retreat leaders in ${city}…`, 'loading');
+  document.getElementById('lg-results')?.replaceChildren();
+
+  try {
+    const res  = await fetch('/api/leadgen-agent', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ city }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${res.status}`);
+    }
+    const data = await res.json();
+    const added   = (data.leads || []).filter(l => l.status === 'added').length;
+    const skipped = (data.leads || []).filter(l => l.status === 'skipped').length;
+    lgStatus(`✅ ${added} leads added to Notion${skipped ? ` · ${skipped} skipped (duplicate)` : ''} — ${city}`, 'ok');
+    lgRenderLeads(data.leads || []);
+  } catch (e) {
+    lgStatus('Error: ' + e.message, 'error');
+  } finally {
+    _lgRunning = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate Leads'; }
   }
 }
 
-function lgGenerate() {
-  const city = document.getElementById('lg-city')?.value.trim() || '';
-  const btn  = document.getElementById('lg-generate-btn');
-  const results = document.getElementById('lg-results');
-  const label   = document.getElementById('lg-city-label');
+function lgStatus(msg, type) {
+  const el = document.getElementById('lg-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'lg-status lg-s-' + (type || 'info');
+  el.style.display = msg ? 'block' : 'none';
+}
 
-  if (!city) {
-    if (btn) { btn.textContent = 'Enter a city first'; btn.style.opacity = '.6'; }
-    setTimeout(() => { if (btn) { btn.textContent = 'Generate Leads'; btn.style.opacity = ''; } }, 1800);
+function lgRenderLeads(leads) {
+  const el = document.getElementById('lg-results');
+  if (!el) return;
+  if (!leads.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0;">No leads found. Try a different city.</div>';
     return;
   }
-
-  _lgGenerated = true;
-  if (results) results.style.display = 'block';
-  if (label) label.textContent = city;
-  if (btn) { btn.textContent = `Searching ${city}…`; btn.style.opacity = '.7'; }
-
-  // Brief animation then reset button
-  setTimeout(() => {
-    if (btn) { btn.textContent = 'Generate Leads'; btn.style.opacity = ''; }
-  }, 1200);
-
-  lgUpdate();
-
-  // Scroll results into view
-  setTimeout(() => results?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
-}
-
-function lgSetVariant(v) {
-  _lgVariant = v;
-  const a = document.getElementById('lg-var-a');
-  const b = document.getElementById('lg-var-b');
-  if (a) a.className = v === 'a' ? 'pill-btn dark' : 'pill-btn';
-  if (b) b.className = v === 'b' ? 'pill-btn dark' : 'pill-btn';
-  lgUpdate();
-}
-
-function lgBuildMessage(firstname, retreat) {
-  const name = (firstname || '').trim() || '[First Name]';
-  const ret  = (retreat  || '').trim();
-  let hook;
-  if (_lgVariant === 'a') {
-    hook = `You are hosting the ${ret || '[Upcoming Retreat]'}, is that right?`;
-  } else {
-    hook = `You held the ${ret || '[Last Retreat]'}, is that right?`;
-  }
-  return `Dear ${name}, Kevin here from Bali.\n\n${hook}`;
-}
-
-function lgCopyMessage() {
-  const firstname = document.getElementById('lg-firstname')?.value || '';
-  const retreat   = document.getElementById('lg-retreat')?.value   || '';
-  const msg = lgBuildMessage(firstname, retreat);
-  const btn = document.getElementById('lg-copy-btn');
-  const reset = () => { if (btn) btn.textContent = 'Copy'; };
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(msg)
-      .then(() => { if (btn) { btn.textContent = 'Copied ✓'; setTimeout(reset, 2000); } })
-      .catch(() => _lgCopyFallback(msg, btn, reset));
-  } else {
-    _lgCopyFallback(msg, btn, reset);
-  }
-}
-
-function _lgCopyFallback(text, btn, reset) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-  if (btn) { btn.textContent = 'Copied ✓'; setTimeout(reset, 2000); }
-}
-
-function lgUpdate() {
-  if (!_lgGenerated) return;
-
-  const firstname = document.getElementById('lg-firstname')?.value || '';
-  const retreat   = document.getElementById('lg-retreat')?.value   || '';
-  const rawPhone  = document.getElementById('lg-phone')?.value     || '';
-  const phone     = rawPhone.replace(/[\s\-\(\)\+]/g, '').replace(/^00/, '');
-  const msgEl     = document.getElementById('lg-message');
-  const linksEl   = document.getElementById('lg-links');
-
-  const msg = lgBuildMessage(firstname, retreat);
-  if (msgEl) msgEl.textContent = msg;
-
-  const encoded = encodeURIComponent(msg);
-  const href    = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
-  const sub     = phone
-    ? `To +${rawPhone.trim().replace(/^\+/, '')}`
-    : 'No number — select recipient in WhatsApp';
-
-  if (linksEl) {
-    linksEl.innerHTML = `
-      <a href="${href}" target="_blank" rel="noopener"
-        style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;text-decoration:none;-webkit-tap-highlight-color:transparent;">
-        <div style="width:40px;height:40px;border-radius:50%;background:#E8F5E9;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">💬</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px;">Message 1 — Curiosity Hook</div>
-          <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</div>
+  el.innerHTML = leads.map(lead => {
+    const added   = lead.status === 'added';
+    const skipped = lead.status === 'skipped';
+    const badge   = added ? '✅ Added' : skipped ? '⏭️ Skipped' : '⚠️ Error';
+    const badgeC  = added ? '#2E7D32' : skipped ? '#888' : '#c62828';
+    const srcIcon = lead.source === 'instagram' ? '📸' : '📍';
+    const srcLabel = lead.source === 'instagram' ? 'Instagram' : 'Google Maps';
+    return `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div style="min-width:0;">
+          <div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:3px;">${esc(lead.name)}</div>
+          <div style="font-size:11px;color:var(--muted);">${srcIcon} ${srcLabel}${lead.insta ? ` · ${esc(lead.insta)}` : ''}</div>
         </div>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>`;
-  }
+        <div style="font-size:11px;font-weight:600;color:${badgeC};flex-shrink:0;white-space:nowrap;">${badge}</div>
+      </div>
+      ${lead.retreat ? `<div style="font-size:12px;color:var(--text);margin-bottom:8px;padding:6px 10px;background:var(--bg);border-radius:var(--radius-sm);">🎯 ${esc(lead.retreat)}</div>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:12px;color:var(--muted);">
+        ${lead.phone   ? `<span>📞 ${esc(lead.phone)}</span>` : '<span style="opacity:.5;">📞 no number</span>'}
+        ${lead.email   ? `<span>✉️ ${esc(lead.email)}</span>`  : ''}
+        ${lead.website ? `<a href="${esc(lead.website)}" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">🌐 website</a>` : ''}
+      </div>
+      ${lead.waLink
+        ? `<a href="${esc(lead.waLink)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:#E8F5E9;border:1px solid #C8E6C9;border-radius:var(--radius-sm);color:#2E7D32;font-size:13px;font-weight:600;text-decoration:none;">💬 Open in WhatsApp</a>`
+        : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;font-style:italic;">No phone number — message not available</div>`
+      }
+    </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
