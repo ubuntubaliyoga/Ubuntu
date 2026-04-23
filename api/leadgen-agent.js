@@ -156,13 +156,21 @@ function extractPhoneFromText(text) {
 }
 
 function extractPhoneFromHtml(html) {
+  // tel: href (most reliable)
   const telM = html.match(/href="tel:(\+?[\d\s\-().+]{7,20})"/i);
   if (telM) return telM[1].replace(/[\s\-().]/g, '');
+  // wa.me / api.whatsapp.com
   const waM = html.match(/wa\.me\/\+?([\d]{7,15})/);
   if (waM) return waM[1];
   const waApi = html.match(/api\.whatsapp\.com\/send[^"'\s]*[?&]phone=\+?([\d]{7,15})/i);
   if (waApi) return waApi[1];
-  return html.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.replace(/[\s\-()]/g, '') || null;
+  // international + prefix in text
+  const intl = html.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0];
+  if (intl) return intl.replace(/[\s\-()]/g, '');
+  // labeled local numbers: "Tel:", "Phone:", "WA:", "WhatsApp:", "📞" followed by digits
+  const labeled = html.match(/(?:tel|phone|whatsapp|wa|mob(?:ile)?|call|contact|hp)[:\s 📞]+(\+?[\d][\d\s\-().]{7,14}[\d])/i);
+  if (labeled) return labeled[1].replace(/[\s\-().]/g, '');
+  return null;
 }
 
 const LINK_IN_BIO_DOMAINS = [
@@ -344,10 +352,10 @@ async function scrapeLinkInBio(url) {
   } catch { return null; }
 }
 
-// ── Deep website scraper — raw HTML fetch, 6 page variants ───────────────────
+// ── Deep website scraper — raw HTML fetch, 10 page variants ─────────────────
 async function fetchContactDeep(website) {
   const base    = website.replace(/\/$/, '');
-  const PAGES   = ['', '/contact', '/about', '/book', '/schedule', '/workshop'];
+  const PAGES   = ['', '/contact', '/about', '/impressum', '/imprint', '/legal', '/kontakt', '/book', '/schedule', '/workshop'];
   const UA      = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15';
 
   const results = await Promise.allSettled(PAGES.map(async suffix => {
