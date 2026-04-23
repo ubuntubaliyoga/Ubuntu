@@ -11,9 +11,32 @@ const LG_CITIES = [
 
 let _lgRunning = false;
 
+function lgInit() {
+  // Populate datalist for city autocomplete
+  const dl = document.getElementById('lg-cities-list');
+  if (dl) {
+    dl.innerHTML = LG_CITIES.map(c => `<option value="${c}">`).join('');
+  }
+}
+
 function lgRandomCity() {
-  const el = document.getElementById('lg-city');
-  if (el) el.value = LG_CITIES[Math.floor(Math.random() * LG_CITIES.length)];
+  const btn  = document.getElementById('lg-dice-btn');
+  const inp  = document.getElementById('lg-city');
+  if (!btn || !inp) return;
+
+  const chosen = LG_CITIES[Math.floor(Math.random() * LG_CITIES.length)];
+  inp.value = '';
+
+  // Animate dice for 1.5 s then reveal city
+  const icon = btn.querySelector('span') || btn;
+  btn.style.pointerEvents = 'none';
+  btn.innerHTML = `<span class="dice-rolling">🎲</span>`;
+  setTimeout(() => {
+    btn.innerHTML = '🎲';
+    btn.style.pointerEvents = '';
+    inp.value = chosen;
+    inp.focus();
+  }, 1500);
 }
 
 async function lgGenerate() {

@@ -177,8 +177,8 @@ function switchTab(t){
     const el=$('view-'+v);
     if(el)el.classList.toggle('active',v===t);
   });
-  // Bottom nav active state
-  ['deal','crm','bizdev'].forEach(v=>{
+  // Bottom nav active state (bizdev removed from nav)
+  ['deal','crm'].forEach(v=>{
     $('bn-'+v)?.classList.toggle('active',v===t);
   });
   const tb=$('deal-toolbar');
@@ -188,6 +188,7 @@ function switchTab(t){
     if(typeof loadCRM==='function') loadCRM();
     if(typeof crmSwitchTab==='function') crmSwitchTab(typeof crmTab!=='undefined'?crmTab:'cold');
   }
+  if(t==='bizdev' && typeof lgInit==='function') lgInit();
 }
 
 function switchDealTab(t){
