@@ -38,10 +38,11 @@ async function lgGenerate() {
       throw new Error(err.error || `Server error ${res.status}`);
     }
     const data = await res.json();
+    if (data._log) console.log('[leadgen trace]', data._log.join('\n'));
     const added   = (data.leads || []).filter(l => l.status === 'added').length;
     const skipped = (data.leads || []).filter(l => l.status === 'skipped').length;
     lgStatus(`✅ ${added} leads added to Notion${skipped ? ` · ${skipped} skipped (duplicate)` : ''} — ${city}`, 'ok');
-    lgRenderLeads(data.leads || []);
+    lgRenderLeads(data.leads || [], data._log || []);
   } catch (e) {
     lgStatus('Error: ' + e.message, 'error');
     console.error('[leadgen]', e);
@@ -60,11 +61,12 @@ function lgStatus(msg, type) {
   el.style.color   = type === 'error' ? '#c62828' : type === 'ok' ? '#2E7D32' : type === 'warn' ? '#e65100' : 'var(--muted)';
 }
 
-function lgRenderLeads(leads) {
+function lgRenderLeads(leads, log) {
   const el = document.getElementById('lg-results');
   if (!el) return;
   if (!leads.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0;">No leads found. Try a different city.</div>';
+    const trace = log?.length ? `<details style="margin-top:12px;font-size:11px;color:var(--muted);"><summary style="cursor:pointer;">Debug trace</summary><pre style="white-space:pre-wrap;line-height:1.6;margin-top:6px;">${esc(log.join('\n'))}</pre></details>` : '';
+    el.innerHTML = `<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0;">No leads found. Try a different city.${trace}</div>`;
     return;
   }
   el.innerHTML = leads.map(lead => {
