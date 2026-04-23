@@ -95,156 +95,51 @@ function filterBlocklist(leads, blocklist) {
   });
 }
 
-// ─── B2 RESEARCH (Jina web search — free, no Apify credits) ──────────────────
+// ─── B2 RESEARCH (Apify: Instagram hashtag search → profile scrape) ───────────
 async function b2Research(city, log) {
-  // Three parallel searches targeting different lead sources
-  log('S1+S2+S3: searching for yoga/retreat leads');
-  const [s1, s2, s3] = await Promise.all([
-    ddgSearch(`site:instagram.com yoga retreat teacher "${city}"`),
-    ddgSearch(`yoga retreat workshop facilitator "${city}" 2025 contact`),
-    ddgSearch(`yoga teacher training retreat "${city}" 2025 2026`),
-  ]);
-  log(`S1: ${s1.length} results, S2: ${s2.length} results, S3: ${s3.length} results`);
+  // Build city hashtags: yogabarcelona, retreatbarcelona, barcelonayoga
+  const slug     = city.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const hashtags = [`yoga${slug}`, `retreat${slug}`, `${slug}yoga`];
 
-  const candidates = extractCandidates([...s1, ...s2, ...s3], city).slice(0, 14);
-  log(`Candidates extracted: ${candidates.length}`);
-
-  // Fetch contact pages for non-Instagram candidates
-  await fetchCandidateContacts(candidates, log);
-
-  // Instagram profile scrape for any @handles found
-  const handles = candidates.map(c => c.insta).filter(Boolean).map(h => h.replace(/^@/, ''));
-  if (handles.length) {
-    log(`Instagram: scraping ${handles.length} profiles`);
-    const profiles = await instagramProfileScrape(handles, log);
-    log(`Instagram: got ${profiles.length} profiles back`);
-    profiles.forEach(p => {
-      const c = candidates.find(c => c.insta === `@${p.username}`);
-      if (c) {
-        c.bio     = c.bio     || p.biography   || '';
-        c.website = c.website || p.externalUrl || null;
-        c.phone   = c.phone   || p.businessPhoneNumber || null;
-      }
+  log(`Instagram hashtag search: ${hashtags.join(', ')}`);
+  let usernames = [];
+  try {
+    const posts = await apifyRun('apify~instagram-hashtag-scraper', {
+      hashtags,
+      resultsLimit: 60,
     });
-  }
-
-  return candidates.filter(c => c.bio || c.website || c.insta);
-}
-
-// ─── WEB SEARCH via Jina (free) ──────────────────────────────────────────────
-// Try Bing first — Google often returns a consent page that only has nav links.
-async function ddgSearch(query) {
-  const engines = [
-    { url: `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`,        skip: 'microsoft.com' },
-    { url: `https://www.google.com/search?q=${encodeURIComponent(query)}&num=10&hl=en`,  skip: 'google.com' },
-  ];
-  for (const { url, skip } of engines) {
-    try {
-      const r = await fetch(`https://r.jina.ai/${url}`, {
-        headers: {
-          Accept: 'text/plain',
-          'X-With-Links-Summary': 'true',   // appends numbered link list
-          // no X-Return-Format → keeps markdown so [title](url) links survive
-        },
-        signal: AbortSignal.timeout(15000),
-      });
-      const text    = await r.text();
-      const results = parseDDGResults(text, skip);
-      if (results.length) return results;
-    } catch (e) {
-      console.error('[search]', e.message);
+    const seen = new Set();
+    for (const p of (Array.isArray(posts) ? posts : [])) {
+      const u = p.ownerUsername || p.author?.username;
+      if (u && !seen.has(u)) { seen.add(u); usernames.push(u); }
     }
+    log(`${Array.isArray(posts) ? posts.length : 0} posts → ${usernames.length} unique profiles`);
+  } catch (e) {
+    log(`Hashtag scrape failed: ${e.message.slice(0, 120)}`);
   }
-  return [];
-}
 
-function parseDDGResults(text, skipDomain) {
-  const results = [];
-  const seen    = new Set();
-  const lines   = text.split('\n');
+  if (!usernames.length) return [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const lineRe = /\[([^\]]{5,120})\]\((https?:\/\/[^\)\s]{10,})\)/g;
-    let m;
-    while ((m = lineRe.exec(lines[i])) !== null) {
-      const [, title, url] = m;
-      if (seen.has(url)) continue;
-      // Skip search engine's own links (nav, consent pages, etc.)
-      if (skipDomain && url.includes(skipDomain)) continue;
-      if (url.includes('duckduckgo.com') || url.includes('duck.co')) continue;
-      seen.add(url);
-      // Grab next non-empty, non-link line as snippet
-      const snippet = lines.slice(i + 1, i + 4)
-        .find(l => l.trim() && !l.includes('](http')) || '';
-      results.push({ title: title.trim(), url, description: snippet.trim() });
-    }
-  }
-  return results;
-}
+  log(`Scraping ${Math.min(usernames.length, 20)} Instagram profiles`);
+  const profiles = await instagramProfileScrape(usernames.slice(0, 20), log);
+  log(`Got ${profiles.length} profiles`);
 
-function extractCandidates(results, city) {
-  const seen     = new Set();
-  const out      = [];
-  const EVENT_KW = ['retreat','workshop','immersion','ytt','training','program','course','yoga','wellness','meditation'];
-
-  for (const r of results) {
-    const url   = r.url   || '';
-    const title = r.title || '';
-    const desc  = r.description || '';
-    const text  = (title + ' ' + desc).toLowerCase();
-
-    if (!url || seen.has(url)) continue;
-    if (!EVENT_KW.some(k => text.includes(k))) continue;
-    seen.add(url);
-
-    const isInsta = url.includes('instagram.com/');
-    const insta   = isInsta
-      ? '@' + (url.split('instagram.com/')[1] || '').split(/[/?]/)[0]
-      : null;
-
-    out.push({
-      source:    'search',
-      name:      title.split(/[\-\|–]/)[0].trim() || title,
-      website:   isInsta ? null : url,
-      insta,
-      bio:       desc,
-      phone:     null,
-      email:     null,
+  const BIO_KW = ['yoga','retreat','meditat','wellness','workshop','teacher','trainer','facilitator','coach'];
+  return profiles
+    .filter(p => BIO_KW.some(k => (p.biography || '').toLowerCase().includes(k)))
+    .map(p => ({
+      source:    'instagram',
+      name:      p.fullName || p.username || '',
+      insta:     `@${p.username}`,
+      website:   p.externalUrl || null,
+      phone:     p.businessPhoneNumber || null,
+      email:     p.businessEmail || null,
+      bio:       p.biography || '',
       retreat:   null,
       firstname: null,
       variant:   null,
-    });
-  }
-  return out;
-}
-
-// ─── WEBSITE CONTACT FETCHING ─────────────────────────────────────────────────
-async function fetchCandidateContacts(candidates, log) {
-  const toFetch = candidates.filter(c => c.website && !c.phone).slice(0, 4);
-  log(`Fetching ${toFetch.length} websites for contact info`);
-
-  await Promise.allSettled(toFetch.map(async c => {
-    const contact = await fetchContact(c.website);
-    if (contact) {
-      c.phone = contact.phone || c.phone;
-      c.email = contact.email || c.email;
-      c.bio   = (c.bio + ' ' + (contact.text || '')).slice(0, 400);
-    }
-  }));
-
-  // Batched OR-search for still-missing phones
-  const stillMissing = candidates.filter(c => !c.phone).slice(0, 3);
-  if (stillMissing.length >= 2) {
-    const orQuery = stillMissing.map(c => `"${c.name}"`).join(' OR ') + ` contact phone ${candidates[0]?.bio?.slice(0,20) || ''}`;
-    const r = await ddgSearch(orQuery);
-    stillMissing.forEach(c => {
-      const hit = r.find(x => (x.description || '').toLowerCase().includes(c.name.split(' ')[0].toLowerCase()));
-      if (hit) {
-        const phone = (hit.description || '').match(/\+?[\d][\d\s\-().]{8,16}[\d]/)?.[0];
-        if (phone) c.phone = phone.trim();
-      }
-    });
-  }
+      location:  city,
+    }));
 }
 
 async function fetchContact(url) {
@@ -277,13 +172,25 @@ async function instagramProfileScrape(usernames, log) {
 
 // ─── GOOGLE MAPS FALLBACK (Apify) ────────────────────────────────────────────
 async function googleMapsLeads(city, limit, log) {
-  const queries = [`yoga retreat ${city}`, `yoga studio ${city}`];
-  const max     = Math.ceil(limit / 2) + 2;
-  // Each actor uses its own input schema
+  const enc = encodeURIComponent(city);
+  const max = Math.min(limit + 2, 15);
+  // compass~crawler-google-places takes startUrls pointing at Google Maps searches
   const attempts = [
-    { slug: 'apify~google-maps-scraper',      input: { searchStringsArray: queries, maxCrawledPlacesPerSearch: max, language: 'en' } },
-    { slug: 'compass~crawler-google-places',   input: { searchStrings: queries,      maxResultsPerQuery: max, language: 'en' } },
-    { slug: 'apify~google-places-scraper',     input: { queries,                     maxResults: max } },
+    {
+      slug: 'compass~crawler-google-places',
+      input: {
+        startUrls: [
+          { url: `https://www.google.com/maps/search/yoga+retreat+${enc}/` },
+          { url: `https://www.google.com/maps/search/yoga+studio+${enc}/` },
+        ],
+        maxCrawledPlaces: max,
+        language: 'en',
+      },
+    },
+    {
+      slug: 'apify~google-maps-scraper',
+      input: { searchStringsArray: [`yoga retreat ${city}`, `yoga studio ${city}`], maxCrawledPlacesPerSearch: Math.ceil(max / 2), language: 'en' },
+    },
   ];
   for (const { slug, input } of attempts) {
     try {
