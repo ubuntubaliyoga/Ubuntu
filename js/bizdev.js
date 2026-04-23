@@ -86,15 +86,14 @@ function lgRenderLeads(leads, log) {
         <div style="font-size:11px;font-weight:600;color:${badgeC};flex-shrink:0;white-space:nowrap;">${badge}</div>
       </div>
       ${lead.retreat ? `<div style="font-size:12px;color:var(--text);margin-bottom:8px;padding:6px 10px;background:var(--bg);border-radius:var(--radius-sm);">🎯 ${esc(lead.retreat)}</div>` : ''}
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:12px;color:var(--muted);">
-        ${lead.phone   ? `<span>📞 ${esc(lead.phone)}</span>` : '<span style="opacity:.5;">📞 no number</span>'}
-        ${lead.email   ? `<span>✉️ ${esc(lead.email)}</span>`  : ''}
-        ${lead.website ? `<a href="${esc(lead.website)}" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">🌐 website</a>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;">
+        ${lead.waLink  ? `<a href="${esc(lead.waLink)}"  target="_blank" rel="noopener" class="crm-action-btn crm-wa-btn">WA</a>` : ''}
+        ${lead.insta   ? `<a href="https://instagram.com/${esc(lead.insta.replace(/^@/,''))}" target="_blank" rel="noopener" class="crm-action-btn crm-ig-btn">IG</a>` : ''}
+        ${lead.website ? `<a href="${esc(lead.website)}" target="_blank" rel="noopener" class="crm-action-btn crm-web-btn">www</a>` : ''}
+        ${lead.phone   ? `<span style="font-size:12px;color:var(--muted);padding:8px 0;">📞 ${esc(lead.phone)}</span>` : ''}
+        ${lead.email   ? `<span style="font-size:12px;color:var(--muted);padding:8px 0;">✉️ ${esc(lead.email)}</span>` : ''}
+        ${!lead.waLink && !lead.phone ? `<span style="font-size:12px;color:var(--muted);font-style:italic;padding:8px 0;">no number</span>` : ''}
       </div>
-      ${lead.waLink
-        ? `<a href="${esc(lead.waLink)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:#E8F5E9;border:1px solid #C8E6C9;border-radius:var(--radius-sm);color:#2E7D32;font-size:13px;font-weight:600;text-decoration:none;">💬 Open in WhatsApp</a>`
-        : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;font-style:italic;">No phone number — message not available</div>`
-      }
     </div>`;
   }).join('');
 }

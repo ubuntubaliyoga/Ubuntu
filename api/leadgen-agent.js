@@ -237,8 +237,8 @@ async function enrichContacts(leads, log) {
     // 1. Linktree: check external URL and bio text
     const ltUrl = extractLinktree(l.website) || extractLinktree(l.bio);
     if (ltUrl) {
-      const c = await scrapeForContact(ltUrl);
-      if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; l.website = l.website || c.website; }
+      const c = await scrapeLinktree(ltUrl);
+      if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; }
       if (l.phone) return;
     }
     // 2. Website
@@ -259,22 +259,45 @@ function extractLinktree(text) {
   return m ? `https://${m[0]}` : null;
 }
 
-// Scrapes a page via Jina — finds wa.me links (= phone), email, external site URL
-async function scrapeForContact(url) {
+// Scrapes a Linktree page by fetching its raw HTML and parsing __NEXT_DATA__ JSON.
+// Linktree is a Next.js app — the link URLs live in a script tag, not rendered text.
+async function scrapeLinktree(ltUrl) {
   try {
-    const r = await fetch(`https://r.jina.ai/${url}`, {
-      headers: { Accept: 'text/plain', 'X-Return-Format': 'text' },
-      signal: AbortSignal.timeout(8000),
+    const r = await fetch(ltUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15' },
+      signal: AbortSignal.timeout(10000),
     });
-    const text = (await r.text()).slice(0, 1500);
-    // wa.me/number is the most reliable phone signal
-    const waM  = text.match(/wa\.me\/\+?([\d]{7,15})/);
-    const phone = waM ? waM[1] : (text.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.trim() || null);
-    const email = text.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0] || null;
-    // Pick up an external website link from the Linktree page
-    const siteM = text.match(/https?:\/\/(?!linktr\.ee|wa\.me|instagram\.com|facebook\.com|tiktok\.com|youtube\.com)[^\s"'<>]{4,}\.[a-z]{2,}/i);
-    const website = siteM ? siteM[0].replace(/[,.)]+$/, '') : null;
-    return (phone || email || website) ? { phone, email, website } : null;
+    const html = await r.text();
+
+    // Primary: parse __NEXT_DATA__ for the links array
+    const ndMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+    if (ndMatch) {
+      try {
+        const nd    = JSON.parse(ndMatch[1]);
+        const links = nd?.props?.pageProps?.account?.links
+                   || nd?.props?.pageProps?.links
+                   || nd?.props?.pageProps?.pageProps?.links
+                   || [];
+        for (const lnk of links) {
+          const href = (lnk.url || lnk.href || '').trim();
+          if (!href) continue;
+          const waM = href.match(/wa\.me\/\+?([\d]{7,15})/);
+          if (waM)              return { phone: waM[1], email: null };
+          if (href.startsWith('tel:')) return { phone: href.slice(4).replace(/\s/g,''), email: null };
+        }
+        // Also scan link titles for phone patterns
+        for (const lnk of links) {
+          const p = (lnk.title || '').match(/\+[\d]{8,14}/)?.[0];
+          if (p) return { phone: p.replace(/\s/g,''), email: null };
+        }
+      } catch { /* fall through */ }
+    }
+
+    // Fallback: scan raw HTML for wa.me links
+    const waRaw = html.match(/wa\.me\/\+?([\d]{7,15})/);
+    if (waRaw) return { phone: waRaw[1], email: null };
+
+    return null;
   } catch { return null; }
 }
 

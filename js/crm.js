@@ -186,6 +186,7 @@ function buildList(items) {
       ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;">${c.notes.trim().slice(0,80)}</div>`
       : '';
 
+    const igUrl = c.insta ? `https://instagram.com/${c.insta.replace(/^@/,'')}` : null;
     return `<div class="crm-card" data-lead-id="${c.id}" draggable="true" ondragstart="startLeadDrag(event,'${c.id}')" onclick="openCrmModal('${c.id}')">
       <div class="crm-card-main">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
@@ -197,9 +198,9 @@ function buildList(items) {
         ${stagePill || offerPill ? `<div style="display:flex;gap:5px;margin-top:6px;">${stagePill}${offerPill}</div>` : ''}
       </div>
       <div class="crm-card-right">
-        ${wa ? `<a class="crm-wa-btn" href="${wa}" target="_blank" onclick="event.stopPropagation()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-          WA</a>` : ''}
+        ${wa    ? `<a class="crm-action-btn crm-wa-btn"  href="${wa}"        target="_blank" onclick="event.stopPropagation()">WA</a>`  : ''}
+        ${igUrl ? `<a class="crm-action-btn crm-ig-btn"  href="${igUrl}"     target="_blank" onclick="event.stopPropagation()">IG</a>`  : ''}
+        ${c.website ? `<a class="crm-action-btn crm-web-btn" href="${c.website}" target="_blank" onclick="event.stopPropagation()">www</a>` : ''}
       </div>
     </div>`;
   }).join('');
