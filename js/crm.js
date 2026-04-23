@@ -566,6 +566,20 @@ function dropLeadOnTab(id, targetTab) {
         email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
     }).catch(e => dbg('Demote failed: ' + e.message));
 
+  } else if (targetTab === 'closed' && sourceTab === 'converted') {
+    crmData.converted = (crmData.converted || []).filter(x => x.id !== id);
+    lead.db = 'email';
+    lead.status = 'SALE CLOSED';
+    crmData.emailLeads = [...(crmData.emailLeads || []), lead];
+    crmSwitchTab('closed');
+    if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!']);
+    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'demote', pageId: id, name: lead.name, company: lead.company,
+        email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
+    }).then(() => fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', pageId: id, db: 'email', status: 'SALE CLOSED' }),
+    })).catch(e => dbg('Close warm failed: ' + e.message));
+
   } else if (targetTab === 'cold' && sourceTab === 'closed') {
     lead.status = 'Followed + Engaged';
     crmSwitchTab('cold');
