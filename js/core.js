@@ -151,6 +151,7 @@ async function runMigration(){
 function openFABSheet(){
   $('fab-sheet')?.classList.add('open');
   $('fab-overlay')?.classList.add('open');
+  if (typeof fxConfetti === 'function') fxConfetti($('bn-fab'));
 }
 function closeFABSheet(){
   $('fab-sheet')?.classList.remove('open');

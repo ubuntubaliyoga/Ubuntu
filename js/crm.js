@@ -540,6 +540,7 @@ function dropLeadOnTab(id, targetTab) {
     lead.db = 'converted';
     crmData.converted = [...(crmData.converted || []), lead];
     crmSwitchTab('converted');
+    if (typeof fxSparkle === 'function') fxSparkle(document.getElementById('crm-tab-converted'));
     fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'promote', pageId: id, name: lead.name, company: lead.company,
         email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
@@ -549,6 +550,7 @@ function dropLeadOnTab(id, targetTab) {
     const st = lead.db === 'email' ? 'SALE CLOSED' : 'Converted to Customer';
     lead.status = st;
     crmSwitchTab('closed');
+    if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!']);
     fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: st }),
     }).catch(e => dbg('Status save failed: ' + e.message));
@@ -724,6 +726,8 @@ async function saveNewLead() {
       }),
     });
     if (!r.ok) throw new Error(await r.text());
+    const saveBtn = document.querySelector('#new-lead-modal .ios-modal-close');
+    if (typeof fxPop === 'function' && saveBtn) fxPop(saveBtn, '🌱 Added!', '#2E7D32');
     document.getElementById('new-lead-modal').classList.remove('open');
     loadCRM(true);
   } catch (e) { dbg('Create failed: ' + e.message); alert('Could not save: ' + e.message); }
