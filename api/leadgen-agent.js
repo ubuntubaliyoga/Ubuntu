@@ -142,7 +142,6 @@ async function b2Research(city, log) {
 }
 
 // ─── WEB SEARCH via Jina (free) ──────────────────────────────────────────────
-// DuckDuckGo blocks Vercel IPs. Use Google then Bing as fallback.
 async function ddgSearch(query) {
   const engines = [
     `https://www.google.com/search?q=${encodeURIComponent(query)}&num=10&hl=en`,
@@ -153,8 +152,8 @@ async function ddgSearch(query) {
       const r = await fetch(`https://r.jina.ai/${url}`, {
         headers: {
           Accept: 'text/plain',
-          'X-Return-Format': 'text',
-          'X-With-Links-Summary': 'true',
+          'X-With-Links-Summary': 'true',   // appends numbered link list
+          // no X-Return-Format → keeps markdown so [title](url) links survive
         },
         signal: AbortSignal.timeout(15000),
       });
@@ -302,38 +301,35 @@ async function instagramProfileScrape(usernames, log) {
   }
 }
 
-// ─── GOOGLE MAPS FALLBACK (Apify — try known actor slugs) ────────────────────
+// ─── GOOGLE MAPS FALLBACK (Apify) ────────────────────────────────────────────
 async function googleMapsLeads(city, limit, log) {
-  const input = {
-    searchStringsArray: [`yoga retreat ${city}`, `yoga studio ${city}`],
-    maxCrawledPlacesPerSearch: Math.ceil(limit / 2) + 2,
-    language: 'en',
-  };
-  // Try known actor slugs in order
-  const slugs = [
-    'apify~google-maps-scraper',
-    'compass~crawler-google-places',
-    'apify~google-places-scraper',
+  const queries = [`yoga retreat ${city}`, `yoga studio ${city}`];
+  const max     = Math.ceil(limit / 2) + 2;
+  // Each actor uses its own input schema
+  const attempts = [
+    { slug: 'apify~google-maps-scraper',      input: { searchStringsArray: queries, maxCrawledPlacesPerSearch: max, language: 'en' } },
+    { slug: 'compass~crawler-google-places',   input: { searchStrings: queries,      maxResultsPerQuery: max, language: 'en' } },
+    { slug: 'apify~google-places-scraper',     input: { queries,                     maxResults: max } },
   ];
-  for (const slug of slugs) {
+  for (const { slug, input } of attempts) {
     try {
       const items = await apifyRun(slug, input);
       if (Array.isArray(items) && items.length) {
         log(`Maps: ${slug} returned ${items.length} places`);
         return items
-          .filter(i => i.title)
+          .filter(i => i.title || i.name)
           .map(i => ({
-            source:   'google_maps',
-            name:     i.title,
-            website:  i.website  || null,
-            insta:    null,
-            phone:    i.phone    || null,
-            email:    null,
-            bio:      i.description || '',
-            retreat:  null,
+            source:    'google_maps',
+            name:      i.title || i.name,
+            website:   i.website  || null,
+            insta:     null,
+            phone:     i.phone    || null,
+            email:     null,
+            bio:       i.description || i.snippet || '',
+            retreat:   null,
             firstname: null,
-            variant:  null,
-            location: i.url || null,
+            variant:   null,
+            location:  i.url || i.address || null,
           }));
       }
     } catch (e) {
