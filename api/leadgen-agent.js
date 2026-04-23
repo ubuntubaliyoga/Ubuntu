@@ -442,12 +442,13 @@ async function writeToNotion(leads, city, blocklist, log) {
           parent: { database_id: CRM_DB_ID },
           properties: {
             'Name':          { title:     [{ text: { content: lead.name || '' } }] },
-            'Whatsapp 1':    { rich_text: [{ text: { content: lead.waLink || 'No number found' } }] },
-            'Mail':          { rich_text: [{ text: { content: lead.email || '' } }] },
-            'Website':       { url: lead.website || null },
+            'Whatsapp':      { rich_text: [{ text: { content: lead.waLink || 'No number found' } }] },
+            'Email':         { email: lead.email || null },
+            'Website':       { rich_text: [{ text: { content: lead.website || '' } }] },
             'Location':      { rich_text: [{ text: { content: lead.location || mapsLink } }] },
             'Insta':         { rich_text: [{ text: { content: lead.insta || '' } }] },
-            'Engaged first': { rich_text: [{ text: { content: today } }] },
+            'Source':        { select: { name: 'WhatsApp' } },
+            'Engaged first': { date: { start: today } },
           },
         }),
       });
