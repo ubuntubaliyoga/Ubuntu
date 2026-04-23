@@ -551,9 +551,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu">
     <span class="top-logo-name">Ubuntu Flow</span>
   </div>
-  <button id="leadgen-header-btn" onclick="switchTab('bizdev')" title="Generate Leads" style="width:34px;height:34px;border-radius:50%;background:rgba(245,236,215,.1);border:1px solid rgba(245,236,215,.15);color:#F5ECD7;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;margin-right:4px;flex-shrink:0;">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-  </button>
   <button id="avatar-btn" onclick="openDrawer()">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
   </button>
@@ -1061,8 +1058,17 @@ Airport pick-up available on request.</textarea>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5D20" stroke-width="1.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
     </div>
     <div>
-      <div class="fab-option-title">New Lead</div>
+      <div class="fab-option-title">Add New Lead</div>
       <div class="fab-option-sub">Add to CRM pipeline</div>
+    </div>
+  </button>
+  <button class="fab-option" onclick="closeFABSheet();switchTab('bizdev');">
+    <div class="fab-option-icon" style="background:#E3EDF5;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div>
+      <div class="fab-option-title">Generate Leads</div>
+      <div class="fab-option-sub">Find retreat leaders by city</div>
     </div>
   </button>
 </div>
