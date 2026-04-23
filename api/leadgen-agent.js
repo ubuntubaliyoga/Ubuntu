@@ -146,8 +146,12 @@ async function b2Research(city, log) {
 // ─── PHONE HELPERS ───────────────────────────────────────────────────────────
 function extractPhoneFromText(text) {
   if (!text) return null;
+  // wa.me/NUMBER
   const waM = text.match(/wa\.me\/\+?([\d]{7,15})/);
   if (waM) return waM[1];
+  // api.whatsapp.com/send?phone=NUMBER
+  const waApi = text.match(/api\.whatsapp\.com\/send[^"'\s]*[?&]phone=\+?([\d]{7,15})/i);
+  if (waApi) return waApi[1];
   return text.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.replace(/[\s\-()]/g, '') || null;
 }
 
@@ -156,6 +160,8 @@ function extractPhoneFromHtml(html) {
   if (telM) return telM[1].replace(/[\s\-().]/g, '');
   const waM = html.match(/wa\.me\/\+?([\d]{7,15})/);
   if (waM) return waM[1];
+  const waApi = html.match(/api\.whatsapp\.com\/send[^"'\s]*[?&]phone=\+?([\d]{7,15})/i);
+  if (waApi) return waApi[1];
   return html.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.replace(/[\s\-()]/g, '') || null;
 }
 
@@ -296,30 +302,42 @@ async function scrapeLinkInBio(url) {
     });
     const html = await r.text();
 
-    // 1. wa.me anywhere in raw HTML (works for Beacons, Taplink, Campsite etc.)
+    // 1. wa.me anywhere in raw HTML
     const waM = html.match(/wa\.me\/\+?([\d]{7,15})/);
     if (waM) return waM[1];
 
-    // 2. tel: link
+    // 2. api.whatsapp.com/send?phone=NUMBER
+    const waApi = html.match(/api\.whatsapp\.com\/send[^"'\s]*[?&]phone=\+?([\d]{7,15})/i);
+    if (waApi) return waApi[1];
+
+    // 3. tel: link
     const telM = html.match(/href="tel:(\+?[\d\s\-().+]{7,20})"/i);
     if (telM) return telM[1].replace(/[\s\-().]/g, '');
 
-    // 3. Next.js __NEXT_DATA__ (Linktree)
+    // 4. Next.js __NEXT_DATA__ — stringify entire JSON and search (handles any Linktree schema)
     const ndM = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
     if (ndM) {
+      // Raw string search first (fastest, catches wa.me + api.whatsapp.com)
+      const ndStr = ndM[1];
+      const ndWa  = ndStr.match(/wa\.me\\?\/\+?([\d]{7,15})/);
+      if (ndWa) return ndWa[1];
+      const ndApi = ndStr.match(/api\.whatsapp\.com\\?\/send[^"'\s\\]*[?&]phone=\+?([\d]{7,15})/i);
+      if (ndApi) return ndApi[1];
+      // Parsed JSON — walk all link objects for tel: hrefs and phone numbers in titles
       try {
-        const nd    = JSON.parse(ndM[1]);
-        const links = nd?.props?.pageProps?.account?.links
-                   || nd?.props?.pageProps?.links
-                   || nd?.props?.pageProps?.pageProps?.links || [];
-        for (const lnk of links) {
-          const href = (lnk.url || lnk.href || '').trim();
-          const wL   = href.match(/wa\.me\/\+?([\d]{7,15})/);
-          if (wL) return wL[1];
+        const nd = JSON.parse(ndStr);
+        const findLinks = (obj) => {
+          if (!obj || typeof obj !== 'object') return null;
+          if (Array.isArray(obj)) { for (const x of obj) { const r = findLinks(x); if (r) return r; } return null; }
+          const href = (obj.url || obj.href || obj.link || '').trim();
           if (href.startsWith('tel:')) return href.slice(4).replace(/[\s\-]/g,'');
-          const tP = (lnk.title||'').match(/\+[\d]{8,14}/)?.[0];
+          const tP = (obj.title || obj.label || '').match(/\+[\d]{8,14}/)?.[0];
           if (tP) return tP.replace(/\s/g,'');
-        }
+          for (const v of Object.values(obj)) { const r = findLinks(v); if (r) return r; }
+          return null;
+        };
+        const found = findLinks(nd);
+        if (found) return found;
       } catch { /* fall through */ }
     }
     return null;
