@@ -88,3 +88,49 @@ Errors flow: `window.onerror` / `window.onunhandledrejection` / fetch monkey-pat
 - **`rt(s)` / `dt(s)` helpers** — used in both `api/crm.js` and `api/migrate-crm.js` for building Notion `rich_text` and `date` property payloads.
 - **`$('id')`** — shorthand for `document.getElementById` defined in `core.js`.
 - **Drift detector** — update `EXPECTED` in `api/drift-detector.js` whenever Notion property names change in code.
+- **Meals default text** — always "2 plant based meals per day" everywhere (offer, contract, form defaults). Legacy "2 organic meals per day" is migrated on draft load in `loadDraftByIndex()`.
+- **`<br>` + inline `<span>` for sub-lines** — sub-text inside flex rows must use `<br><span style="...">` not a block `<div>` (flex layout breaks block children).
+
+## UI patterns
+
+### Template edit mode (`window._templateMode`)
+
+`openTemplateEdit()` in `core.js` sets `window._templateMode = true` and opens the edit view with a "Master Template" heading. While active:
+- `saveToNotion()` in `drafts.js` intercepts and calls `showTemplateConfirm()` instead of saving to Notion.
+- Autosave is suppressed (`markDraftActive()` returns early when `intentionalDraft === false`).
+- `switchDealTab('edit')` skips resetting the title/button/notion-status when `_templateMode` is true.
+- `switchDealTab('drafts')` resets `_templateMode = false`.
+
+**Critical ordering in `openTemplateEdit()`:** call `switchTab('deal')` first (resets any prior state), then set `_templateMode = true`, then fill form fields, then `switchDealTab('edit')`. Setting `_templateMode` before `switchTab` causes it to be reset.
+
+Template fields are defined in `TEMPLATE_FIELDS` in `core.js` and stored in `localStorage` key `masterTemplate`. Applied to new drafts in `newDraft()`.
+
+### Collapsible form sections
+
+Use the `toggleMoreDetails(btn)` pattern — a `<button>` that toggles `display:none` on the next sibling `<div>`.
+
+### Avatar update glow
+
+When the service worker installs an update, `#avatar-btn` and `#update-btn` both get class `update-glow` (CSS `@keyframes avatarGoldPulse`). `#update-btn` is `display:none` by default.
+
+### Contract pricing table
+
+Two-column layout: **ITEM** (with optional detail sub-line) and **TOTAL** (right-aligned). Built with `cR(label, sub, amt)` helper in `buildContractHTML()` (`js/offer.js`). Rows with no rate sub-line pass `''` as `sub`. Section headers and total rows use `colspan="2"`.
+
+### Offer pricing table (`.pt-*` classes)
+
+Three-column layout in the offer tab (Item, Rate, Subtotal) — separate from the simplified contract table.
+
+### Sign-off section
+
+Collapsed by default using `toggleMoreDetails`. Two fields:
+- `f-signoff` — offer sign-off name (default: "Andréa and Tari")
+- `f-signoff2` — contract signatory note (default: "Tari, as representative of Andréa Drottholm")
+
+### Bale/Gladak split (6+ rooms)
+
+When `P.bales > 5`: render "5 Gladaks" + `(P.bales - 5) Partner Hotel Rooms` as separate rows in both offer and contract. When `P.bales <= 5`: single Gladak row.
+
+### Marketing Material overlay
+
+`openMarketing()` / `closeMarketing()` show `#marketing-overlay` with 5 placeholder cards. No backend — placeholder only.
