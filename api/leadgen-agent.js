@@ -95,31 +95,21 @@ function filterBlocklist(leads, blocklist) {
   });
 }
 
-// ─── B2 RESEARCH (Jina + DuckDuckGo — free, no Apify credits) ────────────────
+// ─── B2 RESEARCH (Jina web search — free, no Apify credits) ──────────────────
 async function b2Research(city, log) {
-  // Search 1: discover local yoga/wellness platforms
-  log('S1: discovering local platforms');
-  const s1 = await ddgSearch(`top yoga wellness retreat event listing platforms ${city} 2025`);
-  log(`S1: ${s1.length} results`);
-  const platforms = extractPlatformDomains(s1);
-  log(`S1: platforms found: ${platforms.join(', ') || 'none'}`);
-
-  const siteFilter = platforms.length
-    ? platforms.slice(0, 4).map(d => `site:${d}`).join(' OR ')
-    : '';
-
-  // Searches 2+3 in parallel
-  log('S2+S3: searching for facilitators');
-  const [s2, s3] = await Promise.all([
-    ddgSearch(`yoga OR retreat OR wellness facilitator "${city}" 2025 2026 ${siteFilter}`.trim()),
-    ddgSearch(`yoga studio "${city}" retreat OR workshop OR program contact ${siteFilter}`.trim()),
+  // Three parallel searches targeting different lead sources
+  log('S1+S2+S3: searching for yoga/retreat leads');
+  const [s1, s2, s3] = await Promise.all([
+    ddgSearch(`site:instagram.com yoga retreat teacher "${city}"`),
+    ddgSearch(`yoga retreat workshop facilitator "${city}" 2025 contact`),
+    ddgSearch(`yoga teacher training retreat "${city}" 2025 2026`),
   ]);
-  log(`S2: ${s2.length} results, S3: ${s3.length} results`);
+  log(`S1: ${s1.length} results, S2: ${s2.length} results, S3: ${s3.length} results`);
 
-  const candidates = extractCandidates([...s2, ...s3], city).slice(0, 12);
+  const candidates = extractCandidates([...s1, ...s2, ...s3], city).slice(0, 14);
   log(`Candidates extracted: ${candidates.length}`);
 
-  // Fetch up to 4 contact pages
+  // Fetch contact pages for non-Instagram candidates
   await fetchCandidateContacts(candidates, log);
 
   // Instagram profile scrape for any @handles found
@@ -131,23 +121,24 @@ async function b2Research(city, log) {
     profiles.forEach(p => {
       const c = candidates.find(c => c.insta === `@${p.username}`);
       if (c) {
-        c.bio     = c.bio     || p.biography    || '';
-        c.website = c.website || p.externalUrl  || null;
+        c.bio     = c.bio     || p.biography   || '';
+        c.website = c.website || p.externalUrl || null;
+        c.phone   = c.phone   || p.businessPhoneNumber || null;
       }
     });
   }
 
-  // Keep only candidates that have some event signal
-  return candidates.filter(c => c.bio || c.website);
+  return candidates.filter(c => c.bio || c.website || c.insta);
 }
 
 // ─── WEB SEARCH via Jina (free) ──────────────────────────────────────────────
+// Try Bing first — Google often returns a consent page that only has nav links.
 async function ddgSearch(query) {
   const engines = [
-    `https://www.google.com/search?q=${encodeURIComponent(query)}&num=10&hl=en`,
-    `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`,
+    { url: `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`,        skip: 'microsoft.com' },
+    { url: `https://www.google.com/search?q=${encodeURIComponent(query)}&num=10&hl=en`,  skip: 'google.com' },
   ];
-  for (const url of engines) {
+  for (const { url, skip } of engines) {
     try {
       const r = await fetch(`https://r.jina.ai/${url}`, {
         headers: {
@@ -157,8 +148,8 @@ async function ddgSearch(query) {
         },
         signal: AbortSignal.timeout(15000),
       });
-      const text = await r.text();
-      const results = parseDDGResults(text);
+      const text    = await r.text();
+      const results = parseDDGResults(text, skip);
       if (results.length) return results;
     } catch (e) {
       console.error('[search]', e.message);
@@ -167,20 +158,19 @@ async function ddgSearch(query) {
   return [];
 }
 
-function parseDDGResults(text) {
+function parseDDGResults(text, skipDomain) {
   const results = [];
   const seen    = new Set();
-  // Jina renders DDG as markdown — links appear as [title](url)
-  const re = /\[([^\]]{5,120})\]\((https?:\/\/[^\)\s]{10,})\)/g;
-  const lines = text.split('\n');
+  const lines   = text.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
-    let m;
     const lineRe = /\[([^\]]{5,120})\]\((https?:\/\/[^\)\s]{10,})\)/g;
+    let m;
     while ((m = lineRe.exec(lines[i])) !== null) {
       const [, title, url] = m;
       if (seen.has(url)) continue;
-      // Skip DDG-internal links
+      // Skip search engine's own links (nav, consent pages, etc.)
+      if (skipDomain && url.includes(skipDomain)) continue;
       if (url.includes('duckduckgo.com') || url.includes('duck.co')) continue;
       seen.add(url);
       // Grab next non-empty, non-link line as snippet
@@ -190,22 +180,6 @@ function parseDDGResults(text) {
     }
   }
   return results;
-}
-
-function extractPlatformDomains(results) {
-  const GENERIC = new Set([
-    'google.com','facebook.com','instagram.com','linkedin.com',
-    'youtube.com','wikipedia.org','tripadvisor.com','duckduckgo.com',
-    'reddit.com','twitter.com','x.com','yelp.com',
-  ]);
-  const domains = new Set();
-  for (const r of results) {
-    try {
-      const host = new URL(r.url || '').hostname.replace(/^www\./, '');
-      if (!GENERIC.has(host) && host.includes('.')) domains.add(host);
-    } catch { /* skip */ }
-  }
-  return [...domains].slice(0, 6);
 }
 
 function extractCandidates(results, city) {
