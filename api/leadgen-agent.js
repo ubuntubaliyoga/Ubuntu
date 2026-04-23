@@ -144,15 +144,21 @@ async function b2Research(city, log) {
 
 async function fetchContact(url) {
   try {
-    for (const suffix of ['/events', '/contact']) {
-      const r = await fetch(`https://r.jina.ai/${url}${suffix}`, {
+    // Try homepage then /contact in parallel; return first that has a number/email
+    const base = url.replace(/\/$/, '');
+    const results = await Promise.allSettled([base, `${base}/contact`].map(u =>
+      fetch(`https://r.jina.ai/${u}`, {
         headers: { Accept: 'text/plain', 'X-Return-Format': 'text' },
         signal: AbortSignal.timeout(7000),
-      });
-      const text  = (await r.text()).slice(0, 800);
-      const phone = text.match(/\+?[\d][\d\s\-().]{8,16}[\d]/)?.[0]?.trim() || null;
-      const email = text.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0]       || null;
-      if (phone || email) return { phone, email, text };
+      }).then(r => r.text())
+    ));
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue;
+      const text  = r.value.slice(0, 1200);
+      const waM   = text.match(/wa\.me\/\+?([\d]{7,15})/);
+      const phone = waM ? waM[1] : (text.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.trim() || null);
+      const email = text.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0] || null;
+      if (phone || email) return { phone, email };
     }
     return null;
   } catch { return null; }
@@ -221,14 +227,55 @@ async function googleMapsLeads(city, limit, log) {
 }
 
 // ─── CONTACT ENRICHMENT ──────────────────────────────────────────────────────
+// Priority: Linktree (often has wa.me direct link) → website /contact → website homepage
 async function enrichContacts(leads, log) {
-  const toFetch = leads.filter(l => l.website && !l.phone && !l.email).slice(0, 3);
-  if (toFetch.length) log(`Enriching ${toFetch.length} websites`);
-  await Promise.allSettled(toFetch.map(async l => {
-    const c = await fetchContact(l.website);
-    if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; }
+  const needPhone = leads.filter(l => !l.phone);
+  if (!needPhone.length) return leads;
+  log(`Enriching ${needPhone.length} leads for phone`);
+
+  await Promise.allSettled(needPhone.map(async l => {
+    // 1. Linktree: check external URL and bio text
+    const ltUrl = extractLinktree(l.website) || extractLinktree(l.bio);
+    if (ltUrl) {
+      const c = await scrapeForContact(ltUrl);
+      if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; l.website = l.website || c.website; }
+      if (l.phone) return;
+    }
+    // 2. Website
+    if (l.website && !l.website.includes('linktr.ee')) {
+      const c = await fetchContact(l.website);
+      if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; }
+    }
   }));
+
+  const found = leads.filter(l => l.phone).length;
+  log(`Enrichment done: ${found}/${leads.length} have phone`);
   return leads;
+}
+
+function extractLinktree(text) {
+  if (!text) return null;
+  const m = text.match(/linktr\.ee\/[\w.\-]+/i);
+  return m ? `https://${m[0]}` : null;
+}
+
+// Scrapes a page via Jina — finds wa.me links (= phone), email, external site URL
+async function scrapeForContact(url) {
+  try {
+    const r = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { Accept: 'text/plain', 'X-Return-Format': 'text' },
+      signal: AbortSignal.timeout(8000),
+    });
+    const text = (await r.text()).slice(0, 1500);
+    // wa.me/number is the most reliable phone signal
+    const waM  = text.match(/wa\.me\/\+?([\d]{7,15})/);
+    const phone = waM ? waM[1] : (text.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.trim() || null);
+    const email = text.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0] || null;
+    // Pick up an external website link from the Linktree page
+    const siteM = text.match(/https?:\/\/(?!linktr\.ee|wa\.me|instagram\.com|facebook\.com|tiktok\.com|youtube\.com)[^\s"'<>]{4,}\.[a-z]{2,}/i);
+    const website = siteM ? siteM[0].replace(/[,.)]+$/, '') : null;
+    return (phone || email || website) ? { phone, email, website } : null;
+  } catch { return null; }
 }
 
 // ─── CLAUDE ENRICHMENT ───────────────────────────────────────────────────────

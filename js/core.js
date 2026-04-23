@@ -338,7 +338,11 @@ function applyUpdate(){window.location.reload(true);}
 
 $('f-contractdate').value=todayStr();
 $('f-validuntil').value=addDays(todayStr(),7);
-window.addEventListener('load',()=>switchTab('deal'));
+window.addEventListener('load',()=>{
+  switchTab('deal');
+  // Pre-load CRM in background so it's ready when the user opens the tab
+  setTimeout(()=>{ if(typeof loadCRM==='function') loadCRM(); }, 300);
+});
 
 (async()=>{
   const dot=$('idr-dot'),info=$('idr-info');

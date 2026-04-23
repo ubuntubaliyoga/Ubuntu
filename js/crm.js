@@ -149,7 +149,9 @@ function crmRender() {
 // ── CARD LIST ─────────────────────────────────────────────────────────────────
 function waLink(num) {
   if (!num) return null;
-  const clean = num.replace(/[\s\-\(\)]/g, '');
+  if (num.startsWith('http')) return num; // legacy: stored full URL
+  const clean = num.replace(/[\s\-\(\)]/g, '').replace(/^\+/, '');
+  if (!clean || clean.length < 7) return null;
   return `https://wa.me/${clean}`;
 }
 
