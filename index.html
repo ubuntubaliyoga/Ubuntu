@@ -845,9 +845,12 @@ Airport pick-up available on request.</textarea>
 
   <!-- City + Random -->
   <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;align-items:stretch;">
-    <input id="lg-city" type="text" placeholder="Choose a city…" list="lg-cities-list" autocomplete="off"
-      style="padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;min-width:0;">
-    <datalist id="lg-cities-list"></datalist>
+    <div style="position:relative;min-width:0;">
+      <input id="lg-city" type="text" placeholder="Choose a city…" autocomplete="off"
+        oninput="lgCityFilter()" onfocus="lgCityFilter()" onblur="setTimeout(lgCityClear,200)"
+        style="width:100%;box-sizing:border-box;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;">
+      <div id="lg-city-drop" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,.12);"></div>
+    </div>
     <button id="lg-dice-btn" class="pill-btn" onclick="lgRandomCity()" style="flex-shrink:0;white-space:nowrap;padding:0 16px;font-size:18px;" title="Random city">🎲</button>
   </div>
 

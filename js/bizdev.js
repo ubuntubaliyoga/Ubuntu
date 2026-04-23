@@ -1,41 +1,81 @@
 // js/bizdev.js — Leadgen tab
 
 const LG_CITIES = [
-  'Amsterdam', 'London', 'Berlin', 'New York', 'Los Angeles', 'Sydney',
-  'Melbourne', 'Toronto', 'Zurich', 'Vienna', 'Barcelona', 'Lisbon',
-  'Paris', 'Stockholm', 'Copenhagen', 'Vancouver', 'San Francisco',
-  'Tulum', 'Ibiza', 'Cape Town', 'Singapore', 'Dubai', 'Tel Aviv',
-  'Milan', 'Prague', 'Budapest', 'Athens', 'Oslo', 'Helsinki', 'Auckland',
-  'Bali', 'Chiang Mai', 'Playa del Carmen', 'Nosara', 'Sedona',
+  // Europe
+  'Amsterdam','London','Berlin','Paris','Barcelona','Lisbon','Madrid','Rome','Milan',
+  'Vienna','Zurich','Stockholm','Copenhagen','Oslo','Helsinki','Prague','Budapest',
+  'Athens','Brussels','Dublin','Porto','Seville','Valencia','Florence','Venice',
+  'Munich','Hamburg','Cologne','Warsaw','Krakow','Riga','Tallinn','Ljubljana',
+  'Dubrovnik','Split','Montenegro','Santorini','Ibiza','Mallorca','Tenerife',
+  // Americas
+  'New York','Los Angeles','San Francisco','Miami','Chicago','Austin','Seattle',
+  'Toronto','Vancouver','Montreal','Mexico City','Tulum','Playa del Carmen',
+  'Nosara','Santa Teresa','Buenos Aires','Medellin','Bogota','Lima','Cusco',
+  'Rio de Janeiro','São Paulo','Oaxaca','Puerto Vallarta','Sayulita',
+  // Asia-Pacific
+  'Bali','Canggu','Ubud','Seminyak','Chiang Mai','Bangkok','Koh Samui','Koh Phangan',
+  'Singapore','Tokyo','Kyoto','Seoul','Hong Kong','Shanghai','Goa','Mumbai',
+  'Rishikesh','Sydney','Melbourne','Auckland','Byron Bay','Queenstown',
+  // Middle East & Africa
+  'Dubai','Abu Dhabi','Tel Aviv','Cape Town','Marrakech','Cairo',
+  // North America wellness hubs
+  'Sedona','Santa Fe','Asheville','Portland','Boulder','Ojai','Topanga',
 ];
 
-let _lgRunning = false;
+let _lgRunning     = false;
+let _lgRecentCities = [];
 
-function lgInit() {
-  // Populate datalist for city autocomplete
-  const dl = document.getElementById('lg-cities-list');
-  if (dl) {
-    dl.innerHTML = LG_CITIES.map(c => `<option value="${c}">`).join('');
-  }
+function lgInit() { /* datalist replaced by custom dropdown — nothing to init */ }
+
+// ── Custom city autocomplete ──────────────────────────────────────────────────
+function lgCityFilter() {
+  const inp  = document.getElementById('lg-city');
+  const drop = document.getElementById('lg-city-drop');
+  if (!drop) return;
+  const val = (inp?.value || '').trim().toLowerCase();
+  if (!val) { drop.style.display = 'none'; return; }
+  const matches = LG_CITIES.filter(c => c.toLowerCase().includes(val)).slice(0, 8);
+  if (!matches.length) { drop.style.display = 'none'; return; }
+  drop.innerHTML = matches.map(c =>
+    `<div style="padding:12px 16px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);"
+      onmousedown="lgPickCity('${c.replace(/'/g, "\\'")}')">
+      ${c.replace(new RegExp('('+val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'i'), '<strong>$1</strong>')}
+    </div>`
+  ).join('');
+  drop.style.display = 'block';
 }
 
+function lgPickCity(city) {
+  const inp = document.getElementById('lg-city');
+  if (inp) { inp.value = city; inp.blur(); }
+  lgCityClear();
+}
+
+function lgCityClear() {
+  const drop = document.getElementById('lg-city-drop');
+  if (drop) drop.style.display = 'none';
+}
+
+// ── Random city (no recent repeats) ──────────────────────────────────────────
 function lgRandomCity() {
-  const btn  = document.getElementById('lg-dice-btn');
-  const inp  = document.getElementById('lg-city');
+  const btn = document.getElementById('lg-dice-btn');
+  const inp = document.getElementById('lg-city');
   if (!btn || !inp) return;
 
-  const chosen = LG_CITIES[Math.floor(Math.random() * LG_CITIES.length)];
-  inp.value = '';
+  // Exclude last 20 picks so the same city doesn't recur quickly
+  const pool = LG_CITIES.filter(c => !_lgRecentCities.includes(c));
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  _lgRecentCities.push(chosen);
+  if (_lgRecentCities.length > 20) _lgRecentCities.shift();
 
-  // Animate dice for 1.5 s then reveal city
-  const icon = btn.querySelector('span') || btn;
+  inp.value = '';
+  lgCityClear();
   btn.style.pointerEvents = 'none';
   btn.innerHTML = `<span class="dice-rolling">🎲</span>`;
   setTimeout(() => {
     btn.innerHTML = '🎲';
     btn.style.pointerEvents = '';
     inp.value = chosen;
-    inp.focus();
   }, 1500);
 }
 
