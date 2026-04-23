@@ -1,6 +1,6 @@
 // api/leadgen-agent.js
 // Ubuntu Bali — Lead Research & Notion Sync
-// B1: blocklist → B2: 3-search (Jina/DDG, free) + Instagram (Apify) + Maps fallback (Apify)
+// B1: blocklist → B2: Instagram hashtag search (Apify) → profile scrape → Maps fallback (Apify)
 // → B3: WA links → B4: Notion write
 
 export const config = { maxDuration: 120 };
@@ -298,18 +298,38 @@ function buildWALink(lead) {
 }
 
 // ─── B4 NOTION WRITE ─────────────────────────────────────────────────────────
+async function existsInCRM(instaHandle, name) {
+  // Check by Instagram handle first (most reliable), then by name
+  const filters = [];
+  if (instaHandle) filters.push({ property: 'Insta', rich_text: { equals: instaHandle } });
+  if (name)        filters.push({ property: 'Name',  title:     { equals: name } });
+  if (!filters.length) return false;
+  const filter = filters.length === 1 ? filters[0] : { or: filters };
+  try {
+    const r = await fetch(`https://api.notion.com/v1/databases/${CRM_DB_ID}/query`, {
+      method: 'POST',
+      headers: notionHeaders(),
+      body: JSON.stringify({ filter, page_size: 1 }),
+    });
+    const d = await r.json();
+    return (d.results || []).length > 0;
+  } catch { return false; }
+}
+
 async function writeToNotion(leads, city, blocklist, log) {
   const today    = new Date().toISOString().slice(0, 10);
   const mapsLink = `https://www.google.com/maps/search/yoga+retreat+${encodeURIComponent(city)}`;
   const results  = [];
 
   for (const lead of leads) {
+    // 1. Check text blocklist (fast, no API call)
     const nameLC = (lead.name || '').toLowerCase();
-    let dup = false;
-    for (const e of blocklist) {
-      if (e && (nameLC === e || nameLC.startsWith(e + ' ') || nameLC.endsWith(' ' + e))) { dup = true; break; }
-    }
-    if (dup) { results.push({ ...lead, status: 'skipped', reason: `Duplicate: ${lead.name}` }); continue; }
+    const inBlocked = [...blocklist].some(e => e && (nameLC === e || nameLC.startsWith(e + ' ') || nameLC.endsWith(' ' + e)));
+    if (inBlocked) { results.push({ ...lead, status: 'skipped', reason: 'Duplicate (blocklist)' }); continue; }
+
+    // 2. Check actual Notion CRM for existing record
+    const alreadyIn = await existsInCRM(lead.insta, lead.name);
+    if (alreadyIn) { log(`Skipping "${lead.name}" — already in CRM`); results.push({ ...lead, status: 'skipped', reason: 'Already in CRM' }); continue; }
 
     try {
       const nr = await fetch('https://api.notion.com/v1/pages', {
@@ -319,13 +339,12 @@ async function writeToNotion(leads, city, blocklist, log) {
           parent: { database_id: CRM_DB_ID },
           properties: {
             'Name':           { title:        [{ text: { content: lead.name || '' } }] },
-            'Whatsapp':       { rich_text:    [{ text: { content: lead.waLink || '' } }] },
+            'Whatsapp':       { rich_text:    [{ text: { content: lead.phone || '' } }] },
             'Email':          { email:        lead.email || null },
             'Website':        { rich_text:    [{ text: { content: lead.website || '' } }] },
             'Location':       { rich_text:    [{ text: { content: lead.location || mapsLink } }] },
             'Insta':          { rich_text:    [{ text: { content: lead.insta || '' } }] },
             'Contact':        { rich_text:    [{ text: { content: 'Kevin' } }] },
-            'Notes':          { rich_text:    [{ text: { content: (lead.bio || '').slice(0, 200) } }] },
             'Reached out on': { multi_select: [{ name: 'WhatsApp' }] },
             'Engaged first':  { date:         { start: today } },
           },
