@@ -135,6 +135,7 @@ async function b2Research(city, log) {
       phone:     p.businessPhoneNumber || null,
       email:     p.businessEmail || null,
       bio:       p.biography || '',
+      _posts:    p.latestPosts || p.posts || [],   // kept for caption scanning, not written to Notion
       retreat:   null,
       firstname: null,
       variant:   null,
@@ -142,27 +143,44 @@ async function b2Research(city, log) {
     }));
 }
 
-async function fetchContact(url) {
-  try {
-    // Try homepage then /contact in parallel; return first that has a number/email
-    const base = url.replace(/\/$/, '');
-    const results = await Promise.allSettled([base, `${base}/contact`].map(u =>
-      fetch(`https://r.jina.ai/${u}`, {
-        headers: { Accept: 'text/plain', 'X-Return-Format': 'text' },
-        signal: AbortSignal.timeout(7000),
-      }).then(r => r.text())
-    ));
-    for (const r of results) {
-      if (r.status !== 'fulfilled') continue;
-      const text  = r.value.slice(0, 1200);
-      const waM   = text.match(/wa\.me\/\+?([\d]{7,15})/);
-      const phone = waM ? waM[1] : (text.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.trim() || null);
-      const email = text.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0] || null;
-      if (phone || email) return { phone, email };
-    }
-    return null;
-  } catch { return null; }
+// ─── PHONE HELPERS ───────────────────────────────────────────────────────────
+function extractPhoneFromText(text) {
+  if (!text) return null;
+  const waM = text.match(/wa\.me\/\+?([\d]{7,15})/);
+  if (waM) return waM[1];
+  return text.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.replace(/[\s\-()]/g, '') || null;
 }
+
+function extractPhoneFromHtml(html) {
+  const telM = html.match(/href="tel:(\+?[\d\s\-().+]{7,20})"/i);
+  if (telM) return telM[1].replace(/[\s\-().]/g, '');
+  const waM = html.match(/wa\.me\/\+?([\d]{7,15})/);
+  if (waM) return waM[1];
+  return html.match(/\+[\d][\d\s\-().]{8,14}[\d]/)?.[0]?.replace(/[\s\-()]/g, '') || null;
+}
+
+const LINK_IN_BIO_DOMAINS = [
+  'linktr.ee','beacons.ai','taplink.cc','bio.fm','campsite.bio',
+  'lnk.bio','flow.page','milkshake.app','linkinbio.at','later.com',
+  'bento.me','bio.link','carrd.co',
+];
+
+function isLinkInBioUrl(url) {
+  return !!url && LINK_IN_BIO_DOMAINS.some(d => url.includes(d));
+}
+
+function extractAllLinkInBio(website, bio) {
+  const text = `${website || ''} ${bio || ''}`;
+  const found = [];
+  for (const d of LINK_IN_BIO_DOMAINS) {
+    const re = new RegExp(`(?:https?:\\/\\/)?${d.replace('.','\\.')}[\\/#][\\w.\\-]+`, 'gi');
+    const m  = text.match(re);
+    if (m) found.push(...m.map(u => u.startsWith('http') ? u : `https://${u}`));
+  }
+  return [...new Set(found)];
+}
+
+function shortUrl(url) { try { return new URL(url).hostname; } catch { return url; } }
 
 // ─── INSTAGRAM PROFILE SCRAPE (Apify) ────────────────────────────────────────
 async function instagramProfileScrape(usernames, log) {
@@ -226,78 +244,131 @@ async function googleMapsLeads(city, limit, log) {
   return [];
 }
 
-// ─── CONTACT ENRICHMENT ──────────────────────────────────────────────────────
-// Priority: Linktree (often has wa.me direct link) → website /contact → website homepage
+// ─── CONTACT ENRICHMENT — 5-method pipeline ──────────────────────────────────
 async function enrichContacts(leads, log) {
   const needPhone = leads.filter(l => !l.phone);
   if (!needPhone.length) return leads;
-  log(`Enriching ${needPhone.length} leads for phone`);
-
-  await Promise.allSettled(needPhone.map(async l => {
-    // 1. Linktree: check external URL and bio text
-    const ltUrl = extractLinktree(l.website) || extractLinktree(l.bio);
-    if (ltUrl) {
-      const c = await scrapeLinktree(ltUrl);
-      if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; }
-      if (l.phone) return;
-    }
-    // 2. Website
-    if (l.website && !l.website.includes('linktr.ee')) {
-      const c = await fetchContact(l.website);
-      if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; }
-    }
-  }));
-
+  log(`Phone enrichment: ${needPhone.length} leads to check`);
+  await Promise.allSettled(needPhone.map(l => enrichOne(l, log)));
   const found = leads.filter(l => l.phone).length;
   log(`Enrichment done: ${found}/${leads.length} have phone`);
   return leads;
 }
 
-function extractLinktree(text) {
-  if (!text) return null;
-  const m = text.match(/linktr\.ee\/[\w.\-]+/i);
-  return m ? `https://${m[0]}` : null;
+async function enrichOne(l, log) {
+  // ① Instagram post captions — free, already in profile data
+  const captions = (l._posts || []).map(p => p.caption || p.text || '').join(' ');
+  const capPhone = extractPhoneFromText(captions);
+  if (capPhone) { l.phone = capPhone; log(`📞 ${l.name}: Instagram caption`); return; }
+
+  // ② All link-in-bio services (Linktree, Beacons, Taplink, Bio.fm, Campsite …)
+  const bioUrls = extractAllLinkInBio(l.website, l.bio);
+  for (const url of bioUrls) {
+    const phone = await scrapeLinkInBio(url);
+    if (phone) { l.phone = phone; log(`📞 ${l.name}: ${shortUrl(url)}`); return; }
+  }
+
+  // ③ Website deeper scrape — raw HTML + tel: links, 6 page variants in parallel
+  if (l.website && !isLinkInBioUrl(l.website)) {
+    const result = await fetchContactDeep(l.website);
+    if (result?.phone) {
+      l.phone = result.phone;
+      l.email = l.email || result.email || null;
+      log(`📞 ${l.name}: website ${result.page}`);
+      return;
+    }
+    if (result?.email && !l.email) l.email = result.email;
+  }
+
+  // ④ Brave Search: "[name] yoga [city] WhatsApp" (set BRAVE_API_KEY in Vercel env)
+  if (process.env.BRAVE_API_KEY) {
+    const phone = await braveSearchPhone(l.name, l.insta, l.location);
+    if (phone) { l.phone = phone; log(`📞 ${l.name}: Brave Search`); return; }
+  }
 }
 
-// Scrapes a Linktree page by fetching its raw HTML and parsing __NEXT_DATA__ JSON.
-// Linktree is a Next.js app — the link URLs live in a script tag, not rendered text.
-async function scrapeLinktree(ltUrl) {
+// ── Link-in-bio scraper (works for all services — raw HTML scan + Next.js JSON) ─
+async function scrapeLinkInBio(url) {
   try {
-    const r = await fetch(ltUrl, {
+    const r = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15' },
       signal: AbortSignal.timeout(10000),
     });
     const html = await r.text();
 
-    // Primary: parse __NEXT_DATA__ for the links array
-    const ndMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-    if (ndMatch) {
+    // 1. wa.me anywhere in raw HTML (works for Beacons, Taplink, Campsite etc.)
+    const waM = html.match(/wa\.me\/\+?([\d]{7,15})/);
+    if (waM) return waM[1];
+
+    // 2. tel: link
+    const telM = html.match(/href="tel:(\+?[\d\s\-().+]{7,20})"/i);
+    if (telM) return telM[1].replace(/[\s\-().]/g, '');
+
+    // 3. Next.js __NEXT_DATA__ (Linktree)
+    const ndM = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+    if (ndM) {
       try {
-        const nd    = JSON.parse(ndMatch[1]);
+        const nd    = JSON.parse(ndM[1]);
         const links = nd?.props?.pageProps?.account?.links
                    || nd?.props?.pageProps?.links
-                   || nd?.props?.pageProps?.pageProps?.links
-                   || [];
+                   || nd?.props?.pageProps?.pageProps?.links || [];
         for (const lnk of links) {
           const href = (lnk.url || lnk.href || '').trim();
-          if (!href) continue;
-          const waM = href.match(/wa\.me\/\+?([\d]{7,15})/);
-          if (waM)              return { phone: waM[1], email: null };
-          if (href.startsWith('tel:')) return { phone: href.slice(4).replace(/\s/g,''), email: null };
-        }
-        // Also scan link titles for phone patterns
-        for (const lnk of links) {
-          const p = (lnk.title || '').match(/\+[\d]{8,14}/)?.[0];
-          if (p) return { phone: p.replace(/\s/g,''), email: null };
+          const wL   = href.match(/wa\.me\/\+?([\d]{7,15})/);
+          if (wL) return wL[1];
+          if (href.startsWith('tel:')) return href.slice(4).replace(/[\s\-]/g,'');
+          const tP = (lnk.title||'').match(/\+[\d]{8,14}/)?.[0];
+          if (tP) return tP.replace(/\s/g,'');
         }
       } catch { /* fall through */ }
     }
-
-    // Fallback: scan raw HTML for wa.me links
-    const waRaw = html.match(/wa\.me\/\+?([\d]{7,15})/);
-    if (waRaw) return { phone: waRaw[1], email: null };
-
     return null;
+  } catch { return null; }
+}
+
+// ── Deep website scraper — raw HTML fetch, 6 page variants ───────────────────
+async function fetchContactDeep(website) {
+  const base    = website.replace(/\/$/, '');
+  const PAGES   = ['', '/contact', '/about', '/book', '/schedule', '/workshop'];
+  const UA      = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15';
+
+  const results = await Promise.allSettled(PAGES.map(async suffix => {
+    try {
+      const r = await fetch(`${base}${suffix}`, {
+        headers: { 'User-Agent': UA },
+        signal: AbortSignal.timeout(6000),
+      });
+      const html  = await r.text();
+      const phone = extractPhoneFromHtml(html);
+      const email = html.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0] || null;
+      if (phone || email) return { phone, email, page: suffix || '/' };
+    } catch { /* skip */ }
+    return null;
+  }));
+
+  for (const r of results) {
+    if (r.status === 'fulfilled' && r.value?.phone) return r.value;
+  }
+  // Return email-only hit if nothing better
+  for (const r of results) {
+    if (r.status === 'fulfilled' && r.value?.email) return r.value;
+  }
+  return null;
+}
+
+// ── Brave Search (optional — set BRAVE_API_KEY in Vercel env vars) ────────────
+async function braveSearchPhone(name, insta, city) {
+  const handle = (insta || '').replace('@', '');
+  const q = `"${name}" OR "@${handle}" yoga retreat WhatsApp ${city || ''}`.trim();
+  try {
+    const r = await fetch(
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(q)}&count=5`,
+      { headers: { Accept: 'application/json', 'X-Subscription-Token': process.env.BRAVE_API_KEY },
+        signal: AbortSignal.timeout(8000) }
+    );
+    const d    = await r.json();
+    const text = (d.web?.results || []).map(x => x.description || '').join(' ');
+    return extractPhoneFromText(text);
   } catch { return null; }
 }
 
