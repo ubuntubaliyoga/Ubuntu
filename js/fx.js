@@ -70,27 +70,30 @@ function fxConfetti(originEl) {
 }
 
 // ── FLOATING TEXT BURST ───────────────────────────────────────────────────────
-// Words/emojis float upward and fade out from an element.
-function fxTextBurst(originEl, words) {
+// Words/emojis float from an element. Pass down=true to float downward (e.g.
+// when origin is near top of screen) — uses bottom edge and smaller particles.
+function fxTextBurst(originEl, words, down) {
   if (!originEl) return;
   const r  = originEl.getBoundingClientRect();
   const cx = r.left + r.width / 2;
-  const cy = r.top;
+  const cy = down ? r.bottom : r.top;
 
   words.forEach((word, i) => {
     const span  = document.createElement('span');
     span.textContent = word;
 
-    const ox    = (Math.random() - .5) * Math.max(r.width * 1.4, 70);
-    const rise  = 60 + Math.random() * 60;
-    const drift = (Math.random() - .5) * 40;
-    const sz    = 12 + Math.random() * 9;
+    const ox    = (Math.random() - .5) * Math.max(r.width * 1.4, 60);
+    const travel = down ? (30 + Math.random() * 40) : (60 + Math.random() * 60);
+    const drift = (Math.random() - .5) * 30;
+    const sz    = down ? (9 + Math.random() * 5) : (12 + Math.random() * 9);
+    const dir   = down ? `translate(calc(-50% + ${drift}px), calc(-50% + ${travel}px)) scale(1)`
+                       : `translate(calc(-50% + ${drift}px), calc(-50% - ${travel}px)) scale(1)`;
 
     span.style.cssText = `
       position:fixed;
       left:${cx + ox}px;
       top:${cy}px;
-      transform:translate(-50%,-50%) scale(.5);
+      transform:translate(-50%,-50%) scale(.4);
       font-family:'Inter',sans-serif;
       font-size:${sz}px;
       font-weight:800;
@@ -103,14 +106,12 @@ function fxTextBurst(originEl, words) {
     `;
     document.body.appendChild(span);
 
-    // Pop in + rise
     setTimeout(() => {
       span.style.transition = `transform .72s cubic-bezier(.17,.84,.44,1), opacity .45s ease`;
-      span.style.transform  = `translate(calc(-50% + ${drift}px), calc(-50% - ${rise}px)) scale(1)`;
+      span.style.transform  = dir;
       span.style.opacity    = '1';
     }, 20 + i * 70);
 
-    // Fade out
     setTimeout(() => {
       span.style.transition = 'opacity .32s ease';
       span.style.opacity    = '0';

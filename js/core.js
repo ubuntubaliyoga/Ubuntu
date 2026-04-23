@@ -177,8 +177,8 @@ function switchTab(t){
     const el=$('view-'+v);
     if(el)el.classList.toggle('active',v===t);
   });
-  // Bottom nav active state (only deal/crm)
-  ['deal','crm'].forEach(v=>{
+  // Bottom nav active state
+  ['deal','crm','bizdev'].forEach(v=>{
     $('bn-'+v)?.classList.toggle('active',v===t);
   });
   const tb=$('deal-toolbar');

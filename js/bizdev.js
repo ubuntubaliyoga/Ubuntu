@@ -10,11 +10,50 @@ const LG_CITIES = [
 ];
 
 let _lgVariant = 'a';
+let _lgGenerated = false;
 
 function lgRandomCity() {
   const city = LG_CITIES[Math.floor(Math.random() * LG_CITIES.length)];
   const el = document.getElementById('lg-city');
-  if (el) { el.value = city; lgUpdate(); }
+  if (el) { el.value = city; lgOnCityInput(); }
+}
+
+function lgOnCityInput() {
+  // Reset generated state if city changes
+  if (_lgGenerated) {
+    const city = document.getElementById('lg-city')?.value.trim() || '';
+    const label = document.getElementById('lg-city-label');
+    if (label) label.textContent = city || 'your city';
+    lgUpdate();
+  }
+}
+
+function lgGenerate() {
+  const city = document.getElementById('lg-city')?.value.trim() || '';
+  const btn  = document.getElementById('lg-generate-btn');
+  const results = document.getElementById('lg-results');
+  const label   = document.getElementById('lg-city-label');
+
+  if (!city) {
+    if (btn) { btn.textContent = 'Enter a city first'; btn.style.opacity = '.6'; }
+    setTimeout(() => { if (btn) { btn.textContent = 'Generate Leads'; btn.style.opacity = ''; } }, 1800);
+    return;
+  }
+
+  _lgGenerated = true;
+  if (results) results.style.display = 'block';
+  if (label) label.textContent = city;
+  if (btn) { btn.textContent = `Searching ${city}…`; btn.style.opacity = '.7'; }
+
+  // Brief animation then reset button
+  setTimeout(() => {
+    if (btn) { btn.textContent = 'Generate Leads'; btn.style.opacity = ''; }
+  }, 1200);
+
+  lgUpdate();
+
+  // Scroll results into view
+  setTimeout(() => results?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
 }
 
 function lgSetVariant(v) {
@@ -41,7 +80,6 @@ function lgBuildMessage(firstname, retreat) {
 function lgCopyMessage() {
   const firstname = document.getElementById('lg-firstname')?.value || '';
   const retreat   = document.getElementById('lg-retreat')?.value   || '';
-  if (!firstname.trim()) { alert('Fill in a first name first.'); return; }
   const msg = lgBuildMessage(firstname, retreat);
   const btn = document.getElementById('lg-copy-btn');
   const reset = () => { if (btn) btn.textContent = 'Copy'; };
@@ -66,20 +104,17 @@ function _lgCopyFallback(text, btn, reset) {
 }
 
 function lgUpdate() {
+  if (!_lgGenerated) return;
+
   const firstname = document.getElementById('lg-firstname')?.value || '';
   const retreat   = document.getElementById('lg-retreat')?.value   || '';
   const rawPhone  = document.getElementById('lg-phone')?.value     || '';
   const phone     = rawPhone.replace(/[\s\-\(\)\+]/g, '').replace(/^00/, '');
-  const msgEl    = document.getElementById('lg-message');
-  const linksEl  = document.getElementById('lg-links');
+  const msgEl     = document.getElementById('lg-message');
+  const linksEl   = document.getElementById('lg-links');
 
   const msg = lgBuildMessage(firstname, retreat);
   if (msgEl) msgEl.textContent = msg;
-
-  if (!firstname.trim() && !retreat.trim()) {
-    if (linksEl) linksEl.innerHTML = '<div style="color:var(--muted);font-size:13px;font-style:italic;text-align:center;padding:20px 0;">Fill in name and retreat to generate link.</div>';
-    return;
-  }
 
   const encoded = encodeURIComponent(msg);
   const href    = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;

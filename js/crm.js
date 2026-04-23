@@ -550,7 +550,7 @@ function dropLeadOnTab(id, targetTab) {
     const st = lead.db === 'email' ? 'SALE CLOSED' : 'Converted to Customer';
     lead.status = st;
     crmSwitchTab('closed');
-    if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!']);
+    if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!'], true);
     fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: st }),
     }).catch(e => dbg('Status save failed: ' + e.message));
@@ -572,7 +572,7 @@ function dropLeadOnTab(id, targetTab) {
     lead.status = 'SALE CLOSED';
     crmData.emailLeads = [...(crmData.emailLeads || []), lead];
     crmSwitchTab('closed');
-    if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!']);
+    if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!'], true);
     fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'demote', pageId: id, name: lead.name, company: lead.company,
         email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
