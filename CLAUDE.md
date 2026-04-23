@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 git push -u origin main   # Vercel auto-deploys; sw.js BUILD_TIMESTAMP replaced by vercel.json buildCommand
 ```
 
+**Solo project — commit directly to `main`.** Do NOT use feature branches unless the user explicitly asks for one. Always end every session with `git push origin main` so changes go live on Vercel.
+
 Test API endpoints locally by setting `NOTION_TOKEN` (already in `.claude/settings.local.json`) and running:
 ```bash
 node -e "process.env.NOTION_TOKEN='...'; import('./api/notion.js').then(m => ...)"
