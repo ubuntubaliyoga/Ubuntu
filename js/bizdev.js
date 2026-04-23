@@ -44,6 +44,8 @@ async function lgGenerate() {
     lgRenderLeads(data.leads || []);
   } catch (e) {
     lgStatus('Error: ' + e.message, 'error');
+    console.error('[leadgen]', e);
+    if (typeof dbg === 'function') dbg('Leadgen error: ' + e.message);
   } finally {
     _lgRunning = false;
     if (btn) { btn.disabled = false; btn.textContent = 'Generate Leads'; }
