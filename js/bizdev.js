@@ -127,9 +127,11 @@ function lgStatus(msg, type) {
 function lgRenderLeads(leads, log) {
   const el = document.getElementById('lg-results');
   if (!el) return;
+  const traceHtml = log?.length
+    ? `<details style="margin-top:16px;font-size:11px;color:var(--muted);"><summary style="cursor:pointer;user-select:none;padding:4px 0;">🔍 Debug trace</summary><pre style="white-space:pre-wrap;line-height:1.6;margin-top:6px;font-family:'SF Mono',monospace;">${esc(log.join('\n'))}</pre></details>`
+    : '';
   if (!leads.length) {
-    const trace = log?.length ? `<details style="margin-top:12px;font-size:11px;color:var(--muted);"><summary style="cursor:pointer;">Debug trace</summary><pre style="white-space:pre-wrap;line-height:1.6;margin-top:6px;">${esc(log.join('\n'))}</pre></details>` : '';
-    el.innerHTML = `<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0;">No leads found. Try a different city.${trace}</div>`;
+    el.innerHTML = `<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0;">No leads found. Try a different city.${traceHtml}</div>`;
     return;
   }
   el.innerHTML = leads.map(lead => {
@@ -158,7 +160,7 @@ function lgRenderLeads(leads, log) {
         ${!lead.waLink && !lead.phone ? `<span style="font-size:12px;color:var(--muted);font-style:italic;padding:8px 0;">no number</span>` : ''}
       </div>
     </div>`;
-  }).join('');
+  }).join('') + traceHtml;
 }
 
 function esc(s) {
