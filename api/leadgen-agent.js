@@ -1,47 +1,51 @@
 // api/leadgen-agent.js
 // Ubuntu Bali — Lead Research & Notion Sync
-// Flow: Instagram hashtags → profile scrape → Google Maps supplement →
-//       Claude enrichment → blocklist dedup → Notion write
+// B1: blocklist → B2: 3-search discovery (Google) + Instagram enrich + Maps fallback
+// → B3: WA links → B4: Notion write
 
 export const config = { maxDuration: 120 };
 
 const BLOCKLIST_PAGE_ID = '333622d3-e574-8159-b0d7-d4998af4cf2c';
-const LEADGEN_DB_ID     = '320622d3-e574-81e2-b672-000b38b5ed23';
+const CRM_DB_ID         = '34a622d3e57481738b3ce70824a6adf7';
 const NOTION_VER        = '2022-06-28';
 
-// ─── MAIN HANDLER ─────────────────────────────────────────────────────────────
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   const { city } = req.body;
   if (!city?.trim()) return res.status(400).json({ error: 'city required' });
 
   try {
-    // B1: blocklist (fail-safe — continue even if fetch fails)
+    // B1
     const blocklist = await fetchBlocklist();
 
-    // B2: Instagram first, Google Maps as supplement
-    let leads = await findInstagramLeads(city);
+    // B2
+    let leads = await b2Research(city);
+
+    // Google Maps supplement if < 10
     if (leads.length < 10) {
-      const needed  = 13 - leads.length; // buffer for dedup
-      const mapLeads = await findGoogleMapsLeads(city, needed);
-      leads = mergeDedupe(leads, mapLeads);
+      const extra = await googleMapsLeads(city, 13 - leads.length);
+      leads = mergeDedupe(leads, extra);
     }
 
     // Blocklist filter + cap
     leads = filterBlocklist(leads, blocklist).slice(0, 10);
 
-    // Enrich: websites for contact info, then Claude for names/retreats
-    leads = await enrichLeads(leads, city);
+    // Enrich contacts via websites
+    leads = await enrichContacts(leads);
+
+    // Claude: first names, retreat names, variant
+    leads = await claudeEnrich(leads, city);
 
     // B3: WA links
     leads = leads.map(l => ({ ...l, waLink: buildWALink(l) }));
 
-    // B4: Notion write (per-lead dedup re-check inside)
-    const results = await writeLeadsToNotion(leads, city, blocklist);
+    // B4: Notion
+    const results = await writeToNotion(leads, city, blocklist);
 
-    // Append written names to blocklist page (single call)
-    const written = results.filter(r => r.status === 'added').map(r => r.name);
-    if (written.length) await appendBlocklist(written);
+    // Append written names to blocklist
+    const newNames = results.filter(r => r.status === 'added').map(r => r.name);
+    if (newNames.length) await appendBlocklist(newNames);
 
     res.json({ leads: results, city, found: results.length });
   } catch (err) {
@@ -57,11 +61,11 @@ async function fetchBlocklist() {
       `https://api.notion.com/v1/blocks/${BLOCKLIST_PAGE_ID}/children?page_size=100`,
       { headers: notionHeaders() }
     );
-    const data = await r.json();
-    const text = (data.results || [])
+    const d = await r.json();
+    const text = (d.results || [])
       .flatMap(b => {
-        const block = b.paragraph || b.bulleted_list_item || b.numbered_list_item || b.quote;
-        return (block?.rich_text || []).map(t => t.plain_text);
+        const blk = b.paragraph || b.bulleted_list_item || b.numbered_list_item || b.quote;
+        return (blk?.rich_text || []).map(t => t.plain_text);
       })
       .join('');
     return new Set(text.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
@@ -74,173 +78,234 @@ async function appendBlocklist(names) {
       method: 'PATCH',
       headers: notionHeaders(),
       body: JSON.stringify({
-        children: [{
-          object: 'block',
-          type: 'paragraph',
-          paragraph: { rich_text: [{ type: 'text', text: { content: names.join(', ') } }] },
-        }],
+        children: [{ object: 'block', type: 'paragraph',
+          paragraph: { rich_text: [{ type: 'text', text: { content: names.join(', ') } }] } }],
       }),
     });
   } catch { /* non-critical */ }
 }
 
-// Match on the candidate's own name only — not venue or associated person
+// Match on candidate's OWN name only — shared surname / venue contact is NOT a match
 function filterBlocklist(leads, blocklist) {
-  return leads.filter(lead => {
-    const name = (lead.name || '').toLowerCase();
-    for (const entry of blocklist) {
-      if (entry && (name === entry || name.startsWith(entry + ' ') || name.endsWith(' ' + entry))) {
-        return false;
-      }
+  return leads.filter(l => {
+    const n = (l.name || '').toLowerCase();
+    for (const e of blocklist) {
+      if (e && (n === e || n.startsWith(e + ' ') || n.endsWith(' ' + e))) return false;
     }
     return true;
   });
 }
 
-// ─── B2 INSTAGRAM ─────────────────────────────────────────────────────────────
-async function findInstagramLeads(city) {
-  // Step 1: hashtag posts → unique usernames
-  const usernames = await instagramHashtagUsernames(city);
-  if (!usernames.length) return [];
+// ─── B2 RESEARCH ─────────────────────────────────────────────────────────────
+async function b2Research(city) {
+  // Search 1: discover top local yoga/wellness platforms for this city
+  const platResults = await googleSearch(
+    `top yoga wellness retreat event listing platforms ${city} 2025`
+  );
+  const platforms = extractPlatformDomains(platResults, city);
 
-  // Step 2: full profiles for those usernames
-  return instagramProfileScrape(usernames);
-}
+  // Build site: filter from discovered platforms (cap at 4)
+  const siteFilter = platforms.length
+    ? platforms.slice(0, 4).map(d => `site:${d}`).join(' OR ')
+    : '';
 
-async function instagramHashtagUsernames(city) {
-  try {
-    const slug = city.toLowerCase().replace(/[^a-z]/g, '');
-    const hashtags = [
-      `#${slug}yoga`,
-      `#${slug}retreat`,
-      `#${slug}wellness`,
-      `#yoga${slug}`,
-      `#retreat${slug}`,
-    ];
+  // Search 2: facilitators on local platforms
+  const [s2, s3] = await Promise.all([
+    googleSearch(`yoga OR retreat OR wellness facilitator "${city}" 2025 2026 ${siteFilter}`.trim()),
+    googleSearch(`yoga studio "${city}" retreat OR workshop OR program contact ${siteFilter}`.trim()),
+  ]);
 
-    const posts = await apifyRun('apify~instagram-hashtag-scraper', {
-      hashtags,
-      resultsLimit: 40,
-      proxy: { useApifyProxy: true },
-    });
+  // Extract up to 12 candidates from S2+S3 combined
+  const candidates = extractCandidates([...s2, ...s3], city).slice(0, 12);
 
-    const RETREAT_KW = ['retreat', 'workshop', 'immersion', 'ytt', 'training', 'program', 'course', 'teacher'];
-    const seen = new Set();
-    const out  = [];
+  // Fetch contact pages for candidates (up to 4 fetches as per prompt)
+  await fetchCandidateContacts(candidates);
 
-    for (const p of (Array.isArray(posts) ? posts : [])) {
-      const u = p.ownerUsername || p.username;
-      if (!u || seen.has(u)) continue;
-      const text = ((p.caption || '') + ' ' + (p.ownerBio || '')).toLowerCase();
-      if (RETREAT_KW.some(k => text.includes(k))) { seen.add(u); out.push(u); }
-    }
-
-    // If caption-filter too strict, fall back to any username found
-    if (out.length < 5) {
-      for (const p of (Array.isArray(posts) ? posts : [])) {
-        const u = p.ownerUsername || p.username;
-        if (u && !seen.has(u)) { seen.add(u); out.push(u); }
+  // Instagram profile scrape for any handles found
+  const handles = candidates.map(c => c.insta).filter(Boolean).map(h => h.replace(/^@/, ''));
+  if (handles.length) {
+    const profiles = await instagramProfileScrape(handles);
+    profiles.forEach(p => {
+      const c = candidates.find(c => c.insta === `@${p.username}`);
+      if (c) {
+        c.phone = c.phone || null;
+        c.email = c.email || null;
+        c.bio   = c.bio   || p.biography || '';
+        c.website = c.website || p.externalUrl || null;
       }
-    }
-
-    return out.slice(0, 20);
-  } catch { return []; }
-}
-
-async function instagramProfileScrape(usernames) {
-  try {
-    const profiles = await apifyRun('apify~instagram-profile-scraper', {
-      usernames: usernames.slice(0, 20),
     });
+  }
 
-    const RETREAT_KW = ['retreat', 'workshop', 'immersion', 'ytt', 'training', 'program', 'course'];
+  return candidates.filter(c => c.retreat || c.bio || c.website); // DROP: no event of any kind
+}
 
-    return (Array.isArray(profiles) ? profiles : [])
-      .filter(p => {
-        const bio = (p.biography || '').toLowerCase();
-        return RETREAT_KW.some(k => bio.includes(k));
-      })
-      .map(p => ({
-        source:   'instagram',
-        name:     p.fullName || p.username,
-        insta:    `@${p.username}`,
-        website:  p.externalUrl || null,
-        bio:      p.biography || '',
-        phone:    null,
-        email:    null,
-        retreat:  null,
-        firstname: null,
-        variant:  null,
-      }));
+// ─── GOOGLE SEARCH (Apify) ────────────────────────────────────────────────────
+async function googleSearch(query) {
+  try {
+    const results = await apifyRun('apify~google-search-scraper', {
+      queries: query,
+      maxPagesPerQuery: 1,
+      resultsPerPage: 10,
+      languageCode: 'en',
+    });
+    return Array.isArray(results) ? results : [];
   } catch { return []; }
 }
 
-// ─── B2 GOOGLE MAPS ───────────────────────────────────────────────────────────
-async function findGoogleMapsLeads(city, limit) {
+function extractPlatformDomains(results, city) {
+  const GENERIC = new Set(['google.com','facebook.com','instagram.com','linkedin.com','youtube.com','wikipedia.org','tripadvisor.com']);
+  const domains = new Set();
+  for (const r of results) {
+    try {
+      const host = new URL(r.url || r.link || '').hostname.replace(/^www\./, '');
+      if (!GENERIC.has(host) && host.includes('.')) domains.add(host);
+    } catch { /* skip invalid */ }
+  }
+  return [...domains].slice(0, 6);
+}
+
+function extractCandidates(results, city) {
+  const seen = new Set();
+  const out  = [];
+  const EVENT_KW = ['retreat', 'workshop', 'immersion', 'ytt', 'training', 'program', 'course', 'yoga', 'wellness'];
+
+  for (const r of results) {
+    const url   = r.url || r.link || '';
+    const title = r.title || '';
+    const desc  = r.description || r.snippet || '';
+    const text  = (title + ' ' + desc).toLowerCase();
+
+    if (!url || seen.has(url)) continue;
+    if (!EVENT_KW.some(k => text.includes(k))) continue;
+    seen.add(url);
+
+    const isInsta = url.includes('instagram.com/');
+    const insta   = isInsta ? '@' + url.split('instagram.com/')[1]?.split('/')[0] : null;
+
+    out.push({
+      source:    'search',
+      name:      title.split(' - ')[0].split(' | ')[0].trim() || title,
+      website:   isInsta ? null : url,
+      insta,
+      bio:       desc,
+      phone:     null,
+      email:     null,
+      retreat:   null,
+      firstname: null,
+      variant:   null,
+    });
+  }
+  return out;
+}
+
+// ─── WEBSITE CONTACT FETCHING ────────────────────────────────────────────────
+async function fetchCandidateContacts(candidates) {
+  // Max 4 fetches as per prompt — prioritise those missing phone
+  const toFetch = candidates
+    .filter(c => c.website && !c.phone)
+    .slice(0, 4);
+
+  await Promise.allSettled(toFetch.map(async c => {
+    const contact = await fetchContact(c.website);
+    if (contact) {
+      c.phone = contact.phone || c.phone;
+      c.email = contact.email || c.email;
+      c.bio   = (c.bio + ' ' + (contact.text || '')).slice(0, 400);
+    }
+  }));
+
+  // Batched OR-search for still-missing phones (1 search)
+  const stillMissing = candidates.filter(c => !c.phone).slice(0, 3);
+  if (stillMissing.length >= 2) {
+    const orQuery = stillMissing.map(c => `"${c.name}"`).join(' OR ') + ` contact phone`;
+    const r = await googleSearch(orQuery);
+    stillMissing.forEach(c => {
+      const hit = r.find(x => (x.description || '').includes(c.name.split(' ')[0]));
+      if (hit) {
+        const phone = (hit.description || '').match(/\+?[\d][\d\s\-().]{8,16}[\d]/)?.[0];
+        if (phone) c.phone = phone.trim();
+      }
+    });
+  }
+}
+
+async function fetchContact(url) {
+  try {
+    // Try /events or /retreat page first, then /contact
+    const targets = [url + '/events', url + '/retreat', url + '/contact', url];
+    for (const target of targets.slice(0, 2)) {
+      const r = await fetch(`https://r.jina.ai/${target}`, {
+        headers: { Accept: 'text/plain', 'X-Return-Format': 'text' },
+        signal: AbortSignal.timeout(7000),
+      });
+      const text = (await r.text()).slice(0, 800);
+      const phone = text.match(/\+?[\d][\d\s\-().]{8,16}[\d]/)?.[0]?.trim() || null;
+      const email = text.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0]       || null;
+      if (phone || email) return { phone, email, text };
+    }
+    return null;
+  } catch { return null; }
+}
+
+// ─── INSTAGRAM PROFILE SCRAPE ────────────────────────────────────────────────
+async function instagramProfileScrape(usernames) {
+  if (!usernames.length) return [];
+  try {
+    const items = await apifyRun('apify~instagram-profile-scraper', { usernames });
+    return Array.isArray(items) ? items : [];
+  } catch { return []; }
+}
+
+// ─── GOOGLE MAPS FALLBACK ────────────────────────────────────────────────────
+async function googleMapsLeads(city, limit) {
   try {
     const items = await apifyRun('apify~google-maps-scraper', {
-      searchStringsArray: [
-        `yoga retreat ${city}`,
-        `yoga studio ${city}`,
-        `wellness retreat ${city}`,
-      ],
+      searchStringsArray: [`yoga retreat ${city}`, `yoga studio ${city}`],
       maxCrawledPlacesPerSearch: Math.ceil(limit / 2) + 2,
       language: 'en',
     });
-
     return (Array.isArray(items) ? items : [])
       .filter(i => i.title)
       .map(i => ({
         source:   'google_maps',
         name:     i.title,
-        insta:    null,
         website:  i.website || null,
+        insta:    null,
         phone:    i.phone   || null,
         email:    null,
+        bio:      i.description || '',
         retreat:  null,
         firstname: null,
         variant:  null,
-        bio:      i.description || '',
         location: i.url || null,
       }));
   } catch { return []; }
 }
 
-// ─── ENRICHMENT ───────────────────────────────────────────────────────────────
-async function enrichLeads(leads, city) {
-  // Fetch websites (capped at 5 to stay within timeout)
-  const needFetch = leads.filter(l => l.website && !l.phone && !l.email).slice(0, 5);
-  const fetched   = await Promise.allSettled(needFetch.map(l => fetchContact(l.website)));
-  needFetch.forEach((lead, i) => {
-    const v = fetched[i].value;
-    if (v) { lead.phone = v.phone || lead.phone; lead.email = v.email || lead.email; }
-  });
-
-  // Claude batch enrichment for names + retreat identification
-  return claudeEnrich(leads, city);
+// ─── CONTACT ENRICHMENT ──────────────────────────────────────────────────────
+async function enrichContacts(leads) {
+  const toFetch = leads.filter(l => l.website && !l.phone && !l.email).slice(0, 3);
+  await Promise.allSettled(toFetch.map(async l => {
+    const c = await fetchContact(l.website);
+    if (c) { l.phone = c.phone || l.phone; l.email = c.email || l.email; }
+  }));
+  return leads;
 }
 
-async function fetchContact(url) {
-  try {
-    const r = await fetch(`https://r.jina.ai/${url}`, {
-      headers: { Accept: 'text/plain', 'X-Return-Format': 'text' },
-      signal: AbortSignal.timeout(7000),
-    });
-    const text = (await r.text()).slice(0, 800);
-    const phone = text.match(/\+?[\d][\d\s\-().]{8,16}[\d]/)?.[0]?.trim() || null;
-    const email = text.match(/[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i)?.[0]    || null;
-    return { phone, email };
-  } catch { return null; }
-}
-
+// ─── CLAUDE ENRICHMENT ───────────────────────────────────────────────────────
 async function claudeEnrich(leads, city) {
+  if (!leads.length) return leads;
   try {
-    const prompt = `Extract per lead: firstname (host's personal first name, not business), retreat (most specific upcoming or recent retreat/workshop/YTT name, null if none), variant ("a" upcoming event / "b" past only / null if unclear), email (if in bio/text), phone (international format if in bio/text).
+    const prompt =
+`Extract for each lead: firstname (host personal first name only), retreat (most specific upcoming or recent retreat/workshop/YTT name — past events qualify; null if truly none), variant ("a" upcoming / "b" past only / null unclear), email (if in text), phone (international format if in text; null if not found — never invent).
 
-Leads:
-${leads.map((l, i) => `[${i}] ${l.name} | bio: ${(l.bio || '').slice(0, 150)} | phone: ${l.phone || ''} | email: ${l.email || ''}`).join('\n')}
+Leads for ${city}:
+${leads.map((l, i) =>
+  `[${i}] Name: ${l.name} | bio: ${(l.bio||'').slice(0,150)} | phone: ${l.phone||''} | email: ${l.email||''}`
+).join('\n')}
 
-Return ONLY a JSON array of ${leads.length} objects: [{"firstname":"...","retreat":"...","variant":"a","email":null,"phone":null},...]`;
+Return ONLY a JSON array of ${leads.length} objects:
+[{"firstname":"...","retreat":"...","variant":"a","email":null,"phone":null},...]`;
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -269,8 +334,8 @@ Return ONLY a JSON array of ${leads.length} objects: [{"firstname":"...","retrea
         firstname: e.firstname || firstWord(l.name),
         retreat:   e.retreat   || null,
         variant:   e.variant   || 'a',
-        email:     l.email     || e.email   || null,
-        phone:     l.phone     || e.phone   || null,
+        email:     l.email     || e.email  || null,
+        phone:     l.phone     || e.phone  || null,
       };
     });
   } catch {
@@ -281,43 +346,37 @@ Return ONLY a JSON array of ${leads.length} objects: [{"firstname":"...","retrea
 // ─── B3 WA LINK ───────────────────────────────────────────────────────────────
 function buildWALink(lead) {
   if (!lead.phone) return null;
-  const phone = lead.phone.replace(/[\s\-()]/g, '').replace(/^\+/, '').replace(/^00/, '');
+  const phone = lead.phone.replace(/[\s\-()]/g,'').replace(/^\+/,'').replace(/^00/,'');
   const name  = lead.firstname || firstWord(lead.name);
   const hook  = lead.retreat
     ? (lead.variant === 'b'
         ? `You held the ${lead.retreat}, is that right?`
         : `You are hosting the ${lead.retreat}, is that right?`)
-    : `You are organizing retreats, is that right?`;
-  const msg = `Dear ${name}, Kevin here from Bali.\n\n${hook}`;
-  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    : `You are organizing yoga retreats, is that right?`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(`Dear ${name}, Kevin here from Bali.\n\n${hook}`)}`;
 }
 
 // ─── B4 NOTION WRITE ─────────────────────────────────────────────────────────
-async function writeLeadsToNotion(leads, city, blocklist) {
+async function writeToNotion(leads, city, blocklist) {
   const today    = new Date().toISOString().slice(0, 10);
   const mapsLink = `https://www.google.com/maps/search/yoga+retreat+${encodeURIComponent(city)}`;
   const results  = [];
 
   for (const lead of leads) {
-    // Re-check blocklist before each write
-    const nameLC  = (lead.name || '').toLowerCase();
-    let duplicate = false;
-    for (const entry of blocklist) {
-      if (entry && (nameLC === entry || nameLC.startsWith(entry + ' ') || nameLC.endsWith(' ' + entry))) {
-        duplicate = true; break;
-      }
+    // Re-check blocklist immediately before each write
+    const nameLC = (lead.name || '').toLowerCase();
+    let dup = false;
+    for (const e of blocklist) {
+      if (e && (nameLC === e || nameLC.startsWith(e + ' ') || nameLC.endsWith(' ' + e))) { dup = true; break; }
     }
-    if (duplicate) {
-      results.push({ ...lead, status: 'skipped', reason: `Duplicate: ${lead.name}` });
-      continue;
-    }
+    if (dup) { results.push({ ...lead, status: 'skipped', reason: `Duplicate: ${lead.name}` }); continue; }
 
     try {
       await fetch('https://api.notion.com/v1/pages', {
         method: 'POST',
         headers: notionHeaders(),
         body: JSON.stringify({
-          parent: { database_id: LEADGEN_DB_ID },
+          parent: { database_id: CRM_DB_ID },
           properties: {
             'Name':          { title:     [{ text: { content: lead.name || '' } }] },
             'Whatsapp 1':    { rich_text: [{ text: { content: lead.waLink || 'No number found' } }] },
@@ -334,7 +393,6 @@ async function writeLeadsToNotion(leads, city, blocklist) {
       results.push({ ...lead, status: 'error', reason: e.message });
     }
   }
-
   return results;
 }
 
@@ -343,9 +401,9 @@ async function apifyRun(actorSlug, input) {
   const url = `https://api.apify.com/v2/acts/${actorSlug}/run-sync-get-dataset-items`
     + `?token=${process.env.APIFY_TOKEN}&timeout=90&memory=1024`;
   const r = await fetch(url, {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
+    body:    JSON.stringify(input),
   });
   if (!r.ok) {
     const txt = await r.text().catch(() => '');
@@ -362,11 +420,7 @@ function notionHeaders() {
     'Notion-Version': NOTION_VER,
   };
 }
-
-function firstWord(str) {
-  return (str || '').split(/[\s,]+/)[0] || str || '';
-}
-
+function firstWord(s) { return (s || '').split(/[\s,]+/)[0] || s || ''; }
 function mergeDedupe(a, b) {
   const seen = new Set(a.map(l => l.name.toLowerCase()));
   return [...a, ...b.filter(l => !seen.has(l.name.toLowerCase()))];
