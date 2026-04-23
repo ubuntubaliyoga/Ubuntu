@@ -53,9 +53,9 @@ async function lgGenerate() {
 function lgStatus(msg, type) {
   const el = document.getElementById('lg-status');
   if (!el) return;
-  el.textContent = msg;
-  el.className   = 'lg-status lg-s-' + (type || 'info');
+  el.textContent   = msg;
   el.style.display = msg ? 'block' : 'none';
+  el.style.color   = type === 'error' ? '#c62828' : type === 'ok' ? '#2E7D32' : type === 'warn' ? '#e65100' : 'var(--muted)';
 }
 
 function lgRenderLeads(leads) {

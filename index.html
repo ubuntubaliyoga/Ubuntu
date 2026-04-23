@@ -836,64 +836,24 @@ Airport pick-up available on request.</textarea>
     <div class="view-hero-sub">Retreat Leaders · WhatsApp Outreach</div>
   </div>
 
-  <!-- 1 · City + Type -->
+  <!-- City + Random -->
   <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;align-items:stretch;">
-    <input id="lg-city" type="text" placeholder="Choose a city…" oninput="lgOnCityInput()"
+    <input id="lg-city" type="text" placeholder="Choose a city…"
       style="padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;min-width:0;">
     <button class="pill-btn" onclick="lgRandomCity()" style="flex-shrink:0;white-space:nowrap;padding:0 16px;font-size:18px;" title="Random city">🎲</button>
   </div>
-  <select id="lg-type" onchange="lgUpdate()" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;margin-bottom:20px;">
-    <option value="whatsapp">💬 WhatsApp</option>
-    <option value="email" disabled>📧 Email — coming soon</option>
-    <option value="linkedin" disabled>👔 LinkedIn — coming soon</option>
-  </select>
 
   <!-- Generate button -->
   <button id="lg-generate-btn" onclick="lgGenerate()"
-    style="width:100%;padding:18px;background:var(--gold);border:none;border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--dark);cursor:pointer;letter-spacing:.02em;margin-bottom:32px;-webkit-tap-highlight-color:transparent;transition:opacity .15s;">
+    style="width:100%;padding:18px;background:var(--gold);border:none;border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--dark);cursor:pointer;letter-spacing:.02em;margin-bottom:16px;-webkit-tap-highlight-color:transparent;transition:opacity .15s;">
     Generate Leads
   </button>
 
-  <!-- Results — hidden until Generate is clicked -->
-  <div id="lg-results" style="display:none;">
+  <!-- Status message -->
+  <div id="lg-status" style="display:none;font-size:13px;color:var(--muted);padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:16px;line-height:1.5;"></div>
 
-    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:20px;padding:12px 14px;background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);">
-      Search Instagram for retreat leaders in <strong id="lg-city-label">your city</strong>. For each lead you find, fill in their name and retreat below to build the outreach message.
-    </div>
-
-    <!-- Customize for specific lead -->
-    <div style="margin-bottom:20px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Personalize</div>
-      <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-bottom:8px;">
-        <input id="lg-firstname" type="text" placeholder="First name" oninput="lgUpdate()"
-          style="padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;width:100%;box-sizing:border-box;">
-        <input id="lg-retreat" type="text" placeholder="Retreat / event name" oninput="lgUpdate()"
-          style="padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;width:100%;box-sizing:border-box;">
-      </div>
-      <div style="display:flex;gap:6px;margin-bottom:10px;">
-        <button id="lg-var-a" onclick="lgSetVariant('a')" class="pill-btn dark" style="flex:1;font-size:11px;padding:7px 10px;">A — Upcoming</button>
-        <button id="lg-var-b" onclick="lgSetVariant('b')" class="pill-btn" style="flex:1;font-size:11px;padding:7px 10px;">B — Past event</button>
-      </div>
-    </div>
-
-    <!-- Message preview -->
-    <div style="margin-bottom:20px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Outreach Message</div>
-        <button id="lg-copy-btn" onclick="lgCopyMessage()" class="pill-btn" style="padding:5px 12px;font-size:11px;">Copy</button>
-      </div>
-      <div id="lg-message" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:'Inter',sans-serif;min-height:72px;"></div>
-    </div>
-
-    <!-- WhatsApp link -->
-    <div style="margin-bottom:40px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">WhatsApp Link</div>
-      <input id="lg-phone" type="tel" placeholder="Phone number — optional (e.g. +31 6 12 34 56 78)" oninput="lgUpdate()"
-        style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;box-sizing:border-box;margin-bottom:10px;">
-      <div id="lg-links"></div>
-    </div>
-
-  </div><!-- /lg-results -->
+  <!-- Results -->
+  <div id="lg-results" style="margin-bottom:40px;"></div>
 </div>
 
 <!-- TUTORIALS VIEW -->
