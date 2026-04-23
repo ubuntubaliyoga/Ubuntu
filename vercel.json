@@ -3,6 +3,7 @@
   "outputDirectory": ".",
   "crons": [{ "path": "/api/drift-detector", "schedule": "0 0 * * *" }],
   "functions": {
-    "api/leadgen-agent.js": { "maxDuration": 120 }
+    "api/leadgen-agent.js": { "maxDuration": 120 },
+    "api/retro-enrich.js":  { "maxDuration": 120 }
   }
 }
