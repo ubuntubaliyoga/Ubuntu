@@ -831,11 +831,46 @@ Airport pick-up available on request.</textarea>
 
 <!-- BIZ DEV VIEW -->
 <div class="view" id="view-bizdev">
-  <div class="view-hero"><div class="view-hero-title">Biz Dev</div><div class="view-hero-sub">Lead generation &amp; outreach</div></div>
-  <div class="bizdev-empty">
-    <div class="bizdev-empty-icon">🌱</div>
-    <div class="bizdev-empty-title">Coming Soon</div>
-    <div class="bizdev-empty-sub">Lead generation tools, outreach templates,<br>and pipeline analytics will live here.</div>
+  <div class="view-hero">
+    <div class="view-hero-title">Lead Generation</div>
+    <div class="view-hero-sub">Retreat Leaders · Outreach</div>
+  </div>
+
+  <!-- 1 · Type of leadgen -->
+  <div style="margin-bottom:28px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Type of Leadgen</div>
+    <select id="lg-type" onchange="lgUpdate()" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;">
+      <option value="whatsapp">💬 WhatsApp</option>
+      <option value="email" disabled>📧 Email — coming soon</option>
+      <option value="linkedin" disabled>👔 LinkedIn — coming soon</option>
+    </select>
+  </div>
+
+  <!-- 2 · Choose city -->
+  <div style="margin-bottom:28px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Choose City</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="lg-city" type="text" placeholder="e.g. Amsterdam" oninput="lgUpdate()"
+        style="flex:1;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:var(--bg);outline:none;-webkit-appearance:none;min-width:0;">
+      <button class="pill-btn" onclick="lgRandomCity()" style="flex-shrink:0;white-space:nowrap;">🎲 Random</button>
+    </div>
+  </div>
+
+  <!-- 3 · Outreach message -->
+  <div style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Outreach Message 1</div>
+      <button id="lg-copy-btn" onclick="lgCopyMessage()" class="pill-btn" style="padding:5px 12px;font-size:11px;">Copy</button>
+    </div>
+    <div id="lg-message" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:'Inter',sans-serif;min-height:80px;"><span style="color:var(--muted);font-style:italic;">Enter a city above to generate the outreach message.</span></div>
+  </div>
+
+  <!-- 4 · WhatsApp links -->
+  <div style="margin-bottom:40px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">WhatsApp Links</div>
+    <div id="lg-links">
+      <div style="color:var(--muted);font-size:13px;font-style:italic;text-align:center;padding:20px 0;">Enter a city to generate WhatsApp links.</div>
+    </div>
   </div>
 </div>
 
@@ -1061,7 +1096,7 @@ Airport pick-up available on request.</textarea>
   <button class="drawer-item" onclick="closeDrawer();switchTab('philosophy')">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Philosophy
   </button>
-  <button class="drawer-item" onclick="closeDrawer();showDuplicates();switchTab('crm')">
+  <button class="drawer-item" onclick="closeDrawer();openDuplicateView()">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Find Duplicates
   </button>
   <div class="drawer-sep"></div>
@@ -1150,5 +1185,6 @@ Airport pick-up available on request.</textarea>
 <script src="/js/offer.js"></script>
 <script src="/js/drafts.js"></script>
 <script src="/js/crm.js"></script>
+<script src="/js/bizdev.js"></script>
 </body>
 </html>

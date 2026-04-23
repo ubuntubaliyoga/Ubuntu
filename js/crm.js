@@ -222,7 +222,10 @@ async function loadCRM(force = false) {
     crmData = await r.json();
     crmLoaded = true;
     dbg(`CRM: ${(crmData.emailLeads||[]).length} email, ${(crmData.whatsappLeads||[]).length} whatsapp, ${(crmData.shalaLeads||[]).length} shala, ${(crmData.converted||[]).length} converted`);
-    fetchDraftsData().then(() => crmRender());
+    fetchDraftsData().then(() => {
+      crmRender();
+      if (window._crmAfterLoad) { const cb = window._crmAfterLoad; window._crmAfterLoad = null; cb(); }
+    });
     initCrmDragDrop();
   } catch (e) {
     if (list) list.innerHTML = `<div class="crm-empty" style="color:#B71C1C;">Could not load: ${e.message}</div>`;
@@ -524,6 +527,7 @@ function startLeadDrag(event, id) {
 }
 
 function dropLeadOnTab(id, targetTab) {
+  clearMoveSelection();
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (!lead) return;
   const sourceTab = lead.db === 'converted' ? 'converted'
@@ -670,6 +674,12 @@ function showDuplicates() {
         ${i > 0 ? `<button onclick="deleteDupConfirm('${c.id}','${c.name}')" style="padding:5px 14px;border-radius:100px;border:1px solid #FDECEA;background:transparent;color:#B71C1C;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>` : '<span style="font-size:11px;color:#2E7D32;font-weight:600;">Keep</span>'}
       </div>`).join('')}
     </div>`).join('');
+}
+
+function openDuplicateView() {
+  switchTab('crm');
+  if (crmLoaded) { showDuplicates(); }
+  else { window._crmAfterLoad = showDuplicates; }
 }
 
 async function deleteDupConfirm(id, name) {
