@@ -28,6 +28,9 @@ function allLeads() {
     ...(crmData.shalaLeads    || []),
   ];
 }
+function allLeadsAndConverted() {
+  return [...allLeads(), ...(crmData.converted || [])];
+}
 
 function getStageKey(c) {
   const s = Array.isArray(c.status) ? c.status[0] : c.status;
@@ -243,14 +246,14 @@ async function loadCRM(force = false) {
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
 function openCrmModal(id) {
-  const c = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const c = allLeadsAndConverted().find(x => x.id === id);
   if (!c) return;
   document.getElementById('crm-modal-content').innerHTML = crmDetailHTML(c);
   document.getElementById('crm-modal').classList.add('open');
 }
 
 function openCrmModalEdit(id) {
-  const c = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const c = allLeadsAndConverted().find(x => x.id === id);
   if (!c) return;
   document.getElementById('crm-modal-content').innerHTML = crmEditHTML(c);
   document.getElementById('crm-modal').classList.add('open');
@@ -425,7 +428,7 @@ function toggleReachedOut(id, db, btn) {
   const selected = Array.from(container.querySelectorAll('button.active'))
     .map(b => b.dataset.opt)
     .filter(o => o !== NOT_REACHED);
-  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
   crmRender();
   fetch('/api/crm', {
@@ -464,7 +467,7 @@ function addCustomReachedOut(id, db) {
   btn.onclick = function() { toggleReachedOut(id, db, this); };
   container.appendChild(btn);
   const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
-  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
   crmRender();
   fetch('/api/crm', {
@@ -474,7 +477,7 @@ function addCustomReachedOut(id, db) {
 }
 
 async function saveNotes(id, db, notes) {
-  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.notes = notes;
   try {
     await fetch('/api/crm', {
@@ -486,7 +489,7 @@ async function saveNotes(id, db, notes) {
 }
 
 async function savePipelineStage(id, db, status) {
-  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.status = status;
   try {
     await fetch('/api/crm', {
@@ -511,7 +514,7 @@ async function saveContactDetails(id, db) {
     engagedFirst: document.getElementById('ce-engagedFirst')?.value,
     engageNext:   document.getElementById('ce-engageNext')?.value,
   };
-  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) Object.assign(lead, props);
   try {
     await fetch('/api/crm', {
@@ -570,7 +573,7 @@ function startLeadDrag(event, id) {
 
 function dropLeadOnTab(id, targetTab) {
   clearMoveSelection();
-  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
+  const lead = allLeadsAndConverted().find(x => x.id === id);
   if (!lead) return;
   const sourceTab = lead.db === 'converted' ? 'converted'
                   : getStageKey(lead) === 'closed' ? 'closed' : 'cold';
@@ -708,7 +711,7 @@ function initCrmDragDrop() {
 // ── DUPLICATES ────────────────────────────────────────────────────────────────
 function findDuplicates() {
   const groups = {};
-  [...allLeads(), ...(crmData.converted || [])].forEach(c => {
+  allLeadsAndConverted().forEach(c => {
     const key = (c.name || '').toLowerCase().trim();
     if (!key) return;
     if (!groups[key]) groups[key] = [];
@@ -791,7 +794,7 @@ async function saveNewLead() {
 
 // ── EMAIL MODAL ───────────────────────────────────────────────────────────────
 function openEmailModal(leadId) {
-  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === leadId);
+  const lead = allLeadsAndConverted().find(x => x.id === leadId);
   if (!lead?.email) return;
   const modal = document.getElementById('email-modal');
   const addrEl = document.getElementById('email-modal-addr');

@@ -1,3 +1,5 @@
+const TAX = 1.15; // 10% tax + 5% service charge
+
 function pricing(){
   const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
   const pkgRate=parseFloat($('f-pkgrate')?.value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
@@ -11,7 +13,7 @@ function pricing(){
   const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
   const earlyAmt=discPct>0?stdSub*(discPct/100):0;
   const roomDiscAmt=discRooms>0&&discRoomPct>0?roomRate*(discRoomPct/100)*discRooms:0;
-  const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight*1.15;
+  const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight* TAX;
   const nights=parseInt($('f-nights').value)||7, totalEx=perNight*nights, totalIn=perNightTax*nights;
   return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,parvDiscPct,buddOn,buddOrig,buddDisc,buddDiscPct,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
 }
@@ -57,7 +59,7 @@ function buildOfferHTML(){
   const P=pricing(), totalPeople=guests+facilitators, days=P.nights+1;
   const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
-  const depositAmt=depositPct>0?(P.totalIn+extraServicesTotal()*1.15)*(depositPct/100):0;
+  const depositAmt=depositPct>0?(P.totalIn+extraServicesTotal()* TAX)*(depositPct/100):0;
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
@@ -76,7 +78,7 @@ function buildOfferHTML(){
   const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Nightly Rate</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl.</td></tr>`:'';
   const extTotal=extraServicesTotal();
   const hasExtras=extraServices.length>0;
-  const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal*1.15;
+  const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal* TAX;
   const investAddonRows=hasExtras?extraServices.map(s=>{
     const t=s.unitUsd*s.qty;
     const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
@@ -145,7 +147,7 @@ function buildContractHTML(){
   const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
   const P=pricing(), nights=P.nights, days=nights+1;
   const extTotal=extraServicesTotal(), hasExtrasC=extraServices.length>0;
-  const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal*1.15;
+  const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal* TAX;
   const finalTotal=hasExtrasC?grandInC:P.totalIn;
   const idrTotal=finalTotal*idrRate;
   const PMT=payments(finalTotal,checkin,depositPct);

@@ -188,7 +188,7 @@ function switchTab(t){
     if(typeof loadCRM==='function') loadCRM();
     if(typeof crmSwitchTab==='function') crmSwitchTab(typeof crmTab!=='undefined'?crmTab:'cold');
   }
-  if(t==='bizdev' && typeof lgInit==='function') lgInit();
+
 }
 
 function switchDealTab(t){
@@ -216,7 +216,6 @@ function switchDealTab(t){
 function toggleVilla(n){
   $(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked);
 }
-function toggleAutosave(){}
 
 function startAutosave(){
   if(autosaveOn)return;

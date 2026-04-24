@@ -105,8 +105,6 @@ const LG_CITIES = [
 let _lgRunning     = false;
 let _lgRecentCities = [];
 
-function lgInit() { /* datalist replaced by custom dropdown — nothing to init */ }
-
 // ── Custom city autocomplete ──────────────────────────────────────────────────
 function lgCityFilter() {
   const inp  = document.getElementById('lg-city');
