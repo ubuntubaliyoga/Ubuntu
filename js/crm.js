@@ -177,7 +177,8 @@ function buildList(items) {
       : '';
 
     const channels = Array.isArray(c.reachedOutOn) && c.reachedOutOn.length
-      ? 'via ' + c.reachedOutOn.join(', ') : null;
+      ? 'via ' + c.reachedOutOn.join(', ')
+      : '<span style="font-style:italic;color:var(--muted);">not reached out yet</span>';
     const subParts = [
       loc,
       c.engagedFirst && fmtDateShort(c.engagedFirst),
