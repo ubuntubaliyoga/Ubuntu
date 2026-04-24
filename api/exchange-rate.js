@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const data = await resp.json();
     const idr = data.rates?.IDR;
     if (!idr) throw new Error('IDR rate not found in response');
-    const MAJORS = ['IDR','EUR','GBP','AUD','SGD','CHF','CAD'];
+    const MAJORS = ['IDR','EUR','GBP','AUD','SGD','CHF','CAD','CNY','JPY','RUB'];
     const rates = {};
     for (const c of MAJORS) { if (data.rates?.[c]) rates[c] = data.rates[c]; }
 
