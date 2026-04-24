@@ -1,5 +1,11 @@
 const TAX = 1.15; // 10% tax + 5% service charge
 
+function cFmt(usdAmt, decimals=0){
+  const code=window.offerCurrency||'USD';
+  const rate=window.offerCurrencyRate||1;
+  return `${code} ${fmtN(usdAmt*rate,decimals)}`;
+}
+
 function pricing(){
   const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
   const pkgRate=parseFloat($('f-pkgrate')?.value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
@@ -28,7 +34,7 @@ function payments(total,checkin,depositPct){
 }
 
 function getFormState(){
-  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-note','f-included','f-also','f-signoff','f-signoff2'];
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-currency','f-note','f-included','f-also','f-signoff','f-signoff2'];
   const s={};
   ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
   s['f-parvati-on']=$('f-parvati-on').checked;
@@ -46,6 +52,7 @@ function setFormState(s){
   if(r)r.checked=true;
   ['parvati','buddha'].forEach(n=>$(`${n}-fields`).classList.toggle('disabled',!$(`f-${n}-on`).checked));
   if(s['extra-services'])setExtraServicesState(s['extra-services']);
+  if(s['f-currency']&&typeof onCurrencyChange==='function')onCurrencyChange(s['f-currency']);
 }
 
 function buildOfferHTML(){
@@ -63,38 +70,38 @@ function buildOfferHTML(){
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
-  const vLbl=(orig,disc,pct)=>pct>0?`<span class="rate-orig">USD ${fmtN(orig)}</span><span class="rate-disc">USD ${fmtN(disc)}</span><span class="rate-pct">−${pct}%</span>`:`USD ${fmtN(disc)}`;
+  const vLbl=(orig,disc,pct)=>pct>0?`<span class="rate-orig">${cFmt(orig)}</span><span class="rate-disc">${cFmt(disc)}</span><span class="rate-pct">−${pct}%</span>`:`${cFmt(disc)}`;
   const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
   const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
   const bodyText=$('f-body')?.value.trim()||'Kindly open the attached brochure for pictures of the full property.';
   const baleRow=P.bales<=0?'':P.bales<=5
-    ?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.bales*P.roomRate,2)}</td></tr>`
-    :`<tr class="pt-item"><td class="col-item">5 Gladaks</td><td class="col-rate">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN(5*P.roomRate,2)}</td></tr><tr class="pt-item"><td class="col-item">${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}</td><td class="col-rate">USD ${fmtN(P.roomRate,2)} / night</td><td class="col-sub">USD ${fmtN((P.bales-5)*P.roomRate,2)}</td></tr>`;
-  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.parvDisc,2)}</td></tr>`:'';
-  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">USD ${fmtN(P.buddDisc,2)}</td></tr>`:'';
-  const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Additional cost per person (Meals, Shala, Staff) &mdash; ${P.pkgCount} ${P.pkgCount===1?'person':'people'}</td><td class="col-rate">USD ${fmtN(P.pkgRate,2)} / night</td><td class="col-sub">USD ${fmtN(P.pkgSub,2)}</td></tr>`:'';
-  const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">− USD ${fmtN(P.earlyAmt,2)}</td><td class="col-sub">− USD ${fmtN(P.earlyAmt,2)}</td></tr>`:'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} &mdash; ${P.discRoomPct}% Special Rate</td><td class="col-rate">− USD ${fmtN(P.roomDiscAmt,2)}</td><td class="col-sub">− USD ${fmtN(P.roomDiscAmt,2)}</td></tr>`:'';
-  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Nightly Rate</td><td class="col-rate">USD ${fmtN(P.perNight,0)} / night</td><td class="col-sub">USD ${fmtN(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; USD ${fmtN(P.perNightTax,0)} / night incl.</td></tr>`:'';
+    ?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate">${cFmt(P.roomRate,2)} / night</td><td class="col-sub">${cFmt(P.bales*P.roomRate,2)}</td></tr>`
+    :`<tr class="pt-item"><td class="col-item">5 Gladaks</td><td class="col-rate">${cFmt(P.roomRate,2)} / night</td><td class="col-sub">${cFmt(5*P.roomRate,2)}</td></tr><tr class="pt-item"><td class="col-item">${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}</td><td class="col-rate">${cFmt(P.roomRate,2)} / night</td><td class="col-sub">${cFmt((P.bales-5)*P.roomRate,2)}</td></tr>`;
+  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">${cFmt(P.parvDisc,2)}</td></tr>`:'';
+  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">${cFmt(P.buddDisc,2)}</td></tr>`:'';
+  const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Additional cost per person (Meals, Shala, Staff) &mdash; ${P.pkgCount} ${P.pkgCount===1?'person':'people'}</td><td class="col-rate">${cFmt(P.pkgRate,2)} / night</td><td class="col-sub">${cFmt(P.pkgSub,2)}</td></tr>`:'';
+  const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">− ${cFmt(P.earlyAmt,2)}</td><td class="col-sub">− ${cFmt(P.earlyAmt,2)}</td></tr>`:'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} &mdash; ${P.discRoomPct}% Special Rate</td><td class="col-rate">− ${cFmt(P.roomDiscAmt,2)}</td><td class="col-sub">− ${cFmt(P.roomDiscAmt,2)}</td></tr>`:'';
+  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Nightly Rate</td><td class="col-rate">${cFmt(P.perNight,0)} / night</td><td class="col-sub">${cFmt(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; ${cFmt(P.perNightTax,0)} / night incl.</td></tr>`:'';
   const extTotal=extraServicesTotal();
   const hasExtras=extraServices.length>0;
   const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal* TAX;
   const investAddonRows=hasExtras?extraServices.map(s=>{
     const t=s.unitUsd*s.qty;
     const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
-    const unitStr=s.unit==='flat fee'?'':` ${fmtN(s.unitUsd,0)} USD`;
-    return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label}${unitStr}${qtyStr}</span><span>USD ${fmtN(t,0)}</span></div>`;
+    const unitStr=s.unit==='flat fee'?'':` ${cFmt(s.unitUsd,0)}`;
+    return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label}${unitStr}${qtyStr}</span><span>${cFmt(t,0)}</span></div>`;
   }).join(''):'';
-  const investmentBlock=(showTotal||hasExtras)?`<div class="e-investment">${showTotal?`<div class="e-invest-row"><span>Package Total (${P.nights} Nights)<br><span style="font-size:7px;color:#B5AAA0;letter-spacing:.3px;font-weight:400;">excl. tax &amp; service fee</span></span><span>USD ${fmtN(P.totalEx,0)}</span></div>`:''
-  }${hasExtras?`<div class="e-invest-section-label">Enhancements</div>${investAddonRows}<div class="e-invest-row e-invest-addon-total"><span>Add-ons Total</span><span>+ USD ${fmtN(extTotal,0)}</span></div>`:''
-  }<div class="e-invest-grand"><span class="e-invest-grand-lbl">Total Investment</span><div style="text-align:right;"><span class="e-invest-grand-val">USD ${fmtN(hasExtras?grandIn:P.totalIn,0)}</span><div class="e-invest-grand-sub">incl. 15% tax &amp; service charge USD ${fmtN(hasExtras?grandIn-grandEx:P.totalIn-P.totalEx,0)}</div></div></div></div>`:'';
+  const investmentBlock=(showTotal||hasExtras)?`<div class="e-investment">${showTotal?`<div class="e-invest-row"><span>Package Total (${P.nights} Nights)<br><span style="font-size:7px;color:#B5AAA0;letter-spacing:.3px;font-weight:400;">excl. tax &amp; service fee</span></span><span>${cFmt(P.totalEx,0)}</span></div>`:''
+  }${hasExtras?`<div class="e-invest-section-label">Enhancements</div>${investAddonRows}<div class="e-invest-row e-invest-addon-total"><span>Add-ons Total</span><span>+ ${cFmt(extTotal,0)}</span></div>`:''
+  }<div class="e-invest-grand"><span class="e-invest-grand-lbl">Total Investment</span><div style="text-align:right;"><span class="e-invest-grand-val">${cFmt(hasExtras?grandIn:P.totalIn,0)}</span><div class="e-invest-grand-sub">incl. 15% tax &amp; service charge ${cFmt(hasExtras?grandIn-grandEx:P.totalIn-P.totalEx,0)}</div></div></div></div>`:'';
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
   const includedRows=[];for(let i=0;i<includedLines.length;i+=2){includedRows.push(`<tr><td><span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i]}</td><td>${includedLines[i+1]?`<span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i+1]}`:''}</td></tr>`);}
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
   const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
   const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
   const validLine=hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
-  const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (USD ${fmtN(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
+  const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (${cFmt(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
   const datesLine=fmtD(checkin)&&fmtD(checkout)?`<div class="e-header-dates">Check-in: ${fmtD(checkin)} &nbsp;·&nbsp; Check-out: ${fmtD(checkout)}</div>`:'';
   return`<div class="e-header">
     <img class="e-logo" src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
@@ -118,7 +125,7 @@ function buildOfferHTML(){
     <div class="e-pkg-body"><table class="ptable">
       <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate / Night</td><td class="col-sub">Subtotal</td></tr>
       ${baleRow}${parvRow}${buddRow}${pkgRow}
-      <tr class="pt-subtotal"><td class="col-item">Subtotal</td><td class="col-rate"></td><td class="col-sub">USD ${fmtN(P.stdSub,2)}</td></tr>
+      <tr class="pt-subtotal"><td class="col-item">Subtotal</td><td class="col-rate"></td><td class="col-sub">${cFmt(P.stdSub,2)}</td></tr>
       ${ebRow}${rdRow}
     </table>
     ${investmentBlock}</div>
@@ -155,17 +162,17 @@ function buildContractHTML(){
   const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
   const cR=(label,sub,amt)=>`<tr><td>${label}${sub?`<span style="display:block;font-size:9px;color:#9E948A;margin-top:2px;">${sub}</span>`:''}</td><td style="text-align:right;white-space:nowrap;">${amt}</td></tr>`;
   const bR=P.bales<=0?'':P.bales<=5
-    ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`USD ${fmtN(P.roomRate,0)}/night · ${nights} nights`,`USD ${fmtN(P.bales*P.roomRate*nights,2)}`)
-    :cR('5 Gladaks',`USD ${fmtN(P.roomRate,0)}/night · ${nights} nights`,`USD ${fmtN(5*P.roomRate*nights,2)}`)
-     +cR(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`USD ${fmtN(P.roomRate,0)}/night · ${nights} nights`,`USD ${fmtN((P.bales-5)*P.roomRate*nights,2)}`);
-  const pR=P.parvOn?cR('Parvati Villa',`USD ${fmtN(P.parvDisc,0)}/night · ${nights} nights`,`USD ${fmtN(P.parvDisc*nights,2)}`):'';
-  const buR=P.buddOn?cR('Buddha Villa',`USD ${fmtN(P.buddDisc,0)}/night · ${nights} nights`,`USD ${fmtN(P.buddDisc*nights,2)}`):'';
-  const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`USD ${fmtN(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,`USD ${fmtN(P.pkgSub*nights,2)}`):'';
-  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',`USD ${fmtN(t,0)}`);}).join('')}`:'';
-  const txR=cR('Tax (10%) + Service charge (5%)','',`USD ${fmtN(finalTotal-(hasExtrasC?grandExC:P.totalEx),2)}`);
-  const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– USD ${fmtN(P.earlyAmt*nights,2)}</strong>`):'';
-  const rdR=P.discRooms>0&&P.discRoomPct>0?cR(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– USD ${fmtN(P.roomDiscAmt*nights,2)}</strong>`):'';
-  const totR=`<tr style="background:#F5ECD7;font-weight:700;"><td>Total incl. tax &amp; service charge</td><td style="text-align:right;white-space:nowrap;">USD ${fmtN(finalTotal,2)}</td></tr>`;
+    ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate*nights,2))
+    :cR('5 Gladaks',`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(5*P.roomRate*nights,2))
+     +cR(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt((P.bales-5)*P.roomRate*nights,2));
+  const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
+  const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
+  const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
+  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
+  const txR=cR('Tax (10%) + Service charge (5%)','',cFmt(finalTotal-(hasExtrasC?grandExC:P.totalEx),2));
+  const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
+  const rdR=P.discRooms>0&&P.discRoomPct>0?cR(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
+  const totR=`<tr style="background:#F5ECD7;font-weight:700;"><td>Total incl. tax &amp; service charge</td><td style="text-align:right;white-space:nowrap;">${cFmt(finalTotal,2)}</td></tr>`;
   const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td style="font-size:9.5px;font-weight:700;">IDR equivalent<span style="display:block;font-size:8px;font-weight:400;opacity:.75;margin-top:2px;">1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue</span></td><td style="text-align:right;white-space:nowrap;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
   return`<div class="contract-doc">
   <div class="c-hd">
@@ -186,7 +193,7 @@ function buildContractHTML(){
     <p>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
     <p>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p></div>
   <div class="c-sec"><div class="c-sec-hd">B) Pricing & Inclusions</div>
-    <p>All prices in this Agreement are stated in USD. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
+    <p>All prices in this Agreement are stated in ${window.offerCurrency||'USD'}. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
     <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
     <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
     <table class="c-table"><thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead>
@@ -201,10 +208,10 @@ function buildContractHTML(){
     <p>All bank and transfer fees are the responsibility of the Retreat Organizer.</p></div>
   <div class="c-sec"><div class="c-sec-hd">D) Payment Schedule</div>
     <p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p>
-    <table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (USD)</th><th>Due Date</th></tr></thead>
-    <tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>USD ${fmtN(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr>
-    <tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>USD ${fmtN(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr>
-    <tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>USD ${fmtN(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table>
+    <table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (${window.offerCurrency||'USD'})</th><th>Due Date</th></tr></thead>
+    <tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>${cFmt(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr>
+    <tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>${cFmt(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr>
+    <tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>${cFmt(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table>
     <p>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p></div>
   <div class="c-sec"><div class="c-sec-hd">E) Cancellation & Refund Policy</div>
     <p><strong>Standard Bookings:</strong> Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees.</p>
@@ -325,7 +332,7 @@ function renderExtraServices() {
         ${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}
         <input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:70px;" onchange="updateExtraPrice(${s.id}, this.value)" onclick="this.select()" title="USD per unit">
       </div>
-      <div class="extra-tag-price">USD ${fmtN(s.unitUsd * s.qty, 0)}</div>
+      <div class="extra-tag-price">${cFmt(s.unitUsd * s.qty, 0)}</div>
       <button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button>
     </div>
   `).join('');
@@ -333,7 +340,7 @@ function renderExtraServices() {
   const total = extraServices.reduce((sum, s) => sum + s.unitUsd * s.qty, 0);
   if (totalEl) {
     totalEl.style.display = 'block';
-    totalEl.textContent = `Extra Services Total: USD ${fmtN(total, 0)}`;
+    totalEl.textContent = `Extra Services Total: ${cFmt(total, 0)}`;
   }
 }
 
@@ -346,7 +353,7 @@ function extraServicesHTML() {
   const rows = extraServices.map(s => {
     const total = s.unitUsd * s.qty;
     const qtyStr = s.unit === 'flat fee' ? '' : ` × ${s.qty}`;
-    return `<tr class="pt-item"><td class="col-item">${s.label}</td><td class="col-rate" style="color:#555;">USD ${fmtN(s.unitUsd,0)}${qtyStr}</td><td class="col-sub">USD ${fmtN(total,0)}</td></tr>`;
+    return `<tr class="pt-item"><td class="col-item">${s.label}</td><td class="col-rate" style="color:#555;">${cFmt(s.unitUsd,0)}${qtyStr}</td><td class="col-sub">${cFmt(total,0)}</td></tr>`;
   }).join('');
   return `<tr class="pt-colhead"><td colspan="3" style="padding-top:8px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;">Extra Services</td></tr>${rows}`;
 }

@@ -13,12 +13,15 @@ export default async function handler(req, res) {
     const data = await resp.json();
     const idr = data.rates?.IDR;
     if (!idr) throw new Error('IDR rate not found in response');
+    const MAJORS = ['IDR','EUR','GBP','AUD','SGD','CHF','CAD'];
+    const rates = {};
+    for (const c of MAJORS) { if (data.rates?.[c]) rates[c] = data.rates[c]; }
 
     // Cache for 1 hour on Vercel edge
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
-    return res.status(200).json({ rate: Math.round(idr) });
+    return res.status(200).json({ rate: Math.round(idr), rates });
   } catch (err) {
     // Return a fallback rate so the app still works if the API is down
-    return res.status(200).json({ rate: 17085, fallback: true, error: err.message });
+    return res.status(200).json({ rate: 17085, rates: { IDR: 17085 }, fallback: true, error: err.message });
   }
 }

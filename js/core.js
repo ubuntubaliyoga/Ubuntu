@@ -344,20 +344,46 @@ window.addEventListener('load',()=>{
   setTimeout(()=>{ if(typeof loadCRM==='function') loadCRM(); }, 300);
 });
 
+window.offerCurrency     = 'USD';
+window.offerCurrencyRate = 1.0;
+window._allRates         = {};
+
 (async()=>{
   const dot=$('idr-dot'),info=$('idr-info');
   try{
     const r=await fetch('/api/exchange-rate');
     const d=await r.json();
     $('f-idrrate').value=d.rate;
+    window._allRates=d.rates||{IDR:d.rate};
     const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     if(d.fallback){dot.className='idr-dot fallback';info.textContent=`⚠ Fallback rate · ${now}`;}
     else{dot.className='idr-dot live';info.textContent=`Live · ${now}`;}
+    updateCurrencyTicker();
   }catch{
     if(dot)dot.className='idr-dot error';
     if(info)info.textContent='Could not fetch — using default rate';
   }
 })();
+
+function onCurrencyChange(code){
+  window.offerCurrency=code;
+  window.offerCurrencyRate=code==='USD'?1.0:(window._allRates?.[code]||1.0);
+  updateCurrencyTicker();
+  if(typeof activeDealTab!=='undefined'){
+    if(activeDealTab==='offer'&&typeof renderOffer==='function')renderOffer();
+    if(activeDealTab==='contract'&&typeof renderContract==='function')renderContract();
+  }
+  if(typeof renderExtraServices==='function')renderExtraServices();
+}
+
+function updateCurrencyTicker(){
+  const el=$('curr-ticker');
+  if(!el)return;
+  const code=window.offerCurrency||'USD';
+  if(code==='USD'){el.textContent='Base currency';return;}
+  const rate=window._allRates?.[code];
+  el.textContent=rate?`1 USD = ${rate.toFixed(4)} ${code}`:'Rate unavailable';
+}
 
 function toggleMoreDetails(btn){
   const details=btn.nextElementSibling;
