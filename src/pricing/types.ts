@@ -49,6 +49,9 @@ declare global {
     removePeTemplate(btn: HTMLElement): void
     enforceMutualExclusion(checkbox: HTMLInputElement): void
     recalculatePeExtra(id: number, pax: number): Promise<void>
+    sendPeChat(): void
+    applyPeAction(id: string): void
+    dismissPeAction(id: string): void
     _pricingData?: PricingData
     extraServices?: PeExtraService[]
     renderExtraServices?(): void

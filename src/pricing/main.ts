@@ -5,6 +5,7 @@ import {
   enforceMutualExclusion
 } from './admin-ui'
 import { initDealsUI, recalculatePeExtra } from './deals-ui'
+import { sendPeChat, applyPeAction, dismissPeAction } from './chat-ui'
 
 window.openPricingAdmin      = openAdmin
 window.closePricingAdmin     = closeAdmin
@@ -16,6 +17,9 @@ window.addPeTemplate         = addPeTemplate
 window.removePeTemplate      = removePeTemplate
 window.enforceMutualExclusion = enforceMutualExclusion
 window.recalculatePeExtra    = recalculatePeExtra
+window.sendPeChat            = sendPeChat
+window.applyPeAction         = applyPeAction
+window.dismissPeAction       = dismissPeAction
 
 async function init(): Promise<void> {
   try {
