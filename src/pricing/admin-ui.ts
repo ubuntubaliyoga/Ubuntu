@@ -208,14 +208,21 @@ function renderTemplates(templates: ProductTemplate[], library: CostItem[]): str
 }
 
 function renderTemplateCard(t: ProductTemplate, library: CostItem[]): string {
-  const checks = (cls: string, refs: string[]) => library.map(item => `
-    <label class="pe-check-row">
-      <input type="checkbox" class="${cls}" value="${esc(item.id)}"
-        ${refs.includes(item.id) ? 'checked' : ''}
-        onchange="window.enforceMutualExclusion(this)">
-      ${esc(item.name)} <span class="pe-check-id">${esc(item.id)}</span>
-    </label>
-  `).join('')
+  const costRows = library.map(item => {
+    const isFixed = t.fixed_cost_refs.includes(item.id)
+    const included = isFixed || t.variable_cost_refs.includes(item.id)
+    return `
+      <div class="pe-check-row">
+        <input type="checkbox" class="pe-include-check" value="${esc(item.id)}" ${included ? 'checked' : ''}
+          onchange="this.closest('.pe-check-row').querySelector('.pe-fixed-label').classList.toggle('pe-fixed-dim',!this.checked)">
+        <span class="pe-check-name">${esc(item.name)} <span class="pe-check-id">${esc(item.id)}</span></span>
+        <label class="pe-fixed-label${included ? '' : ' pe-fixed-dim'}">
+          <input type="checkbox" class="pe-fixed-check" value="${esc(item.id)}" ${isFixed ? 'checked' : ''}>
+          fixed ÷pax
+        </label>
+      </div>
+    `
+  }).join('')
 
   return `
     <div class="pe-template-card" data-id="${esc(t.id)}">
@@ -231,14 +238,9 @@ function renderTemplateCard(t: ProductTemplate, library: CostItem[]): string {
         <button class="pe-del-btn" onclick="window.removePeTemplate(this)" title="Delete template">✕</button>
       </div>
       <div class="pe-costs-section">
-        <div class="pe-costs-label">Fixed Costs <span class="pe-costs-hint">(shared ÷ pax)</span></div>
-        <div class="pe-cost-note">One cost for the whole group, split equally — e.g. transport is IDR 300,000 for one car regardless of group size, so 5 people each pay IDR 60,000.</div>
-        <div class="pe-checks">${checks('pe-fixed-check', t.fixed_cost_refs)}</div>
-      </div>
-      <div class="pe-costs-section">
-        <div class="pe-costs-label">Variable Costs <span class="pe-costs-hint">(per person)</span></div>
-        <div class="pe-cost-note">Each person pays this — e.g. every participant needs their own entrance ticket, lunch, and offering.</div>
-        <div class="pe-checks">${checks('pe-var-check', t.variable_cost_refs)}</div>
+        <div class="pe-costs-label">Costs</div>
+        <div class="pe-cost-note">Tick to include. Check "fixed ÷pax" for group costs split by headcount (e.g. transport); leave unticked for per-person costs (e.g. entrance fee, guide).</div>
+        <div class="pe-checks">${costRows}</div>
       </div>
     </div>
   `
@@ -260,8 +262,13 @@ function readDataFromDOM(): PricingData {
     const id     = card.dataset.id!
     const name   = (card.querySelector('.pe-tname')  as HTMLInputElement)?.value.trim() || id
     const markup = parseFloat((card.querySelector('.pe-markup') as HTMLInputElement)?.value) || 1.0
-    const fixed_cost_refs    = Array.from(card.querySelectorAll<HTMLInputElement>('.pe-fixed-check:checked')).map(el => el.value)
-    const variable_cost_refs = Array.from(card.querySelectorAll<HTMLInputElement>('.pe-var-check:checked')).map(el => el.value)
+    const fixed_cost_refs: string[] = []
+    const variable_cost_refs: string[] = []
+    card.querySelectorAll<HTMLInputElement>('.pe-include-check:checked').forEach(el => {
+      const fixedBox = card.querySelector<HTMLInputElement>(`.pe-fixed-check[value="${el.value}"]`)
+      if (fixedBox?.checked) fixed_cost_refs.push(el.value)
+      else variable_cost_refs.push(el.value)
+    })
     templates.push({ id, name, markup, fixed_cost_refs, variable_cost_refs })
   })
 

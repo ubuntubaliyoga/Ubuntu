@@ -507,11 +507,13 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
 .pe-template-card-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;}
 .pe-costs-section{margin-top:12px;}
 .pe-costs-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-.pe-costs-hint{font-weight:400;text-transform:none;letter-spacing:0;}
-.pe-checks{display:flex;flex-direction:column;gap:4px;}
-.pe-check-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;padding:3px 0;}
-.pe-check-row input[type=checkbox]{accent-color:var(--gold);width:14px;height:14px;flex-shrink:0;}
+.pe-checks{display:flex;flex-direction:column;gap:2px;}
+.pe-check-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);padding:4px 0;}
+.pe-check-row input[type=checkbox]{accent-color:var(--gold);width:14px;height:14px;flex-shrink:0;cursor:pointer;}
+.pe-check-name{flex:1;min-width:0;}
 .pe-check-id{font-size:10px;font-family:monospace;color:var(--muted);margin-left:2px;}
+.pe-fixed-label{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);white-space:nowrap;cursor:pointer;flex-shrink:0;}
+.pe-fixed-dim{opacity:.3;pointer-events:none;}
 .pe-cost-note{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;}
 .pe-chat{border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;}
 .pe-chat-header{display:flex;align-items:baseline;justify-content:space-between;padding:10px 20px 6px;font-size:12px;font-weight:600;color:var(--dark);}
