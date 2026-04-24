@@ -7,7 +7,8 @@ let crmCollapsed = {};
 let crmLoaded = false;
 let _moveLeadId = null; // id of lead selected for tab-move (long-press pattern)
 
-const REACHED_OUT_OPTIONS = ['Email', 'Instagram', 'LinkedIn', 'WhatsApp', 'In Person', 'Cold Call'];
+const NOT_REACHED = 'Not reached out yet';
+const REACHED_OUT_OPTIONS = [NOT_REACHED, 'Email', 'Instagram', 'LinkedIn', 'WhatsApp', 'In Person', 'Cold Call'];
 
 const CLOSED_STATUSES = ['SALE CLOSED', 'Converted to Customer'];
 const WARM_STATUSES   = ['WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY', 'Booked a call', 'Sent an offer'];
@@ -308,8 +309,9 @@ function crmDetailHTML(c) {
       <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Reached out via</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;" id="reached-out-tags">
         ${allOptions.map(opt => {
-          const active = reached.includes(opt);
-          return `<button class="reach-btn${active ? ' active' : ''}" data-opt="${opt}"
+          const isNotYet = opt === NOT_REACHED;
+          const active   = isNotYet ? reached.filter(r => r !== NOT_REACHED).length === 0 : reached.includes(opt);
+          return `<button class="reach-btn${active ? ' active' : ''}${isNotYet ? ' not-yet' : ''}" data-opt="${opt}"
             onclick="toggleReachedOut('${c.id}','${c.db}',this)">${opt}</button>`;
         }).join('')}
       </div>
@@ -389,18 +391,38 @@ function crmEditHTML(c) {
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
 
 function toggleReachedOut(id, db, btn) {
-  btn.classList.toggle('active');
-  if (btn.classList.contains('active')) {
-    btn.style.background = 'var(--gold)';
-    btn.style.borderColor = 'var(--gold)';
-    btn.style.color = 'var(--dark)';
+  const container  = btn.closest('#reached-out-tags');
+  const isNotYet   = btn.dataset.opt === NOT_REACHED;
+  const activating = !btn.classList.contains('active');
+
+  if (isNotYet) {
+    // "Not reached out yet" — deactivate all real options, activate itself
+    container.querySelectorAll('button').forEach(b => {
+      b.classList.remove('active');
+      b.style.cssText = '';
+    });
+    btn.classList.add('active');
   } else {
-    btn.style.background = 'transparent';
-    btn.style.borderColor = 'var(--border)';
-    btn.style.color = 'var(--muted)';
+    // Real outreach method toggled
+    btn.classList.toggle('active');
+    if (btn.classList.contains('active')) {
+      btn.style.background = 'var(--gold)';
+      btn.style.borderColor = 'var(--gold)';
+      btn.style.color = 'var(--dark)';
+      spawnPlants(btn);
+    } else {
+      btn.style.cssText = '';
+    }
+    // Sync "Not reached out yet" — active only if no real option is active
+    const notYetBtn = container.querySelector(`[data-opt="${NOT_REACHED}"]`);
+    const anyRealActive = Array.from(container.querySelectorAll('button'))
+      .some(b => b.dataset.opt !== NOT_REACHED && b.classList.contains('active'));
+    if (notYetBtn) notYetBtn.classList.toggle('active', !anyRealActive);
   }
-  const container = btn.closest('#reached-out-tags');
-  const selected = Array.from(container.querySelectorAll('button.active')).map(b => b.dataset.opt);
+
+  const selected = Array.from(container.querySelectorAll('button.active'))
+    .map(b => b.dataset.opt)
+    .filter(o => o !== NOT_REACHED);
   const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
   crmRender();
@@ -408,6 +430,21 @@ function toggleReachedOut(id, db, btn) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
+}
+
+function spawnPlants(btn) {
+  const plants = ['🌱','🌿','🌱','🌿','🌱'];
+  const rect   = btn.getBoundingClientRect();
+  plants.forEach((p, i) => {
+    const el = document.createElement('span');
+    el.className = 'plant-pop';
+    el.textContent = p;
+    el.style.left = (20 + (i * 14) - 10 + Math.random() * 10) + 'px';
+    el.style.top  = '-4px';
+    el.style.animationDelay = (i * 80) + 'ms';
+    btn.appendChild(el);
+    setTimeout(() => el.remove(), 900 + i * 80);
+  });
 }
 
 function addCustomReachedOut(id, db) {
