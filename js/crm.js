@@ -200,9 +200,10 @@ function buildList(items) {
         ${stagePill || offerPill ? `<div style="display:flex;gap:5px;margin-top:6px;">${stagePill}${offerPill}</div>` : ''}
       </div>
       <div class="crm-card-right">
-        ${wa    ? `<a class="crm-action-btn crm-wa-btn"  href="${wa}"        target="_blank" onclick="event.stopPropagation()">WA</a>`  : ''}
-        ${igUrl ? `<a class="crm-action-btn crm-ig-btn"  href="${igUrl}"     target="_blank" onclick="event.stopPropagation()">IG</a>`  : ''}
-        ${c.website ? `<a class="crm-action-btn crm-web-btn" href="${c.website}" target="_blank" onclick="event.stopPropagation()">www</a>` : ''}
+        ${wa       ? `<a class="crm-action-btn crm-wa-btn"  href="${wa}"        target="_blank" onclick="event.stopPropagation()">WA</a>`  : ''}
+        ${igUrl    ? `<a class="crm-action-btn crm-ig-btn"  href="${igUrl}"     target="_blank" onclick="event.stopPropagation()">IG</a>`  : ''}
+        ${c.website? `<a class="crm-action-btn crm-web-btn" href="${c.website}" target="_blank" onclick="event.stopPropagation()">www</a>` : ''}
+        ${c.email  ? `<button class="crm-action-btn crm-em-btn" onclick="event.stopPropagation();openEmailModal('${c.id}')">✉</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -786,4 +787,36 @@ async function saveNewLead() {
     document.getElementById('new-lead-modal').classList.remove('open');
     loadCRM(true);
   } catch (e) { dbg('Create failed: ' + e.message); alert('Could not save: ' + e.message); }
+}
+
+// ── EMAIL MODAL ───────────────────────────────────────────────────────────────
+function openEmailModal(leadId) {
+  const lead = [...allLeads(), ...(crmData.converted || [])].find(x => x.id === leadId);
+  if (!lead?.email) return;
+  const modal = document.getElementById('email-modal');
+  const addrEl = document.getElementById('email-modal-addr');
+  const bodyEl = document.getElementById('email-modal-body');
+  if (!modal || !addrEl || !bodyEl) return;
+  addrEl.textContent = lead.email;
+  bodyEl.value = '';
+  modal._email = lead.email;
+  modal.classList.add('open');
+  setTimeout(() => bodyEl.focus(), 120);
+}
+
+function closeEmailModal() {
+  document.getElementById('email-modal')?.classList.remove('open');
+}
+
+function copyEmailAddr() {
+  const email = document.getElementById('email-modal')._email || '';
+  navigator.clipboard.writeText(email).catch(() => {});
+  const btn = document.getElementById('email-copy-btn');
+  if (btn) { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1800); }
+}
+
+function sendEmail() {
+  const email = document.getElementById('email-modal')._email || '';
+  const body  = (document.getElementById('email-modal-body')?.value || '').trim();
+  window.location.href = `mailto:${encodeURIComponent(email)}${body ? '?body=' + encodeURIComponent(body) : ''}`;
 }

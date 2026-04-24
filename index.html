@@ -507,6 +507,23 @@ Airport pick-up available on request.</textarea>
   <div class="ios-modal-box"><div id="crm-modal-content"></div></div>
 </div>
 
+<!-- EMAIL MODAL -->
+<div class="ios-modal" id="email-modal" onclick="if(event.target===this)closeEmailModal()">
+  <div class="ios-modal-box" style="padding-bottom:36px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--dark);">Email</div>
+      <button onclick="closeEmailModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0;line-height:1;">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:14px;">
+      <span id="email-modal-addr" style="flex:1;font-size:14px;color:var(--text);word-break:break-all;"></span>
+      <button id="email-copy-btn" onclick="copyEmailAddr()" style="flex-shrink:0;padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text);white-space:nowrap;">Copy</button>
+    </div>
+    <textarea id="email-modal-body" placeholder="Write your message here…"
+      style="width:100%;min-height:160px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;resize:vertical;line-height:1.6;margin-bottom:14px;"></textarea>
+    <button onclick="sendEmail()" style="width:100%;padding:16px;background:var(--dark);border:none;border-radius:100px;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;color:#F5ECD7;cursor:pointer;">Send Email</button>
+  </div>
+</div>
+
 <!-- NEW LEAD MODAL -->
 <div class="ios-modal" id="new-lead-modal" onclick="closeNewLeadModal(event)">
   <div class="ios-modal-box">

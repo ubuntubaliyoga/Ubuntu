@@ -512,7 +512,7 @@ async function writeToNotion(leads, city, blocklist, log) {
             'Location':       { rich_text:    [{ text: { content: lead.location || mapsLink } }] },
             'Insta':          { rich_text:    [{ text: { content: lead.insta || '' } }] },
             'Contact':        { rich_text:    [{ text: { content: 'Kevin' } }] },
-            'Reached out on': { multi_select: [{ name: 'WhatsApp' }] },
+            'Reached out on': { multi_select: [] },
             'Engaged first':  { date:         { start: today } },
           },
         }),
