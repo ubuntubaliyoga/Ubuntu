@@ -80,11 +80,12 @@ function buildOfferHTML(){
   const investAddonRows=hasExtras?extraServices.map(s=>{
     const t=s.unitUsd*s.qty;
     const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
-    return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label}${qtyStr}</span><span>USD ${fmtN(t,0)}</span></div>`;
+    const unitStr=s.unit==='flat fee'?'':` ${fmtN(s.unitUsd,0)} USD`;
+    return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label}${unitStr}${qtyStr}</span><span>USD ${fmtN(t,0)}</span></div>`;
   }).join(''):'';
   const investmentBlock=(showTotal||hasExtras)?`<div class="e-investment">${showTotal?`<div class="e-invest-row"><span>Package Total (${P.nights} Nights)<br><span style="font-size:7px;color:#B5AAA0;letter-spacing:.3px;font-weight:400;">excl. tax &amp; service fee</span></span><span>USD ${fmtN(P.totalEx,0)}</span></div>`:''
   }${hasExtras?`<div class="e-invest-section-label">Enhancements</div>${investAddonRows}<div class="e-invest-row e-invest-addon-total"><span>Add-ons Total</span><span>+ USD ${fmtN(extTotal,0)}</span></div>`:''
-  }<div class="e-invest-grand"><span class="e-invest-grand-lbl">Total Investment</span><div style="text-align:right;"><span class="e-invest-grand-val">USD ${fmtN(hasExtras?grandIn:P.totalIn,0)}</span><div class="e-invest-grand-sub">incl. tax &amp; service charge</div></div></div></div>`:'';
+  }<div class="e-invest-grand"><span class="e-invest-grand-lbl">Total Investment</span><div style="text-align:right;"><span class="e-invest-grand-val">USD ${fmtN(hasExtras?grandIn:P.totalIn,0)}</span><div class="e-invest-grand-sub">incl. 15% tax &amp; service charge USD ${fmtN(hasExtras?grandIn-grandEx:P.totalIn-P.totalEx,0)}</div></div></div></div>`:'';
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
   const includedRows=[];for(let i=0;i<includedLines.length;i+=2){includedRows.push(`<tr><td><span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i]}</td><td>${includedLines[i+1]?`<span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i+1]}`:''}</td></tr>`);}
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
