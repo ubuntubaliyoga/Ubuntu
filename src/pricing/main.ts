@@ -1,27 +1,26 @@
 import { loadPricingData } from './store'
-import { initAdminUI, openAdmin, closeAdmin, switchPeTab, savePricingAdmin, addPeLibraryRow, removePeLibraryRow, addPeTemplate, removePeTemplate, enforceMutualExclusion } from './admin-ui'
-import { initDealsUI, recalculatePeExtra, getSpppSync } from './deals-ui'
+import {
+  openAdmin, closeAdmin, switchPeTab, savePricingAdmin,
+  addPeLibraryRow, removePeLibraryRow, addPeTemplate, removePeTemplate,
+  enforceMutualExclusion
+} from './admin-ui'
+import { initDealsUI, recalculatePeExtra } from './deals-ui'
 
-// Expose all functions needed by HTML onclick handlers
-;(window as any).openPricingAdmin = openAdmin
-;(window as any).closePricingAdmin = closeAdmin
-;(window as any).switchPeTab = switchPeTab
-;(window as any).savePricingAdmin = savePricingAdmin
-;(window as any).addPeLibraryRow = addPeLibraryRow
-;(window as any).removePeLibraryRow = removePeLibraryRow
-;(window as any).addPeTemplate = addPeTemplate
-;(window as any).removePeTemplate = removePeTemplate
-;(window as any).enforceMutualExclusion = enforceMutualExclusion
-;(window as any).recalculatePeExtra = recalculatePeExtra
-
-// Synchronous SPPP lookup for offer.js addExtraService
-;(window as any).getSpppSync = getSpppSync
+window.openPricingAdmin      = openAdmin
+window.closePricingAdmin     = closeAdmin
+window.switchPeTab           = switchPeTab
+window.savePricingAdmin      = savePricingAdmin
+window.addPeLibraryRow       = addPeLibraryRow
+window.removePeLibraryRow    = removePeLibraryRow
+window.addPeTemplate         = addPeTemplate
+window.removePeTemplate      = removePeTemplate
+window.enforceMutualExclusion = enforceMutualExclusion
+window.recalculatePeExtra    = recalculatePeExtra
 
 async function init(): Promise<void> {
   try {
     const data = await loadPricingData()
-    ;(window as any)._pricingData = data
-    initAdminUI(data)
+    window._pricingData = data
     initDealsUI(data)
   } catch (e) {
     console.error('[PricingEngine] Failed to load pricing data:', e)

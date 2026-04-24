@@ -370,10 +370,9 @@ function renderExtraServices() {
     `;
   }).join('');
 
-  const total = extraServices.reduce((sum, s) => sum + s.unitUsd * s.qty, 0);
   if (totalEl) {
     totalEl.style.display = 'block';
-    totalEl.textContent = `Extra Services Total: ${cFmt(total, 0)}`;
+    totalEl.textContent = `Extra Services Total: ${cFmt(extraServicesTotal(), 0)}`;
   }
 }
 

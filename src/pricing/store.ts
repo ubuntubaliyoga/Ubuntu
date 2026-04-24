@@ -22,11 +22,3 @@ export async function savePricingData(data: PricingData): Promise<void> {
   }
   cache = data
 }
-
-export function invalidateCache(): void {
-  cache = null
-}
-
-export function getCache(): PricingData | null {
-  return cache
-}

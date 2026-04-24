@@ -24,7 +24,6 @@ export interface PricingResult {
   sellingPrice: number // IDR, after markup + Math.ceil
 }
 
-// Extra service object stored in offer.js extraServices array
 export interface PeExtraService {
   id: number
   serviceId: string
@@ -33,7 +32,26 @@ export interface PeExtraService {
   pricingEngine: true
   templateId: string
   pax: number
-  spppIdr: number // Selling Price Per Person in IDR
+  spppIdr: number
   qty: 1
-  unitUsd: number // total USD (spppIdr * pax / idrRate), for offer rendering
+  unitUsd: number
+}
+
+declare global {
+  interface Window {
+    openPricingAdmin(): void
+    closePricingAdmin(): void
+    switchPeTab(tab: 'library' | 'templates'): void
+    savePricingAdmin(): void
+    addPeLibraryRow(): void
+    removePeLibraryRow(btn: HTMLElement): void
+    addPeTemplate(): void
+    removePeTemplate(btn: HTMLElement): void
+    enforceMutualExclusion(checkbox: HTMLInputElement): void
+    recalculatePeExtra(id: number, pax: number): Promise<void>
+    _pricingData?: PricingData
+    extraServices?: PeExtraService[]
+    renderExtraServices?(): void
+    markDraftActive?(): void
+  }
 }
