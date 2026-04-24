@@ -645,6 +645,9 @@ Airport pick-up available on request.</textarea>
   <button class="drawer-item" onclick="closeDrawer();openTemplateEdit()">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Edit Template
   </button>
+  <button class="drawer-item" onclick="closeDrawer();openPricingAdmin()">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cost Calculation
+  </button>
   <button class="drawer-item" onclick="closeDrawer();openMarketing()">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Marketing Material
   </button>
@@ -740,11 +743,15 @@ Airport pick-up available on request.</textarea>
   </div>
 </div>
 
+<!-- PRICING ENGINE OVERLAY -->
+<div id="pricing-overlay"></div>
+
 <script src="/js/fx.js"></script>
 <script src="/js/core.js"></script>
 <script src="/js/offer.js"></script>
 <script src="/js/drafts.js"></script>
 <script src="/js/crm.js"></script>
 <script src="/js/bizdev.js"></script>
+<script src="/js/pricing-engine.js"></script>
 </body>
 </html>

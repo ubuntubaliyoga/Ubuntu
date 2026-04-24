@@ -1,0 +1,19 @@
+{
+  "library": [
+    { "id": "CAR_BALI", "name": "Standard Transport", "cost": 0 },
+    { "id": "JATILUWIH_ENTRANCE", "name": "Jatiluwih Entrance Fee", "cost": 0 },
+    { "id": "BATU_KARU_TICKET", "name": "Batu Karu Temple Ticket", "cost": 0 },
+    { "id": "TREKKING_GUIDE", "name": "Trekking Guide", "cost": 0 },
+    { "id": "LUNCH_STD", "name": "Standard Lunch", "cost": 0 },
+    { "id": "OFFERING", "name": "Offering", "cost": 0 }
+  ],
+  "templates": [
+    {
+      "id": "TREK_SPIRIT",
+      "name": "Trekking Spiritual Purification",
+      "fixed_cost_refs": ["CAR_BALI"],
+      "variable_cost_refs": ["JATILUWIH_ENTRANCE", "BATU_KARU_TICKET", "TREKKING_GUIDE", "LUNCH_STD", "OFFERING"],
+      "markup": 1.4
+    }
+  ]
+}

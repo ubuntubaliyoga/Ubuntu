@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node -e \"const fs=require('fs');let sw=fs.readFileSync('sw.js','utf8');sw=sw.replace('BUILD_TIMESTAMP',new Date().toISOString());fs.writeFileSync('sw.js',sw);\"",
+  "buildCommand": "node -e \"const fs=require('fs');let sw=fs.readFileSync('sw.js','utf8');sw=sw.replace('BUILD_TIMESTAMP',new Date().toISOString());fs.writeFileSync('sw.js',sw);\" && npm run build",
   "outputDirectory": ".",
   "crons": [{ "path": "/api/drift-detector", "schedule": "0 0 * * *" }],
   "functions": {

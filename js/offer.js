@@ -87,6 +87,7 @@ function buildOfferHTML(){
   const hasExtras=extraServices.length>0;
   const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal* TAX;
   const investAddonRows=hasExtras?extraServices.map(s=>{
+    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label} (${s.pax} pax &middot; IDR ${fmtN(s.spppIdr,0)}/person)</span><span>${cFmt(t,0)}</span></div>`;}
     const t=s.unitUsd*s.qty;
     const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
     const unitStr=s.unit==='flat fee'?'':` ${cFmt(s.unitUsd,0)}`;
@@ -168,7 +169,7 @@ function buildContractHTML(){
   const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
   const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
   const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
-  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
+  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR(`${s.label} (${s.pax} pax)`,`IDR ${fmtN(s.spppIdr,0)}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
   const txR=cR('Tax (10%) + Service charge (5%)','',cFmt(finalTotal-(hasExtrasC?grandExC:P.totalEx),2));
   const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
   const rdR=P.discRooms>0&&P.discRoomPct>0?cR(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
@@ -281,9 +282,21 @@ function addExtraService(val) {
   if (!val) return;
   const parts = val.split('|');
   const id = parts[0], label = parts[1];
+
+  // Pricing engine template (pe_ prefix)
+  if (id.startsWith('pe_')) {
+    const templateId = id.slice(3);
+    const item = { id: Date.now(), serviceId: id, label, unit: 'per person',
+      pricingEngine: true, templateId, pax: 1, spppIdr: 0, qty: 1, unitUsd: 0 };
+    extraServices.push(item);
+    renderExtraServices();
+    if (window.recalculatePeExtra) window.recalculatePeExtra(item.id, 1);
+    markDraftActive();
+    return;
+  }
+
   let unitUsd = parseFloat(parts[2]) || 0;
   const unit = parts[3] || 'per unit';
-
   let finalLabel = label;
   if (id === 'custom') {
     finalLabel = prompt('Service name:') || 'Custom Service';
@@ -324,18 +337,38 @@ function renderExtraServices() {
     return;
   }
 
-  list.innerHTML = extraServices.map(s => `
-    <div class="extra-tag">
-      <div class="extra-tag-label">${s.label}</div>
-      <div class="extra-tag-qty">
-        <span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>
-        ${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}
-        <input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:70px;" onchange="updateExtraPrice(${s.id}, this.value)" onclick="this.select()" title="USD per unit">
+  list.innerHTML = extraServices.map(s => {
+    if (s.pricingEngine) {
+      const totalUsd = getIdrRate() > 0 ? (s.spppIdr * s.pax) / getIdrRate() : 0;
+      const priceLabel = s.spppIdr ? `IDR ${fmtN(s.spppIdr, 0)}/pax` : '—';
+      return `
+        <div class="extra-tag">
+          <div class="extra-tag-label">${s.label}</div>
+          <div class="extra-tag-qty">
+            <span style="font-size:11px;color:var(--muted);">Pax</span>
+            <input type="number" value="${s.pax}" min="1" style="width:54px;"
+              onchange="window.recalculatePeExtra && window.recalculatePeExtra(${s.id}, parseInt(this.value)||1)"
+              onclick="this.select()">
+            <span style="font-size:11px;color:var(--muted);min-width:100px;">${priceLabel}</span>
+          </div>
+          <div class="extra-tag-price">${totalUsd ? cFmt(totalUsd, 0) : '—'}</div>
+          <button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button>
+        </div>
+      `;
+    }
+    return `
+      <div class="extra-tag">
+        <div class="extra-tag-label">${s.label}</div>
+        <div class="extra-tag-qty">
+          <span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>
+          ${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}
+          <input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:70px;" onchange="updateExtraPrice(${s.id}, this.value)" onclick="this.select()" title="USD per unit">
+        </div>
+        <div class="extra-tag-price">${cFmt(s.unitUsd * s.qty, 0)}</div>
+        <button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button>
       </div>
-      <div class="extra-tag-price">${cFmt(s.unitUsd * s.qty, 0)}</div>
-      <button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const total = extraServices.reduce((sum, s) => sum + s.unitUsd * s.qty, 0);
   if (totalEl) {
@@ -345,7 +378,10 @@ function renderExtraServices() {
 }
 
 function extraServicesTotal() {
-  return extraServices.reduce((sum, s) => sum + s.unitUsd * s.qty, 0);
+  return extraServices.reduce((sum, s) => {
+    if (s.pricingEngine) return sum + (getIdrRate() > 0 ? (s.spppIdr * s.pax) / getIdrRate() : 0);
+    return sum + s.unitUsd * s.qty;
+  }, 0);
 }
 
 function extraServicesHTML() {
