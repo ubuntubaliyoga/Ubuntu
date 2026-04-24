@@ -9,7 +9,7 @@ import {
   extractPhoneFromText, extractPhoneFromHtml,
   isLinkInBioUrl, extractAllLinkInBio, shortUrl,
   scrapeLinkInBio, fetchContactDeep, braveSearchPhone,
-} from './enrich-helpers.js';
+} from '../lib/enrich-helpers.js';
 
 const BLOCKLIST_PAGE_ID = '333622d3-e574-8159-b0d7-d4998af4cf2c';
 const CRM_DB_ID         = '34a622d3e57481738b3ce70824a6adf7';

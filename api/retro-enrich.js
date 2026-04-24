@@ -10,7 +10,7 @@ import {
   extractPhoneFromText,
   isLinkInBioUrl, extractAllLinkInBio, shortUrl,
   scrapeLinkInBio, fetchContactDeep, braveSearchPhone,
-} from './enrich-helpers.js';
+} from '../lib/enrich-helpers.js';
 
 const CRM_DB_ID  = '34a622d3e57481738b3ce70824a6adf7';
 const NOTION_VER = '2022-06-28';
