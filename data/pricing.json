@@ -2,7 +2,7 @@
   "library": [
     {
       "id": "CAR_BALI",
-      "name": "Standard Transport",
+      "name": "Transport",
       "cost": 1500000
     },
     {
