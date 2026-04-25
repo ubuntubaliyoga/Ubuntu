@@ -21,6 +21,23 @@ Deploy: `git push origin main` → Vercel builds and serves.
 
 ---
 
+## AI Collaboration Protocol
+
+This repo uses a tiered intelligence approach to balance speed and reasoning.
+
+- **Gemini 3 Flash (Workhorse):** Use for 80% of tasks.
+    - UI/CSS styling and layout tweaks.
+    - Standard API CRUD updates (Notion/CRM).
+    - Documentation, logs, and maintenance.
+    - Standard bug fixes and "Safe" auto-fixes.
+- **Claude 3.5 Sonnet (Architect):** Use for "Sophisticated" tasks.
+    - Complex algorithms (e.g., Pricing Engine `engine.ts` logic).
+    - Architectural decisions (managing the 12-function limit).
+    - Cross-file refactors or breaking schema changes.
+    - Security-sensitive logic or complex regex (Leadgen).
+
+---
+
 ## File map
 
 ```
