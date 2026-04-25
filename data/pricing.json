@@ -74,6 +74,11 @@
       "id": "YOGA_SESSION",
       "name": "Daily Yoga",
       "cost": 160000
+    },
+    {
+      "id": "SOUNDHEALING",
+      "name": "Soundhe",
+      "cost": 0
     }
   ],
   "templates": [
