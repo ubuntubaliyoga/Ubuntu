@@ -69,7 +69,9 @@
       "fixed_cost_refs": [
         "TRANSPORT_BIG"
       ],
-      "variable_cost_refs": []
+      "variable_cost_refs": [
+        "JATILUWIH_ENTRANCE"
+      ]
     }
   ]
 }
