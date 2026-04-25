@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
   const apiBase = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`
   const headers = {
-    Authorization: `token ${token}`,
+    Authorization: `Bearer ${token}`,
     Accept: 'application/vnd.github.v3+json',
     'Content-Type': 'application/json',
     'User-Agent': 'ubuntu-flow-pricing'
