@@ -150,6 +150,24 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, pageId });
     }
 
+    // ── AUTOSAVE (formState only) ──────────────────────────────────────────────
+    if (action === 'autosave') {
+      if (!pageId) return res.status(400).json({ error: 'Missing pageId' });
+      const { formState } = req.body;
+      const resp = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ properties: { 'Form State': { rich_text: toRichTextBlocks(formState) } } }),
+      });
+      if (!resp.ok) {
+        const err = await notionError(resp);
+        console.error('[notion] autosave failed:', err.notion_status, err.notion_code, err.error);
+        return res.status(resp.status).json(err);
+      }
+      console.log('[notion] autosaved formState:', pageId);
+      return res.status(200).json({ success: true, pageId });
+    }
+
     // ── DELETE (trash) ─────────────────────────────────────────────────────────
     if (action === 'delete') {
       if (!pageId) return res.status(400).json({ error: 'Missing pageId' });

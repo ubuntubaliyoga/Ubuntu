@@ -152,6 +152,25 @@ async function saveToNotion(silent=false){
   if(window._templateMode){if(!silent)showTemplateConfirm();return;}
   const btn=$('save-btn');
   if(!silent){btn.textContent='Saving…';btn.className='save-btn';}
+  const formState=JSON.stringify(getFormState());
+  // Autosave: only persist formState when the page already exists
+  if(silent&&currentPageId){
+    dbg(`autosave | formState=${formState.length} chars | pageId=${currentPageId}`);
+    try{
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>{dbg('ABORT: 15s timeout hit');controller.abort();},15000);
+      const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'autosave',pageId:currentPageId,formState}),signal:controller.signal});
+      clearTimeout(timeout);
+      const data=await r.json();
+      if(!r.ok) throw new Error(data.error||'HTTP '+r.status);
+      dbg('autosave SUCCESS ✓');
+    } catch(err){
+      const msg=err.name==='AbortError'?'Timeout':(err.message||'Error');
+      dbg(`autosave ERROR: ${msg}`);
+    }
+    return;
+  }
   const P=pricing();
   const payload={
     organizer:$('f-name').value,retreatName:$('f-retreatname').value,
@@ -160,7 +179,7 @@ async function saveToNotion(silent=false){
     rooms:P.bales+(P.parvOn?1:0)+(P.buddOn?1:0),
     nights:P.nights,guests:parseInt($('f-guests').value)||0,
     totalUSD:P.totalIn,status:$('notion-status').value,
-    formState:JSON.stringify(getFormState()),
+    formState,
   };
   const action=currentPageId?'update':'create';
   const fsLen=payload.formState.length;
