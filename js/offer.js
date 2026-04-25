@@ -101,7 +101,7 @@ function buildOfferHTML(){
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
   const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
   const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
-  const validLine=hasEB?`<p>This rate is valid if confirmed by ${offerValidStr}.</p>`:'';
+  const validLine=offerValid?`<p>This offer is valid until ${offerValidStr}.</p>`:'';
   const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (${cFmt(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
   const datesLine=fmtD(checkin)&&fmtD(checkout)?`<div class="e-header-dates">Check-in: ${fmtD(checkin)} &nbsp;·&nbsp; Check-out: ${fmtD(checkout)}</div>`:'';
   return`<div class="e-header">
