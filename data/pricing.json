@@ -124,6 +124,13 @@
       "variable_cost_refs": [
         "ADD_MEAL"
       ]
+    },
+    {
+      "id": "TEMPLATE_1777129122030",
+      "name": "New Template",
+      "markup": 1.4,
+      "fixed_cost_refs": [],
+      "variable_cost_refs": []
     }
   ]
 }
