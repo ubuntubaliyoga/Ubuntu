@@ -39,6 +39,11 @@
       "id": "MENGWIT_ENTRANCE",
       "name": "Mengwit Entrance Fee",
       "cost": 250000
+    },
+    {
+      "id": "ANGSERI_ENTRANCE",
+      "name": "ANg",
+      "cost": 0
     }
   ],
   "templates": [
