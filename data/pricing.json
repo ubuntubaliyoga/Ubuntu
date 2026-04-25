@@ -51,14 +51,15 @@
       "id": "TREK_SPIRIT",
       "name": "Trekking Spiritual Purification",
       "markup": 1.4,
-      "fixed_cost_refs": [],
+      "fixed_cost_refs": [
+        "TRANSPORT_BIG"
+      ],
       "variable_cost_refs": [
         "JATILUWIH_ENTRANCE",
         "BATU_KARU_TICKET",
         "TREKKING_GUIDE",
         "LUNCH_STD",
-        "OFFERING",
-        "TRANSPORT_BIG"
+        "OFFERING"
       ]
     }
   ]
