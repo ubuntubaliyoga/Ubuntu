@@ -63,7 +63,7 @@
     {
       "id": "ADD_MEAL",
       "name": "2 Meals included - Additional Meal",
-      "cost": 9
+      "cost": 0
     }
   ],
   "templates": [
