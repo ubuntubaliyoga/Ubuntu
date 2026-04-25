@@ -97,10 +97,11 @@
       "id": "TEMPLATE_1777126022820",
       "name": "Uluwatu Beach & Culture",
       "markup": 1.4,
-      "fixed_cost_refs": [],
+      "fixed_cost_refs": [
+        "TRANSPORT_BIG"
+      ],
       "variable_cost_refs": [
         "KLIVE_ENTRANCE",
-        "TRANSPORT_BIG",
         "KECAK_ENTRANCE",
         "MEAL_PRM"
       ]
