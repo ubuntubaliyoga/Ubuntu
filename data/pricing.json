@@ -129,7 +129,9 @@
       "id": "TEMPLATE_1777129122030",
       "name": "Breathwork + Meditation",
       "markup": 1,
-      "fixed_cost_refs": [],
+      "fixed_cost_refs": [
+        "BREATH"
+      ],
       "variable_cost_refs": []
     }
   ]
