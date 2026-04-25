@@ -29,6 +29,11 @@
       "id": "OFFERING",
       "name": "Offering",
       "cost": 150000
+    },
+    {
+      "id": "YEHHO_WATERFALL",
+      "name": "Yeh Hoo Entrance Fee",
+      "cost": 0
     }
   ],
   "templates": [
