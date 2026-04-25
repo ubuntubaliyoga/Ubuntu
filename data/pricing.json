@@ -58,7 +58,7 @@
     {
       "id": "MEAL_PRM",
       "name": "Premium Meal",
-      "cost": 0
+      "cost": 150
     }
   ],
   "templates": [
