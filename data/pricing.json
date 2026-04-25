@@ -93,7 +93,9 @@
       "name": "Uluwatu Beach & Culture",
       "markup": 1.4,
       "fixed_cost_refs": [],
-      "variable_cost_refs": []
+      "variable_cost_refs": [
+        "KLIVE_ENTRANCE"
+      ]
     }
   ]
 }
