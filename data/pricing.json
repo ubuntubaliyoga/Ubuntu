@@ -49,6 +49,11 @@
       "id": "KLIVE_ENTRANCE",
       "name": "Klive Beachclub Entrance",
       "cost": 250000
+    },
+    {
+      "id": "KECAK_ENTRANCE",
+      "name": "Kecak Dance Entrance",
+      "cost": 0
     }
   ],
   "templates": [
