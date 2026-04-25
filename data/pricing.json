@@ -114,9 +114,11 @@
     {
       "id": "TEMPLATE_1777128704046",
       "name": "New Template",
-      "markup": 1.4,
+      "markup": 1,
       "fixed_cost_refs": [],
-      "variable_cost_refs": []
+      "variable_cost_refs": [
+        "ADD_MEAL"
+      ]
     }
   ]
 }
