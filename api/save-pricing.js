@@ -12,7 +12,12 @@ export default async function handler(req, res) {
   }
 
   const token = process.env.GITHUB_TOKEN
-  if (!token) return res.status(500).json({ error: 'GITHUB_TOKEN not configured' })
+  if (!token) {
+    const keys = Object.keys(process.env).filter(k => !k.startsWith('VERCEL')).join(', ')
+    return res.status(500).json({ 
+      error: `GITHUB_TOKEN not configured. Available envs: ${keys}` 
+    })
+  }
 
   const apiBase = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`
   const headers = {
