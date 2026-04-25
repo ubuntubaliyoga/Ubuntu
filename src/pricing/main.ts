@@ -2,7 +2,7 @@ import { loadPricingData } from './store'
 import {
   openAdmin, closeAdmin, switchPeTab, savePricingAdmin,
   addPeLibraryRow, removePeLibraryRow, addPeTemplate, removePeTemplate,
-  enforceMutualExclusion
+  peAddCostItem
 } from './admin-ui'
 import { initDealsUI, recalculatePeExtra } from './deals-ui'
 import { sendPeChat, applyPeAction, dismissPeAction } from './chat-ui'
@@ -15,7 +15,7 @@ window.addPeLibraryRow       = addPeLibraryRow
 window.removePeLibraryRow    = removePeLibraryRow
 window.addPeTemplate         = addPeTemplate
 window.removePeTemplate      = removePeTemplate
-window.enforceMutualExclusion = enforceMutualExclusion
+window.peAddCostItem          = peAddCostItem
 window.recalculatePeExtra    = recalculatePeExtra
 window.sendPeChat            = sendPeChat
 window.applyPeAction         = applyPeAction

@@ -47,8 +47,8 @@ declare global {
     removePeLibraryRow(btn: HTMLElement): void
     addPeTemplate(): void
     removePeTemplate(btn: HTMLElement): void
-    enforceMutualExclusion(checkbox: HTMLInputElement): void
     recalculatePeExtra(id: number, pax: number): Promise<void>
+    peAddCostItem(sel: HTMLSelectElement): void
     sendPeChat(): void
     applyPeAction(id: string): void
     dismissPeAction(id: string): void

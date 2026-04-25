@@ -19,6 +19,11 @@ export function closeAdmin(): void {
 }
 
 export function switchPeTab(tab: 'library' | 'templates'): void {
+  // Snapshot current tab's DOM edits before switching away
+  if (currentData) {
+    if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM() }
+    else currentData = { ...currentData, templates: readTemplatesFromDOM() }
+  }
   currentTab = tab
   renderTabContent()
   document.querySelectorAll('.pe-tab').forEach(b => b.classList.remove('active'))
@@ -33,9 +38,13 @@ export async function savePricingAdmin(): Promise<void> {
   btn.disabled = true
 
   try {
-    const data = readDataFromDOM()
+    // Snapshot the active tab into currentData, then save
+    if (currentData) {
+      if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM() }
+      else currentData = { ...currentData, templates: readTemplatesFromDOM() }
+    }
+    const data = currentData!
     await savePricingData(data)
-    currentData = data
     window.dispatchEvent(new CustomEvent('pricingDataUpdated', { detail: data }))
     btn.textContent = 'Saved!'
     setTimeout(() => { btn.textContent = original; btn.disabled = false }, 2000)
@@ -115,15 +124,20 @@ export function removePeTemplate(btn: HTMLElement): void {
   btn.closest('.pe-template-card')?.remove()
 }
 
-export function enforceMutualExclusion(checkbox: HTMLInputElement): void {
-  if (!checkbox.checked) return
-  const card = checkbox.closest('.pe-template-card')
+export function peAddCostItem(sel: HTMLSelectElement): void {
+  const itemId = sel.value
+  if (!itemId || !currentData) return
+  sel.value = ''
+  const card = sel.closest('.pe-template-card') as HTMLElement | null
   if (!card) return
-  const isFixed = checkbox.classList.contains('pe-fixed-check')
-  const other = card.querySelector(
-    `${isFixed ? '.pe-var-check' : '.pe-fixed-check'}[value="${checkbox.value}"]`
-  ) as HTMLInputElement | null
-  if (other) other.checked = false
+  if (card.querySelector(`.pe-cost-chip[data-item-id="${itemId}"]`)) return // already added
+  const item = currentData.library.find(i => i.id === itemId)
+  if (!item) return
+  const chip = document.createElement('div')
+  chip.className = 'pe-cost-chip'
+  chip.dataset.itemId = itemId
+  chip.innerHTML = chipHTML(item.id, item.name, false)
+  card.querySelector('.pe-cost-chips')?.appendChild(chip)
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -207,22 +221,28 @@ function renderTemplates(templates: ProductTemplate[], library: CostItem[]): str
   `
 }
 
+function chipHTML(id: string, name: string, isFixed: boolean): string {
+  return `
+    <span class="pe-chip-name">${esc(name)} <span class="pe-check-id">${esc(id)}</span></span>
+    <label class="pe-fixed-label">
+      <input type="checkbox" class="pe-fixed-check" value="${esc(id)}" ${isFixed ? 'checked' : ''}>
+      fixed ÷pax
+    </label>
+    <button class="pe-del-btn" onclick="this.closest('.pe-cost-chip').remove()" title="Remove">✕</button>
+  `
+}
+
 function renderTemplateCard(t: ProductTemplate, library: CostItem[]): string {
-  const costRows = library.map(item => {
-    const isFixed = t.fixed_cost_refs.includes(item.id)
-    const included = isFixed || t.variable_cost_refs.includes(item.id)
-    return `
-      <div class="pe-check-row">
-        <input type="checkbox" class="pe-include-check" value="${esc(item.id)}" ${included ? 'checked' : ''}
-          onchange="this.closest('.pe-check-row').querySelector('.pe-fixed-label').classList.toggle('pe-fixed-dim',!this.checked)">
-        <span class="pe-check-name">${esc(item.name)} <span class="pe-check-id">${esc(item.id)}</span></span>
-        <label class="pe-fixed-label${included ? '' : ' pe-fixed-dim'}">
-          <input type="checkbox" class="pe-fixed-check" value="${esc(item.id)}" ${isFixed ? 'checked' : ''}>
-          fixed ÷pax
-        </label>
-      </div>
-    `
+  const included = [...t.fixed_cost_refs, ...t.variable_cost_refs]
+  const chips = included.map(id => {
+    const item = library.find(i => i.id === id)
+    if (!item) return ''
+    return `<div class="pe-cost-chip" data-item-id="${esc(id)}">${chipHTML(id, item.name, t.fixed_cost_refs.includes(id))}</div>`
   }).join('')
+
+  const options = library.map(item =>
+    `<option value="${esc(item.id)}">${esc(item.name)}</option>`
+  ).join('')
 
   return `
     <div class="pe-template-card" data-id="${esc(t.id)}">
@@ -239,16 +259,19 @@ function renderTemplateCard(t: ProductTemplate, library: CostItem[]): string {
       </div>
       <div class="pe-costs-section">
         <div class="pe-costs-label">Costs</div>
-        <div class="pe-cost-note">Tick to include. Check "fixed ÷pax" for group costs split by headcount (e.g. transport); leave unticked for per-person costs (e.g. entrance fee, guide).</div>
-        <div class="pe-checks">${costRows}</div>
+        <select class="pe-input pe-add-cost" onchange="window.peAddCostItem(this)">
+          <option value="">＋ Add cost item…</option>
+          ${options}
+        </select>
+        <div class="pe-cost-chips">${chips}</div>
       </div>
     </div>
   `
 }
 
-// ── DOM reader ────────────────────────────────────────────────────────────────
+// ── DOM readers ───────────────────────────────────────────────────────────────
 
-function readDataFromDOM(): PricingData {
+function readLibraryFromDOM(): CostItem[] {
   const library: CostItem[] = []
   document.querySelectorAll<HTMLTableRowElement>('#pe-library-tbody tr[data-id]').forEach(row => {
     const id   = (row.querySelector('.pe-lib-id')   as HTMLInputElement)?.value.trim()
@@ -256,7 +279,10 @@ function readDataFromDOM(): PricingData {
     const cost = parseFloat((row.querySelector('.pe-lib-cost') as HTMLInputElement)?.value) || 0
     if (id && name) library.push({ id, name, cost })
   })
+  return library
+}
 
+function readTemplatesFromDOM(): ProductTemplate[] {
   const templates: ProductTemplate[] = []
   document.querySelectorAll<HTMLElement>('.pe-template-card[data-id]').forEach(card => {
     const id     = card.dataset.id!
@@ -264,15 +290,15 @@ function readDataFromDOM(): PricingData {
     const markup = parseFloat((card.querySelector('.pe-markup') as HTMLInputElement)?.value) || 1.0
     const fixed_cost_refs: string[] = []
     const variable_cost_refs: string[] = []
-    card.querySelectorAll<HTMLInputElement>('.pe-include-check:checked').forEach(el => {
-      const fixedBox = card.querySelector<HTMLInputElement>(`.pe-fixed-check[value="${el.value}"]`)
-      if (fixedBox?.checked) fixed_cost_refs.push(el.value)
-      else variable_cost_refs.push(el.value)
+    card.querySelectorAll<HTMLElement>('.pe-cost-chip[data-item-id]').forEach(chip => {
+      const itemId = chip.dataset.itemId!
+      const fixedBox = chip.querySelector<HTMLInputElement>('.pe-fixed-check')
+      if (fixedBox?.checked) fixed_cost_refs.push(itemId)
+      else variable_cost_refs.push(itemId)
     })
     templates.push({ id, name, markup, fixed_cost_refs, variable_cost_refs })
   })
-
-  return { library, templates }
+  return templates
 }
 
 function esc(s: string): string {
