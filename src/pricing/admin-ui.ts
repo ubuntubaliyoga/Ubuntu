@@ -3,6 +3,7 @@ import { savePricingData, loadPricingData } from './store'
 
 let currentData: PricingData | null = null
 let currentTab: 'library' | 'templates' = 'library'
+let autosaveTimer: any = null
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,10 @@ export function openAdmin(): void {
 }
 
 export function closeAdmin(): void {
+  if (autosaveTimer) {
+    clearTimeout(autosaveTimer)
+    savePricingAdmin(true) // Final sync on close
+  }
   document.getElementById('pricing-overlay')?.classList.remove('open')
 }
 
@@ -30,12 +35,23 @@ export function switchPeTab(tab: 'library' | 'templates'): void {
   document.getElementById(`pe-tab-${tab}`)?.classList.add('active')
 }
 
-export async function savePricingAdmin(): Promise<void> {
+export function triggerPeAutosave(): void {
+  const status = document.getElementById('pe-autosave-status')
+  if (status) status.textContent = '● Unsaved changes'
+  
+  if (autosaveTimer) clearTimeout(autosaveTimer)
+  autosaveTimer = setTimeout(() => savePricingAdmin(true), 2000)
+}
+
+export async function savePricingAdmin(isAutosave = false): Promise<void> {
   const btn = document.getElementById('pe-save-btn') as HTMLButtonElement | null
-  if (!btn) return
-  const original = btn.textContent
-  btn.textContent = 'Saving…'
-  btn.disabled = true
+  const status = document.getElementById('pe-autosave-status')
+  
+  if (!isAutosave && btn) {
+    btn.textContent = 'Saving…'
+    btn.disabled = true
+  }
+  if (status) status.textContent = '○ Saving…'
 
   try {
     // Snapshot the active tab into currentData, then save
@@ -46,11 +62,19 @@ export async function savePricingAdmin(): Promise<void> {
     const data = currentData!
     await savePricingData(data)
     window.dispatchEvent(new CustomEvent('pricingDataUpdated', { detail: data }))
-    btn.textContent = 'Saved!'
-    setTimeout(() => { btn.textContent = original; btn.disabled = false }, 2000)
+    
+    if (!isAutosave && btn) {
+      btn.textContent = 'Saved!'
+      setTimeout(() => { if (btn) { btn.textContent = 'Save Changes'; btn.disabled = false } }, 2000)
+    }
+    if (status) status.textContent = '✓ Saved'
+    autosaveTimer = null
   } catch (e) {
-    btn.textContent = 'Error — retry'
-    btn.disabled = false
+    if (!isAutosave && btn) {
+      btn.textContent = 'Error — retry'
+      btn.disabled = false
+    }
+    if (status) status.textContent = '⚠ Save failed'
     console.error('[PricingEngine] Save failed:', e)
   }
 }
@@ -66,6 +90,7 @@ export function applyAddLibraryItem(item: CostItem): void {
   tr.innerHTML = libraryRowHTML(item)
   tbody.appendChild(tr)
   tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  triggerPeAutosave()
 }
 
 export function applyCreateTemplate(t: ProductTemplate): void {
@@ -77,6 +102,7 @@ export function applyCreateTemplate(t: ProductTemplate): void {
   div.innerHTML = renderTemplateCard(t, currentData.library)
   list.appendChild(div.firstElementChild!)
   div.firstElementChild?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
+  triggerPeAutosave()
 }
 
 export function applyUpdateCost(id: string, cost: number): void {
@@ -87,6 +113,7 @@ export function applyUpdateCost(id: string, cost: number): void {
       row.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
   })
+  triggerPeAutosave()
 }
 
 // ── DOM mutators exposed to window.* ─────────────────────────────────────────
@@ -99,10 +126,12 @@ export function addPeLibraryRow(): void {
   tr.innerHTML = libraryRowHTML({ id: '', name: '', cost: 0 }, true)
   tbody.appendChild(tr)
   ;(tr.querySelector('.pe-lib-id') as HTMLInputElement)?.focus()
+  triggerPeAutosave()
 }
 
 export function removePeLibraryRow(btn: HTMLElement): void {
   btn.closest('tr')?.remove()
+  triggerPeAutosave()
 }
 
 export function addPeTemplate(): void {
@@ -118,10 +147,12 @@ export function addPeTemplate(): void {
   const div = document.createElement('div')
   div.innerHTML = renderTemplateCard(t, currentData.library)
   list.appendChild(div.firstElementChild!)
+  triggerPeAutosave()
 }
 
 export function removePeTemplate(btn: HTMLElement): void {
   btn.closest('.pe-template-card')?.remove()
+  triggerPeAutosave()
 }
 
 export function peAddCostItem(sel: HTMLSelectElement): void {
@@ -138,6 +169,7 @@ export function peAddCostItem(sel: HTMLSelectElement): void {
   chip.dataset.itemId = itemId
   chip.innerHTML = chipHTML(item.id, item.name, false)
   card.querySelector('.pe-cost-chips')?.appendChild(chip)
+  triggerPeAutosave()
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -146,9 +178,12 @@ function renderOverlay(): void {
   const overlay = document.getElementById('pricing-overlay')
   if (!overlay) return
   overlay.innerHTML = `
-    <div class="pe-panel">
+    <div class="pe-panel" oninput="window.triggerPeAutosave()" onchange="window.triggerPeAutosave()">
       <div class="pe-header">
-        <div class="pe-title">Cost Calculation</div>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div class="pe-title">Cost Calculation</div>
+          <div id="pe-autosave-status" style="font-size:10px; color:var(--text-dim); font-family:monospace;">✓ Saved</div>
+        </div>
         <button class="pe-header-close" onclick="window.closePricingAdmin()">✕</button>
       </div>
       <div class="pe-tabs">

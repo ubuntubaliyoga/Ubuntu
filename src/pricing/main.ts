@@ -1,6 +1,6 @@
 import { loadPricingData } from './store'
 import {
-  openAdmin, closeAdmin, switchPeTab, savePricingAdmin,
+  openAdmin, closeAdmin, switchPeTab, savePricingAdmin, triggerPeAutosave,
   addPeLibraryRow, removePeLibraryRow, addPeTemplate, removePeTemplate,
   peAddCostItem
 } from './admin-ui'
@@ -11,6 +11,7 @@ window.openPricingAdmin      = openAdmin
 window.closePricingAdmin     = closeAdmin
 window.switchPeTab           = switchPeTab
 window.savePricingAdmin      = savePricingAdmin
+window.triggerPeAutosave     = triggerPeAutosave
 window.addPeLibraryRow       = addPeLibraryRow
 window.removePeLibraryRow    = removePeLibraryRow
 window.addPeTemplate         = addPeTemplate
