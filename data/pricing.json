@@ -152,6 +152,13 @@
       "variable_cost_refs": [
         "YOGA_SESSION"
       ]
+    },
+    {
+      "id": "TEMPLATE_1777132823367",
+      "name": "New Template",
+      "markup": 1.4,
+      "fixed_cost_refs": [],
+      "variable_cost_refs": []
     }
   ]
 }
