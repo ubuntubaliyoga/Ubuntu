@@ -280,6 +280,17 @@ function getIdrRate() {
   return parseFloat(document.getElementById('f-idrrate')?.value) || 17085;
 }
 
+function getTotalPax() {
+  return (parseInt($('f-guests')?.value) || 0) + (parseInt($('f-facilitators')?.value) || 0) || 1;
+}
+
+function syncPeExtrasPax() {
+  const pax = getTotalPax();
+  extraServices.forEach(s => {
+    if (s.pricingEngine && window.recalculatePeExtra) window.recalculatePeExtra(s.id, pax);
+  });
+}
+
 function addExtraService(val) {
   if (!val) return;
   const parts = val.split('|');
@@ -288,11 +299,12 @@ function addExtraService(val) {
   // Pricing engine template (pe_ prefix)
   if (id.startsWith('pe_')) {
     const templateId = id.slice(3);
+    const pax = getTotalPax();
     const item = { id: Date.now(), serviceId: id, label, unit: 'per person',
-      pricingEngine: true, templateId, pax: 1, spppIdr: 0, qty: 1, unitUsd: 0 };
+      pricingEngine: true, templateId, pax, spppIdr: 0, qty: 1, unitUsd: 0 };
     extraServices.push(item);
     renderExtraServices();
-    if (window.recalculatePeExtra) window.recalculatePeExtra(item.id, 1);
+    if (window.recalculatePeExtra) window.recalculatePeExtra(item.id, pax);
     markDraftActive();
     return;
   }

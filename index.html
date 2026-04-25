@@ -152,8 +152,8 @@
       </div>
       <div class="fg"><label>Retreat Name</label><input type="text" id="f-retreatname"></div>
       <div class="fg-row">
-        <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50"></div>
-        <div class="fg"><label>Facilitators</label><input type="number" id="f-facilitators" value="1" min="0" max="10"></div>
+        <div class="fg"><label>Guests</label><input type="number" id="f-guests" value="10" min="1" max="50" oninput="syncPeExtrasPax()"></div>
+        <div class="fg"><label>Facilitators</label><input type="number" id="f-facilitators" value="1" min="0" max="10" oninput="syncPeExtrasPax()"></div>
       </div>
       <div class="fg-row">
         <div class="fg"><label>Nights</label><input type="number" id="f-nights" value="7" min="1" max="30"></div>
