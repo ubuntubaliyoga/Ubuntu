@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Ubuntu Flow** — internal PWA for Ubuntu Bali retreat hosting. Notion is the database. Vercel is the host. No npm, no build system, no package.json. Deploy = `git push origin main`.
+**Ubuntu Flow** — internal PWA for Ubuntu Bali retreat hosting. Notion is the database. Vercel is the host. Deploy = `git push origin main`.
+
+The pricing engine (`src/pricing/`) uses Vite + TypeScript — `npm run build` compiles it to `js/pricing-engine.js`. All other JS is plain globals with no build step.
 
 ## Deploy
 
@@ -42,7 +44,7 @@ All handlers follow Vercel serverless conventions (`export default async functio
 | `notion.js` | `POST /api/notion` | Offers DB CRUD — `action: load/create/update/delete` |
 | `crm.js` | `POST /api/crm` | Unified CRM DB CRUD — `action: load/update/updateReachedOut/updateDetails/create/delete/promote/demote` |
 | `leadgen-agent.js` | `POST /api/leadgen-agent` | Instagram hashtag scrape → profile scrape → Maps fallback → phone enrichment → Notion write |
-| `enrich-helpers.js` | *(imported)* | Shared phone extraction utilities — imported by `leadgen-agent.js` and `retro-enrich.js` |
+| `lib/enrich-helpers.js` | *(imported)* | Shared phone extraction utilities — imported by `leadgen-agent.js` and `retro-enrich.js`. Lives in `lib/` not `api/` (Vercel 12-function limit). |
 | `retro-enrich.js` | `GET /api/retro-enrich` | Re-run phone enrichment on today's leads. `?dry=1` = preview only |
 | `clear-reached-out.js` | `GET /api/clear-reached-out` | Clear "Reached out on" for leads created since yesterday. `?dry=1` = preview |
 | `exchange-rate.js` | `GET /api/exchange-rate` | USD→IDR live rate, 1h Vercel edge cache, fallback 17085 |
