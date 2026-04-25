@@ -101,7 +101,8 @@
       "variable_cost_refs": [
         "KLIVE_ENTRANCE",
         "TRANSPORT_BIG",
-        "KECAK_ENTRANCE"
+        "KECAK_ENTRANCE",
+        "MEAL_PRM"
       ]
     }
   ]
