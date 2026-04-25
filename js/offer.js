@@ -87,7 +87,7 @@ function buildOfferHTML(){
   const hasExtras=extraServices.length>0;
   const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal* TAX;
   const investAddonRows=hasExtras?extraServices.map(s=>{
-    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label} (${s.pax} pax &middot; IDR ${fmtN(s.spppIdr,0)}/person)</span><span>${cFmt(t,0)}</span></div>`;}
+    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label} (${s.pax} pax &middot; ${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person)</span><span>${cFmt(t,0)}</span></div>`;}
     const t=s.unitUsd*s.qty;
     const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
     const unitStr=s.unit==='flat fee'?'':` ${cFmt(s.unitUsd,0)}`;
@@ -169,7 +169,7 @@ function buildContractHTML(){
   const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
   const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
   const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
-  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR(`${s.label} (${s.pax} pax)`,`IDR ${fmtN(s.spppIdr,0)}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
+  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR(`${s.label} (${s.pax} pax)`,`${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
   const txR=cR('Tax (10%) + Service charge (5%)','',cFmt(finalTotal-(hasExtrasC?grandExC:P.totalEx),2));
   const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
   const rdR=P.discRooms>0&&P.discRoomPct>0?cR(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
@@ -354,7 +354,7 @@ function renderExtraServices() {
   list.innerHTML = extraServices.map(s => {
     if (s.pricingEngine) {
       const totalUsd = getIdrRate() > 0 ? (s.spppIdr * s.pax) / getIdrRate() : 0;
-      const priceLabel = s.spppIdr ? `IDR ${fmtN(s.spppIdr, 0)}/pax` : '—';
+      const priceLabel = s.spppIdr && getIdrRate() > 0 ? `${cFmt(s.spppIdr / getIdrRate(), 0)}/pax` : '—';
       return `
         <div class="extra-tag">
           <div class="extra-tag-label">${s.label}</div>
