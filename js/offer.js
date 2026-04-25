@@ -70,77 +70,68 @@ function buildOfferHTML(){
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
-  const vLbl=(orig,disc,pct)=>pct>0?`<span class="rate-orig">${cFmt(orig)}</span><span class="rate-disc">${cFmt(disc)}</span><span class="rate-pct">−${pct}%</span>`:`${cFmt(disc)}`;
   const vNames=[P.parvOn?'Parvati Villa':'',P.buddOn?'Buddha Villa':''].filter(Boolean);
   const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
   const bodyText=$('f-body')?.value.trim()||'Kindly open the attached brochure for pictures of the full property.';
+  const nights=P.nights;
+  const cR_=(label,sub,amt)=>`<tr><td>${label}${sub?`<span style="display:block;font-size:9px;color:#9E948A;margin-top:2px;">${sub}</span>`:''}</td><td style="text-align:right;white-space:nowrap;">${amt}</td></tr>`;
   const baleRow=P.bales<=0?'':P.bales<=5
-    ?`<tr class="pt-item"><td class="col-item">${P.bales} Gladak${P.bales>1?'s':''}</td><td class="col-rate">${cFmt(P.roomRate,2)} / night</td><td class="col-sub">${cFmt(P.bales*P.roomRate,2)}</td></tr>`
-    :`<tr class="pt-item"><td class="col-item">5 Gladaks</td><td class="col-rate">${cFmt(P.roomRate,2)} / night</td><td class="col-sub">${cFmt(5*P.roomRate,2)}</td></tr><tr class="pt-item"><td class="col-item">${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}</td><td class="col-rate">${cFmt(P.roomRate,2)} / night</td><td class="col-sub">${cFmt((P.bales-5)*P.roomRate,2)}</td></tr>`;
-  const parvRow=P.parvOn?`<tr class="pt-item"><td class="col-item">Parvati Villa</td><td class="col-rate">${vLbl(P.parvOrig,P.parvDisc,P.parvDiscPct)} / night</td><td class="col-sub">${cFmt(P.parvDisc,2)}</td></tr>`:'';
-  const buddRow=P.buddOn?`<tr class="pt-item"><td class="col-item">Buddha Villa</td><td class="col-rate">${vLbl(P.buddOrig,P.buddDisc,P.buddDiscPct)} / night</td><td class="col-sub">${cFmt(P.buddDisc,2)}</td></tr>`:'';
-  const pkgRow=P.pkgCount>0?`<tr class="pt-item"><td class="col-item">Additional cost per person (Meals, Shala, Staff) &mdash; ${P.pkgCount} ${P.pkgCount===1?'person':'people'}</td><td class="col-rate">${cFmt(P.pkgRate,2)} / night</td><td class="col-sub">${cFmt(P.pkgSub,2)}</td></tr>`:'';
-  const ebRow=hasEB?`<tr class="pt-discount"><td class="col-item">${P.discPct}% Early Bird Discount</td><td class="col-rate">− ${cFmt(P.earlyAmt,2)}</td><td class="col-sub">− ${cFmt(P.earlyAmt,2)}</td></tr>`:'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?`<tr class="pt-discount"><td class="col-item">${P.discRooms} Room${P.discRooms>1?'s':''} &mdash; ${P.discRoomPct}% Special Rate</td><td class="col-rate">− ${cFmt(P.roomDiscAmt,2)}</td><td class="col-sub">− ${cFmt(P.roomDiscAmt,2)}</td></tr>`:'';
-  const dailyBlock=showDaily?`<tr class="pt-total"><td class="col-item">Nightly Rate</td><td class="col-rate">${cFmt(P.perNight,0)} / night</td><td class="col-sub">${cFmt(P.perNight,0)}</td></tr><tr class="pt-taxnote"><td colspan="3">excl. 10% tax &amp; 5% service charge &nbsp;·&nbsp; ${cFmt(P.perNightTax,0)} / night incl.</td></tr>`:'';
+    ?cR_(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate*nights,2))
+    :cR_('5 Gladaks',`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(5*P.roomRate*nights,2))
+     +cR_(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt((P.bales-5)*P.roomRate*nights,2));
+  const parvRow=P.parvOn?cR_('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
+  const buddRow=P.buddOn?cR_('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
+  const pkgRow=P.pkgCount>0?cR_(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
   const extTotal=extraServicesTotal();
   const hasExtras=extraServices.length>0;
-  const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal* TAX;
-  const investAddonRows=hasExtras?extraServices.map(s=>{
-    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label} (${s.pax} pax &middot; ${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person)</span><span>${cFmt(t,0)}</span></div>`;}
-    const t=s.unitUsd*s.qty;
-    const qtyStr=s.unit==='flat fee'?'':` &times; ${s.qty}`;
-    const unitStr=s.unit==='flat fee'?'':` ${cFmt(s.unitUsd,0)}`;
-    return `<div class="e-invest-row e-invest-addon"><span>&rarr; ${s.label}${unitStr}${qtyStr}</span><span>${cFmt(t,0)}</span></div>`;
-  }).join(''):'';
-  const investmentBlock=(showTotal||hasExtras)?`<div class="e-investment">${showTotal?`<div class="e-invest-row"><span>Package Total (${P.nights} Nights)<br><span style="font-size:7px;color:#B5AAA0;letter-spacing:.3px;font-weight:400;">excl. tax &amp; service fee</span></span><span>${cFmt(P.totalEx,0)}</span></div>`:''
-  }${hasExtras?`<div class="e-invest-section-label">Enhancements</div>${investAddonRows}<div class="e-invest-row e-invest-addon-total"><span>Add-ons Total</span><span>+ ${cFmt(extTotal,0)}</span></div>`:''
-  }<div class="e-invest-grand"><span class="e-invest-grand-lbl">Total Investment</span><div style="text-align:right;"><span class="e-invest-grand-val">${cFmt(hasExtras?grandIn:P.totalIn,0)}</span><div class="e-invest-grand-sub">incl. 15% tax &amp; service charge ${cFmt(hasExtras?grandIn-grandEx:P.totalIn-P.totalEx,0)}</div></div></div></div>`:'';
+  const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal*TAX;
+  const extRow=hasExtras?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Enhancements</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR_(`${s.label} (${s.pax} pax)`,`${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR_(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
+  const ebRow=hasEB?cR_(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?cR_(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
+  const txRow=cR_('Tax (10%) + Service charge (5%)','',cFmt((hasExtras?grandIn:P.totalIn)-(hasExtras?grandEx:P.totalEx),2));
+  const totRow=`<tr style="background:#F5ECD7;font-weight:700;"><td>Total incl. tax &amp; service charge</td><td style="text-align:right;white-space:nowrap;">${cFmt(hasExtras?grandIn:P.totalIn,0)}</td></tr>`;
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
-  const includedRows=[];for(let i=0;i<includedLines.length;i+=2){includedRows.push(`<tr><td><span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i]}</td><td>${includedLines[i+1]?`<span style="color:#C5A27D;">&middot;&nbsp;</span>${includedLines[i+1]}`:''}</td></tr>`);}
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
   const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
-  const ebBadge=hasEB?`<div class="e-badge"><strong>${P.discPct}% Early Bird Discount applied &nbsp;·&nbsp;</strong> Book by ${offerValidStr} to secure this rate.</div>`:'';
+  const ebBadge=hasEB?`<div style="background:#FAF6F0;border:1px solid #C5A27D;border-radius:3px;padding:8px 12px;margin:10px 0;font-size:11px;color:#7A6248;text-align:center;"><strong>${P.discPct}% Early Bird Discount applied</strong> &nbsp;·&nbsp; Book by ${offerValidStr} to secure this rate.</div>`:'';
   const validLine=offerValid?`<p>This offer is valid until ${offerValidStr}.</p>`:'';
   const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (${cFmt(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
-  const datesLine=fmtD(checkin)&&fmtD(checkout)?`<div class="e-header-dates">Check-in: ${fmtD(checkin)} &nbsp;·&nbsp; Check-out: ${fmtD(checkout)}</div>`:'';
-  return`<div class="e-header">
-    <img class="e-logo" src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" alt="Ubuntu Bali">
-    <div class="e-header-label">Retreat Hosting Offer</div>
-    <div class="e-header-line"></div>
-    <div class="e-header-date">${monthStr}</div>${datesLine}
+  return `<div class="contract-doc">
+  <div class="c-hd">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
+    <div class="c-hd-title">Retreat Hosting Offer</div>
+    <div class="c-hd-sub">Ubuntu Bali &nbsp;·&nbsp; ${monthStr}</div>
   </div>
-  <div class="e-body">
-    ${company||address?`<p>${company||''}${address?'<br>'+address:''}</p>`:''}
-    ${name?`<p>Dear ${name},</p>`:''}
-    ${introPara}
-    <p>${vBody}${hasEB?` To make it even easier to get started, we have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}</p>
+  ${name||company?`<div class="c-parties" style="margin-bottom:20px;"><div class="c-party" style="border-right:none;"><div class="c-party-title">Prepared for</div>${company?`<p>${company}</p>`:''}${name?`<p>Attn: ${name}</p>`:''}${address?`<p>${address}</p>`:''}${fmtD(checkin)&&fmtD(checkout)?`<p>Dates: ${fmtD(checkin)} — ${fmtD(checkout)}</p>`:''}</div></div>`:''}
+  <div class="c-sec">
+    ${introPara||`<p>Please find below our retreat hosting offer for <strong>${retreatName}</strong>.</p>`}
+    <p>${vBody}${hasEB?` We have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}</p>
   </div>
-  ${ebBadge}
-  <div class="e-package">
-    <div class="e-pkg-hd">
-      <div class="e-pkg-hd-label">Package</div>
-      <div class="e-pkg-hd-title">${retreatName}</div>
-      <div class="e-pkg-hd-sub">${P.nights} Nights, ${days} Days &middot; ${totalPeople} Guests</div>
-    </div>
-    <div class="e-pkg-body"><table class="ptable">
-      <tr class="pt-colhead"><td class="col-item">Item</td><td class="col-rate">Rate / Night</td><td class="col-sub">Subtotal</td></tr>
-      ${baleRow}${parvRow}${buddRow}${pkgRow}
-      <tr class="pt-subtotal"><td class="col-item">Subtotal</td><td class="col-rate"></td><td class="col-sub">${cFmt(P.stdSub,2)}</td></tr>
-      ${ebRow}${rdRow}
+  <div class="c-sec">
+    <div class="c-sec-hd">Package &amp; Pricing</div>
+    <p><strong>${retreatName}</strong> &nbsp;·&nbsp; ${nights} Nights, ${days} Days &nbsp;·&nbsp; ${totalPeople} Guests</p>
+    ${fmtDS(checkin)&&fmtDS(checkout)?`<p>Check-in: ${fmtDS(checkin)} &nbsp;·&nbsp; Check-out: ${fmtDS(checkout)}</p>`:''}
+    ${ebBadge}
+    <table class="c-table" style="margin-top:12px;">
+      <thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead>
+      <tbody>${baleRow}${parvRow}${buddRow}${pkgRow}${extRow}${ebRow}${rdRow}${txRow}${totRow}</tbody>
     </table>
-    ${investmentBlock}</div>
   </div>
-  <div class="e-note">${notePara}${validLine}${depositLine}</div>
-  <div class="e-included"><div class="e-included-label">What's Included</div>
-    <table>${includedRows.join('')}</table>
+  <div class="c-sec">
+    <div class="c-sec-hd">What's Included</div>
+    <ul>${includedLines.map(l=>`<li>${l}</li>`).join('')}</ul>
   </div>
-  <div class="e-also"><div class="e-also-label">Also of Interest</div>
-    ${alsoLines.map(l=>`<p><span style="color:#C5A27D;">&rarr;&nbsp;</span>${l}</p>`).join('')}
+  <div class="c-sec">
+    <div class="c-sec-hd">Also of Interest</div>
+    ${alsoLines.map(l=>`<p>${l}</p>`).join('')}
   </div>
-  <div class="e-closing"><p>For any further questions, please don't hesitate to reach out.</p><p>Warmly,<br><strong>${signoff}</strong></p></div>
-  <div class="e-footer-band"><div class="e-footer-tagline">I am, because we are.</div>
-  <div class="e-footer-contact">namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</div></div>`;
+  ${notePara||validLine||depositLine?`<div class="c-sec">${notePara}${validLine}${depositLine}</div>`:''}
+  <div class="c-sec" style="border-top:1px solid var(--border);padding-top:16px;">
+    <p>For any further questions, please don't hesitate to reach out.</p>
+    <p>Warmly,<br><strong>${signoff}</strong></p>
+    <p style="font-size:10px;color:var(--muted);margin-top:12px;">namaste@ubuntubali.com &nbsp;·&nbsp; +62 812 3862 0082 &nbsp;·&nbsp; www.ubuntubali.com</p>
+  </div>
+</div>`;
 }
 
 function buildContractHTML(){
