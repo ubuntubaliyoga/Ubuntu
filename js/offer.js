@@ -85,11 +85,13 @@ function buildOfferHTML(){
   const extTotal=extraServicesTotal();
   const hasExtras=extraServices.length>0;
   const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal*TAX;
-  const extRow=hasExtras?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Enhancements</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR_(`${s.label} (${s.pax} pax)`,`${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR_(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
   const ebRow=hasEB?cR_(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
   const rdRow=P.discRooms>0&&P.discRoomPct>0?cR_(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
-  const txRow=cR_('Tax (10%) + Service charge (5%)','',cFmt((hasExtras?grandIn:P.totalIn)-(hasExtras?grandEx:P.totalEx),2));
-  const totRow=`<tr style="background:#F5ECD7;font-weight:700;"><td>Total incl. tax &amp; service charge</td><td style="text-align:right;white-space:nowrap;">${cFmt(hasExtras?grandIn:P.totalIn,0)}</td></tr>`;
+  const pkgTxRow=cR_('Tax (10%) + Service charge (5%)','',cFmt(P.totalIn-P.totalEx,2));
+  const pkgTotRow=`<tr style="background:#F5ECD7;font-weight:700;"><td>${hasExtras?'Package Total':'Total incl. tax &amp; service charge'}</td><td style="text-align:right;white-space:nowrap;">${cFmt(P.totalIn,0)}</td></tr>`;
+  const extItemRows=hasExtras?extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR_(s.label,`${s.pax} pax · ${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR_(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join(''):'';
+  const extTxRow=hasExtras?cR_('Tax (10%) + Service charge (5%)','',cFmt(extTotal*(TAX-1),2)):'';
+  const extTotRow=hasExtras?`<tr style="background:#F5ECD7;font-weight:700;"><td>Enhancements Total</td><td style="text-align:right;white-space:nowrap;">${cFmt(extTotal*TAX,0)}</td></tr>`:'';
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
   const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
@@ -113,9 +115,16 @@ function buildOfferHTML(){
     ${fmtDS(checkin)&&fmtDS(checkout)?`<p>Check-in: ${fmtDS(checkin)} &nbsp;·&nbsp; Check-out: ${fmtDS(checkout)}</p>`:''}
     ${ebBadge}
     <table class="c-table" style="margin-top:12px;">
-      <thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead>
-      <tbody>${baleRow}${parvRow}${buddRow}${pkgRow}${extRow}${ebRow}${rdRow}${txRow}${totRow}</tbody>
+      <thead><tr><th>ACCOMMODATION</th><th style="text-align:right;">TOTAL</th></tr></thead>
+      <tbody>${baleRow}${parvRow}${buddRow}${pkgRow}${ebRow}${rdRow}${pkgTxRow}${pkgTotRow}</tbody>
     </table>
+    ${hasExtras?`<table class="c-table" style="margin-top:16px;">
+      <thead><tr><th>ENHANCEMENTS</th><th style="text-align:right;">TOTAL</th></tr></thead>
+      <tbody>${extItemRows}${extTxRow}${extTotRow}</tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--dark);color:#F5ECD7;border-radius:var(--radius-sm);padding:10px 14px;margin-top:8px;font-weight:700;font-size:12px;">
+      <span>Grand Total incl. tax &amp; service charge</span><span>${cFmt(grandIn,0)}</span>
+    </div>`:''}
   </div>
   <div class="c-sec">
     <div class="c-sec-hd">What's Included</div>
