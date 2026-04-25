@@ -273,6 +273,8 @@ function render(){}
 // ── EXTRA SERVICES ────────────────────────────────────────────────────────────
 // Each extra: { id, label, unitUsd, unit, qty, customLabel }
 let extraServices = [];
+// Live getter so pricing-engine.js can always find the current array via window.extraServices
+Object.defineProperty(window, 'extraServices', { get() { return extraServices }, set(v) { extraServices = v } });
 
 function getIdrRate() {
   return parseFloat(document.getElementById('f-idrrate')?.value) || 17085;
