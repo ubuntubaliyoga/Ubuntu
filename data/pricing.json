@@ -22,7 +22,7 @@
     },
     {
       "id": "MEAL_STD",
-      "name": "Standard Lunch",
+      "name": "Standard Meal",
       "cost": 50000
     },
     {
@@ -68,7 +68,6 @@
         "JATILUWIH_ENTRANCE",
         "BATU_KARU_TICKET",
         "TREKKING_GUIDE",
-        "LUNCH_STD",
         "OFFERING"
       ]
     },
@@ -83,7 +82,6 @@
         "JATILUWIH_ENTRANCE",
         "YEHHO_ENTRANCE",
         "MENGWIT_ENTRANCE",
-        "LUNCH_STD",
         "ANGSERI_ENTRANCE",
         "OFFERING"
       ]
