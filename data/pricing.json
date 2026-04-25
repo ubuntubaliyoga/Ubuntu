@@ -37,8 +37,8 @@
     },
     {
       "id": "MENGWIT_PALACE",
-      "name": "Mengwit Entrance F",
-      "cost": 0
+      "name": "Mengwit Entrance Fee",
+      "cost": 250
     }
   ],
   "templates": [
