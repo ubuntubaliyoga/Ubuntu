@@ -44,6 +44,11 @@
       "id": "ANGSERI_ENTRANCE",
       "name": "Angseri Hotspring Entrance Fee",
       "cost": 35000
+    },
+    {
+      "id": "KLIVE_ENTRANCE",
+      "name": "Klive Beachclub Entrance",
+      "cost": 0
     }
   ],
   "templates": [
