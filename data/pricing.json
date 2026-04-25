@@ -95,7 +95,8 @@
       "fixed_cost_refs": [],
       "variable_cost_refs": [
         "KLIVE_ENTRANCE",
-        "TRANSPORT_BIG"
+        "TRANSPORT_BIG",
+        "KECAK_ENTRANCE"
       ]
     }
   ]
