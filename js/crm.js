@@ -222,10 +222,10 @@ async function loadCRM(force = false) {
   if (btn) { btn.textContent = '↻ Loading…'; btn.disabled = true; }
 
   try {
-    const r = await fetch('/api/crm', {
+    const r = await fetch('/api/data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'load' }),
+      body: JSON.stringify({ store: 'crm', action: 'load' }),
     });
     if (!r.ok) throw new Error(await r.text());
     crmData = await r.json();
@@ -431,9 +431,9 @@ function toggleReachedOut(id, db, btn) {
   const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
   crmRender();
-  fetch('/api/crm', {
+  fetch('/api/data', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
+    body: JSON.stringify({ store: 'crm', action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
 
@@ -470,9 +470,9 @@ function addCustomReachedOut(id, db) {
   const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.reachedOutOn = selected;
   crmRender();
-  fetch('/api/crm', {
+  fetch('/api/data', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
+    body: JSON.stringify({ store: 'crm', action: 'updateReachedOut', pageId: id, db, reachedOutOn: selected }),
   }).catch(e => dbg('reachedOut save failed: ' + e.message));
 }
 
@@ -480,9 +480,9 @@ async function saveNotes(id, db, notes) {
   const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.notes = notes;
   try {
-    await fetch('/api/crm', {
+    await fetch('/api/data', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update', pageId: id, db, notes }),
+      body: JSON.stringify({ store: 'crm', action: 'update', pageId: id, db, notes }),
     });
     dbg('Notes saved');
   } catch (e) { dbg('Notes save failed: ' + e.message); }
@@ -492,9 +492,9 @@ async function savePipelineStage(id, db, status) {
   const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) lead.status = status;
   try {
-    await fetch('/api/crm', {
+    await fetch('/api/data', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update', pageId: id, db, status }),
+      body: JSON.stringify({ store: 'crm', action: 'update', pageId: id, db, status }),
     });
     dbg('Stage saved: ' + status);
   } catch (e) { dbg('Stage save failed: ' + e.message); }
@@ -517,9 +517,9 @@ async function saveContactDetails(id, db) {
   const lead = allLeadsAndConverted().find(x => x.id === id);
   if (lead) Object.assign(lead, props);
   try {
-    await fetch('/api/crm', {
+    await fetch('/api/data', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'updateDetails', pageId: id, db, ...props }),
+      body: JSON.stringify({ store: 'crm', action: 'updateDetails', pageId: id, db, ...props }),
     });
     dbg('Contact saved');
     openCrmModal(id);
@@ -530,9 +530,9 @@ async function promoteLead(id, skipConfirm = false) {
   const c = allLeads().find(x => x.id === id);
   if (!c || !skipConfirm && !confirm(`Move ${c.name} to Converted?`)) return;
   try {
-    await fetch('/api/crm', {
+    await fetch('/api/data', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'promote', pageId: id, name: c.name, company: c.company,
+      body: JSON.stringify({ store: 'crm', action: 'promote', pageId: id, name: c.name, company: c.company,
         email: c.email, insta: c.insta, website: c.website, location: c.location, notes: c.notes }),
     });
     ['emailLeads', 'whatsappLeads', 'shalaLeads'].forEach(k => {
@@ -551,9 +551,9 @@ function loadDraftFromCrm(i) {
 
 async function deleteLead(id) {
   try {
-    await fetch('/api/crm', {
+    await fetch('/api/data', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete', pageId: id }),
+      body: JSON.stringify({ store: 'crm', action: 'delete', pageId: id }),
     });
     ['emailLeads', 'whatsappLeads', 'shalaLeads', 'converted'].forEach(k => {
       if (crmData[k]) crmData[k] = crmData[k].filter(x => x.id !== id);
@@ -586,8 +586,8 @@ function dropLeadOnTab(id, targetTab) {
     crmData.converted = [...(crmData.converted || []), lead];
     crmSwitchTab('converted');
     if (typeof fxSparkle === 'function') fxSparkle(document.getElementById('crm-tab-converted'));
-    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'promote', pageId: id, name: lead.name, company: lead.company,
+    fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store: 'crm', action: 'promote', pageId: id, name: lead.name, company: lead.company,
         email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
     }).catch(e => dbg('Promote failed: ' + e.message));
 
@@ -596,8 +596,8 @@ function dropLeadOnTab(id, targetTab) {
     lead.status = st;
     crmSwitchTab('closed');
     if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!'], true);
-    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: st }),
+    fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store: 'crm', action: 'update', pageId: id, db: lead.db, status: st }),
     }).catch(e => dbg('Status save failed: ' + e.message));
 
   } else if (targetTab === 'cold' && sourceTab === 'converted') {
@@ -606,8 +606,8 @@ function dropLeadOnTab(id, targetTab) {
     lead.status = null;
     crmData.emailLeads = [...(crmData.emailLeads || []), lead];
     crmSwitchTab('cold');
-    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'demote', pageId: id, name: lead.name, company: lead.company,
+    fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store: 'crm', action: 'demote', pageId: id, name: lead.name, company: lead.company,
         email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
     }).catch(e => dbg('Demote failed: ' + e.message));
 
@@ -618,18 +618,18 @@ function dropLeadOnTab(id, targetTab) {
     crmData.emailLeads = [...(crmData.emailLeads || []), lead];
     crmSwitchTab('closed');
     if (typeof fxTextBurst === 'function') fxTextBurst(document.getElementById('crm-tab-closed'), ['yaay!', 'yaay!', '🎉', 'yaay!', 'yes!', '💰', 'yaay!'], true);
-    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'demote', pageId: id, name: lead.name, company: lead.company,
+    fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store: 'crm', action: 'demote', pageId: id, name: lead.name, company: lead.company,
         email: lead.email, insta: lead.insta, website: lead.website, location: lead.location, notes: lead.notes }),
-    }).then(() => fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update', pageId: id, db: 'email', status: 'SALE CLOSED' }),
+    }).then(() => fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store: 'crm', action: 'update', pageId: id, db: 'email', status: 'SALE CLOSED' }),
     })).catch(e => dbg('Close warm failed: ' + e.message));
 
   } else if (targetTab === 'cold' && sourceTab === 'closed') {
     lead.status = 'Followed + Engaged';
     crmSwitchTab('cold');
-    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: 'Followed + Engaged' }),
+    fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store: 'crm', action: 'update', pageId: id, db: lead.db, status: 'Followed + Engaged' }),
     }).catch(e => dbg('Status save failed: ' + e.message));
   }
 }
@@ -638,9 +638,9 @@ async function demoteLead(id) {
   const c = (crmData.converted || []).find(x => x.id === id);
   if (!c) return;
   try {
-    const r = await fetch('/api/crm', {
+    const r = await fetch('/api/data', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'demote', pageId: id, name: c.name, company: c.company,
+      body: JSON.stringify({ store: 'crm', action: 'demote', pageId: id, name: c.name, company: c.company,
         email: c.email, insta: c.insta, website: c.website, location: c.location, notes: c.notes }),
     });
     if (!r.ok) throw new Error(await r.text());
@@ -746,7 +746,7 @@ function openDuplicateView() {
 async function deleteDupConfirm(id, name) {
   if (!confirm(`Delete: ${name}?`)) return;
   try {
-    await fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', pageId: id }) });
+    await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ store: 'crm', action: 'delete', pageId: id }) });
     ['emailLeads', 'whatsappLeads', 'shalaLeads', 'converted'].forEach(k => { if (crmData[k]) crmData[k] = crmData[k].filter(x => x.id !== id); });
     showDuplicates();
   } catch (e) { dbg('Delete dup failed: ' + e.message); }
@@ -772,10 +772,10 @@ async function saveNewLead() {
   if (!name) { alert('Name is required'); return; }
   const db = document.getElementById('nl-db')?.value || 'email';
   try {
-    const r = await fetch('/api/crm', {
+    const r = await fetch('/api/data', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        action: 'create', db, name,
+        store: 'crm', action: 'create', db, name,
         company:  document.getElementById('nl-company')?.value,
         email:    document.getElementById('nl-email')?.value,
         insta:    document.getElementById('nl-insta')?.value,

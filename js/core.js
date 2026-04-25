@@ -46,7 +46,7 @@ window.addEventListener('load',()=>{
   if(Date.now()-lastCheck>86400000){
     setTimeout(async()=>{
       try{
-        const r=await fetch('/api/drift-detector');
+        const r=await fetch('/api/data?action=drift');
         const d=await r.json();
         localStorage.setItem('driftCheckedAt',String(Date.now()));
         if(d.drifts?.length>0){
@@ -76,7 +76,7 @@ function _logResult(d, level){
   else if(d.action==='skipped')   dbg(`${p} skipped: ${d.reason}`);
   else if(d.action==='circuit_open'){
     dbg(`${p} escalating to deep agent...`);
-    _agentPost('/api/debug-agent-deep', d._entry||{}, r=>_logResult(r,2));
+    _agentPost('/api/debug-agent', {...(d._entry||{}),level:2}, r=>_logResult(r,2));
   }
   else dbg(`${p} ${JSON.stringify(d)}`);
 }
@@ -94,7 +94,7 @@ function dbgStructured(obj){
     _agentPost('/api/debug-agent', entry, d=>{
       if(d.action==='circuit_open'){
         dbg('[AGENT] circuit open — escalating to deep agent...');
-        _agentPost('/api/debug-agent-deep', entry, r=>_logResult(r,2));
+        _agentPost('/api/debug-agent', {...entry,level:2}, r=>_logResult(r,2));
       } else _logResult(d,1);
     });
     return;
@@ -104,7 +104,7 @@ function dbgStructured(obj){
   if((obj.type==='js'||obj.type==='promise')&&_jsFileMap[obj.file]){
     const enriched={...entry,filePath:_jsFileMap[obj.file]};
     dbg('[AGENT-2] analyzing JS error...');
-    _agentPost('/api/debug-agent-deep', enriched, r=>_logResult(r,2));
+    _agentPost('/api/debug-agent', {...enriched,level:2}, r=>_logResult(r,2));
   }
 }
 
@@ -126,27 +126,6 @@ function dbgStructured(obj){
   };
 })();
 
-async function runMigration(){
-  const btn=$('migrate-btn');
-  if(!confirm('Run CRM migration? This writes 329 leads to the new database.'))return;
-  if(btn){btn.textContent='MIGRATING…';btn.disabled=true;}
-  dbg('[MIGRATE] starting…');
-  try{
-    const r=await fetch('/api/migrate-crm?force=true',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
-    const d=await r.json();
-    if(d.success){
-      dbg(`[MIGRATE] done — created:${d.created} failed:${d.failed} total:${d.total}`);
-      if(d.errors?.length)d.errors.forEach(e=>dbgWarn(`[MIGRATE] failed: ${e.name} — ${e.error}`));
-      if(btn){btn.textContent='DONE ✓';btn.style.borderColor='#0f0';btn.style.color='#0f0';}
-    }else{
-      dbgWarn('[MIGRATE] error: '+(d.error||JSON.stringify(d)));
-      if(btn){btn.textContent='MIGRATE CRM';btn.disabled=false;}
-    }
-  }catch(e){
-    dbgWarn('[MIGRATE] network error: '+e.message);
-    if(btn){btn.textContent='MIGRATE CRM';btn.disabled=false;}
-  }
-}
 
 function openFABSheet(){
   $('fab-sheet')?.classList.add('open');
@@ -351,13 +330,17 @@ window._allRates         = {};
 (async()=>{
   const dot=$('idr-dot'),info=$('idr-info');
   try{
-    const r=await fetch('/api/exchange-rate');
-    const d=await r.json();
+    const r=await fetch('https://open.er-api.com/v6/latest/USD');
+    const raw=await r.json();
+    const idr=raw.rates?.IDR;
+    if(!idr)throw new Error('IDR rate not found');
+    const MAJORS=['IDR','EUR','GBP','AUD','SGD','CHF','CAD','CNY','JPY','RUB'];
+    const rates={};for(const c of MAJORS){if(raw.rates?.[c])rates[c]=raw.rates[c];}
+    const d={rate:Math.round(idr),rates};
     $('f-idrrate').value=d.rate;
     window._allRates=d.rates||{IDR:d.rate};
     const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    if(d.fallback){dot.className='idr-dot fallback';info.textContent=`⚠ Fallback rate · ${now}`;}
-    else{dot.className='idr-dot live';info.textContent=`Live · ${now}`;}
+    dot.className='idr-dot live';info.textContent=`Live · ${now}`;
     updateCurrencyTicker();
   }catch{
     if(dot)dot.className='idr-dot error';

@@ -11,7 +11,7 @@ function _parseDraftLinks(drafts) {
 
 async function fetchDraftsData() {
   try {
-    const r = await fetch('/api/notion', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'load'}) });
+    const r = await fetch('/api/data', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({store:'offers',action:'load'}) });
     if (!r.ok) return;
     const data = await r.json();
     window._drafts = _parseDraftLinks(data.drafts || []);
@@ -23,7 +23,7 @@ async function loadDrafts(){
   if(!list) return;
   list.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--muted);font-size:13px;font-style:italic;">Loading drafts…</div>`;
   try{
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'load'})});
+    const r=await fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({store:'offers',action:'load'})});
     if(!r.ok) throw new Error();
     const data=await r.json();
     if(!data.drafts||data.drafts.length===0){
@@ -103,8 +103,8 @@ async function confirmRename(i){
   const d=window._drafts[i];
   if(!d) return;
   try{
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      action:'update',pageId:d.pageId,
+    const r=await fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      store:'offers',action:'update',pageId:d.pageId,
       organizer:$(`rename-input-${i}`).value.trim()||d.organizer,
       retreatName:$(`rename-retreat-${i}`).value.trim()||d.retreatName,
       checkin:d.checkin,checkout:d.checkout,nights:d.nights,
@@ -119,8 +119,8 @@ async function duplicateDraft(i){
   const d=window._drafts[i];
   if(!d||!d.formState) return;
   try{
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      action:'create',organizer:(d.organizer||'')+' (copy)',retreatName:d.retreatName,
+    const r=await fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      store:'offers',action:'create',organizer:(d.organizer||'')+' (copy)',retreatName:d.retreatName,
       checkin:d.checkin,checkout:d.checkout,nights:d.nights,
       guests:d.guests,totalUSD:d.totalUSD,status:'Draft',formState:d.formState,
     })});
@@ -133,7 +133,7 @@ async function deleteDraft(i){
   const d=window._drafts[i];
   if(!d||!confirm(`Move "${d.organizer||'this draft'}" to trash?`)) return;
   try{
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',pageId:d.pageId})});
+    const r=await fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({store:'offers',action:'delete',pageId:d.pageId})});
     if(!r.ok) throw new Error();
     if(currentPageId===d.pageId) currentPageId=null;
     loadDrafts();
@@ -169,10 +169,10 @@ async function saveToNotion(silent=false){
     const controller=new AbortController();
     const timeout=setTimeout(()=>{dbg('ABORT: 15s timeout hit');controller.abort();},15000);
     const body=currentPageId
-      ?JSON.stringify({action:'update',...payload,pageId:currentPageId})
-      :JSON.stringify({action:'create',...payload});
-    dbg(`fetching /api/notion...`);
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json'},body,signal:controller.signal});
+      ?JSON.stringify({store:'offers',action:'update',...payload,pageId:currentPageId})
+      :JSON.stringify({store:'offers',action:'create',...payload});
+    dbg(`fetching /api/data...`);
+    const r=await fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body,signal:controller.signal});
     clearTimeout(timeout);
     dbg(`response status: ${r.status}`);
     const data=await r.json();

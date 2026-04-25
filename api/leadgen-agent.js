@@ -1,7 +1,8 @@
 // api/leadgen-agent.js
 // Ubuntu Bali — Lead Research & Notion Sync
-// B1: blocklist → B2: Instagram hashtag search (Apify) → profile scrape → Maps fallback (Apify)
-// → B3: WA links → B4: Notion write
+// POST { city }                  → B1: blocklist → B2: Instagram/Maps → enrichment → Notion write
+// POST { action:'retro-enrich' } → re-run phone enrichment on today's leads (was api/retro-enrich.js)
+// GET  ?action=retro-enrich      → same, ?dry=1 for preview
 
 export const config = { maxDuration: 120 };
 
@@ -17,7 +18,16 @@ const NOTION_VER        = '2022-06-28';
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
+  // GET: retro-enrich
+  if (req.method === 'GET') {
+    if (req.query?.action === 'retro-enrich') return handleRetroEnrich(req, res);
+    return res.status(400).end();
+  }
   if (req.method !== 'POST') return res.status(405).end();
+
+  // POST: retro-enrich action
+  if (req.body?.action === 'retro-enrich') return handleRetroEnrich(req, res);
+
   const { city } = req.body;
   if (!city?.trim()) return res.status(400).json({ error: 'city required' });
 
@@ -416,4 +426,99 @@ function firstWord(s) { return (s || '').split(/[\s,]+/)[0] || s || ''; }
 function mergeDedupe(a, b) {
   const seen = new Set(a.map(l => l.name.toLowerCase()));
   return [...a, ...b.filter(l => !seen.has(l.name.toLowerCase()))];
+}
+
+// ─── RETRO ENRICH (was api/retro-enrich.js) ──────────────────────────────────
+
+async function handleRetroEnrich(req, res) {
+  const dry  = req.body?.dry === true || req.query?.dry === '1';
+  const _log = [];
+  const log  = (msg) => { console.log('[retro-enrich]', msg); _log.push(msg); };
+
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    log(`Fetching today's leads (${today}) from Notion CRM…`);
+    const leads   = await fetchTodaysLeads(today);
+    const hadPhone = leads.filter(l => l.phone).length;
+    log(`Found ${leads.length} leads — ${hadPhone} already have a phone, enriching ${leads.length - hadPhone}`);
+
+    const rows = [];
+    for (const lead of leads) {
+      if (lead.phone) {
+        rows.push({ name: lead.name, insta: lead.insta, phone: lead.phone, source: 'already had', updated: false });
+        continue;
+      }
+      const result = await retroEnrichOne(lead, log);
+      if (result) {
+        if (!dry) await updateNotionPhone(lead.pageId, result.phone);
+        rows.push({ name: lead.name, insta: lead.insta, phone: result.phone, source: result.source, updated: !dry });
+      } else {
+        rows.push({ name: lead.name, insta: lead.insta, phone: null, source: '—', updated: false });
+      }
+    }
+
+    const found   = rows.filter(r => r.source !== '—' && r.source !== 'already had').length;
+    const updated = rows.filter(r => r.updated).length;
+    log(`Done: ${found} new numbers found, ${updated} Notion pages updated`);
+    return res.json({ today, total: leads.length, hadPhone, found, updated, dry, rows, _log });
+  } catch (err) {
+    console.error('retro-enrich:', err);
+    return res.status(500).json({ error: err.message, _log });
+  }
+}
+
+async function fetchTodaysLeads(today) {
+  const leads = [];
+  let cursor;
+  do {
+    const body = { filter: { property: 'Engaged first', date: { equals: today } }, page_size: 100, ...(cursor ? { start_cursor: cursor } : {}) };
+    const r = await fetch(`https://api.notion.com/v1/databases/${CRM_DB_ID}/query`, { method: 'POST', headers: notionHeaders(), body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.object === 'error') throw new Error(`Notion: ${d.message}`);
+    for (const page of d.results || []) {
+      const p = page.properties;
+      leads.push({
+        pageId:  page.id,
+        name:    p['Name']?.title?.[0]?.plain_text || '',
+        insta:   p['Insta']?.rich_text?.[0]?.plain_text || null,
+        website: p['Website']?.rich_text?.[0]?.plain_text || null,
+        phone:   p['Whatsapp']?.rich_text?.[0]?.plain_text || null,
+        email:   p['Email']?.email || null,
+        bio: '', _posts: [],
+        location: p['Location']?.rich_text?.[0]?.plain_text || null,
+      });
+    }
+    cursor = d.has_more ? d.next_cursor : null;
+  } while (cursor);
+  return leads;
+}
+
+async function updateNotionPhone(pageId, phone) {
+  await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+    method: 'PATCH', headers: notionHeaders(),
+    body: JSON.stringify({ properties: { 'Whatsapp': { rich_text: [{ text: { content: phone } }] } } }),
+  });
+}
+
+async function retroEnrichOne(l, log) {
+  const captions = (l._posts || []).map(p => p.caption || p.text || '').join(' ');
+  const capPhone = extractPhoneFromText(captions);
+  if (capPhone) return { phone: capPhone, source: 'Instagram caption' };
+
+  for (const url of extractAllLinkInBio(l.website, l.bio)) {
+    const phone = await scrapeLinkInBio(url);
+    if (phone) return { phone, source: shortUrl(url) };
+  }
+
+  if (l.website && !isLinkInBioUrl(l.website)) {
+    const result = await fetchContactDeep(l.website);
+    if (result?.phone) return { phone: result.phone, source: `website ${result.page}` };
+  }
+
+  if (process.env.BRAVE_API_KEY) {
+    const phone = await braveSearchPhone(l.name, l.insta, l.location);
+    if (phone) return { phone, source: 'Brave Search' };
+  }
+
+  return null;
 }
