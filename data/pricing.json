@@ -3,7 +3,7 @@
     {
       "id": "CAR_BALI",
       "name": "Standard Transport",
-      "cost": 0
+      "cost": 1500000
     },
     {
       "id": "JATILUWIH_ENTRANCE",
@@ -35,6 +35,7 @@
     {
       "id": "TREK_SPIRIT",
       "name": "Trekking Spiritual Purification",
+      "markup": 1.4,
       "fixed_cost_refs": [
         "CAR_BALI"
       ],
@@ -44,8 +45,7 @@
         "TREKKING_GUIDE",
         "LUNCH_STD",
         "OFFERING"
-      ],
-      "markup": 1.4
+      ]
     }
   ]
 }
