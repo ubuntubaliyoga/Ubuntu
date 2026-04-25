@@ -156,7 +156,7 @@
     {
       "id": "TEMPLATE_1777132823367",
       "name": "Soundhealing",
-      "markup": 1.4,
+      "markup": 1,
       "fixed_cost_refs": [
         "SOUND"
       ],
