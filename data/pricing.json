@@ -69,11 +69,6 @@
       "id": "BREATH",
       "name": "Breathwork + Meditation",
       "cost": 3450000
-    },
-    {
-      "id": "YOGA_SESSION",
-      "name": "One",
-      "cost": 0
     }
   ],
   "templates": [
