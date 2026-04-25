@@ -54,6 +54,11 @@
       "id": "KECAK_ENTRANCE",
       "name": "Kecak Dance Entrance",
       "cost": 150000
+    },
+    {
+      "id": "MEAL_PRM",
+      "name": "Premium Meal",
+      "cost": 0
     }
   ],
   "templates": [
