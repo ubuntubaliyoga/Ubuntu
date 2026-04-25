@@ -43,6 +43,7 @@ declare global {
     closePricingAdmin(): void
     switchPeTab(tab: 'library' | 'templates'): void
     savePricingAdmin(): void
+    triggerPeAutosave(): void
     addPeLibraryRow(): void
     removePeLibraryRow(btn: HTMLElement): void
     addPeTemplate(): void
