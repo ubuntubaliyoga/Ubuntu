@@ -23,7 +23,7 @@
     {
       "id": "LUNCH_STD",
       "name": "Standard Lunch",
-      "cost": 0
+      "cost": 50000
     },
     {
       "id": "OFFERING",
