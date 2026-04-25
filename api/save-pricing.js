@@ -1,5 +1,5 @@
 const OWNER = 'ubuntubaliyoga'
-const REPO  = 'ubuntu'
+const REPO  = 'Ubuntu'
 const PATH  = 'data/pricing.json'
 const BRANCH = 'main'
 
