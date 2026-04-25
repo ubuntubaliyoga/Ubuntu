@@ -1,7 +1,7 @@
 {
   "library": [
     {
-      "id": "TRANSPORT_B",
+      "id": "TRANSPORT_BIG",
       "name": "Transport 14 Seats",
       "cost": 1500000
     },
