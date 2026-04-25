@@ -70,7 +70,8 @@
         "TRANSPORT_BIG"
       ],
       "variable_cost_refs": [
-        "JATILUWIH_ENTRANCE"
+        "JATILUWIH_ENTRANCE",
+        "YEHHO_ENTRANCE"
       ]
     }
   ]
