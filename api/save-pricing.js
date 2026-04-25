@@ -1,6 +1,6 @@
 const OWNER = 'ubuntubaliyoga'
-const REPO  = 'Ubuntu'
-const PATH  = 'data/pricing.json'
+const REPO = 'Ubuntu'
+const PATH = 'data/pricing.json'
 const BRANCH = 'main'
 
 export default async function handler(req, res) {
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid payload: library and templates required' })
   }
 
-  const token = process.env.GITHUB_TOKEN
+  const token = process.env.GH_TOKEN
   if (!token) return res.status(500).json({ error: 'GITHUB_TOKEN not configured' })
 
   const apiBase = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`
