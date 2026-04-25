@@ -66,7 +66,9 @@
       "id": "TEMPLATE_1777125992656",
       "name": "The Sanctuary of Stillness",
       "markup": 1.4,
-      "fixed_cost_refs": [],
+      "fixed_cost_refs": [
+        "TRANSPORT_BIG"
+      ],
       "variable_cost_refs": []
     }
   ]
