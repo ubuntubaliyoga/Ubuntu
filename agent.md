@@ -2,6 +2,41 @@
 
 > Read this before touching any file. It applies to Claude, Gemini, and any other agent working in this repo.
 
+---
+
+## Which agent to use
+
+### Gemini — fast coding
+Use Gemini CLI (`gemini`) for routine, well-scoped tasks where speed matters more than reasoning depth:
+
+| Task type | Examples |
+|-----------|---------|
+| Small edits, CSS tweaks | Change a colour, adjust spacing, rename a label |
+| Single-function fixes | Fix a typo in a Notion field name, update a constant |
+| Boilerplate generation | Add a new CRM action button following existing pattern |
+| File reads / quick lookups | "What does `pricing()` return?", "Show me the TAX constant" |
+| Minor API changes | Add a new query param to an existing handler |
+| Copy/text changes | Update meals text, button labels, placeholder copy |
+
+### Claude — sophisticated tasks
+Use Claude Code (`claude`) when the task requires judgement, cross-file reasoning, or risk of breakage:
+
+| Task type | Examples |
+|-----------|---------|
+| Multi-file refactors | Moving logic between `js/` files, restructuring the pricing engine |
+| Architecture decisions | Adding a new subsystem, new Notion DB integration |
+| Debug agent work | Modifying `debug-agent.js` / `debug-agent-deep.js` — these touch prod error recovery |
+| Pricing engine changes | Editing `src/pricing/*.ts` — must rebuild and verify SPPP formula integrity |
+| Security-sensitive code | API keys, token handling, blocklist logic in `leadgen-agent.js` |
+| Ambiguous bugs | Errors with unclear root cause spanning multiple files |
+| Vercel function limit decisions | `api/` is at 12 functions — adding/removing requires deliberate planning |
+
+### Routing heuristic
+> **Gemini first** if you can describe the change in one sentence and it touches ≤ 2 files.  
+> **Claude** if you're unsure, if it touches the pricing engine, debug agents, or CRM data model, or if a mistake would break prod.
+
+---
+
 ## Rules first
 
 - **Never create new files in the repo root.** The root contains only config files (`vercel.json`, `package.json`, `tsconfig.json`, `vite.config.ts`, `sw.js`, `index.html`). Everything else lives in a subdirectory. If you think you need a new file, put it in the correct subdirectory.
