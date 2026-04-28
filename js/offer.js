@@ -19,7 +19,7 @@ function pricing(){
   const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
   const earlyAmt=discPct>0?stdSub*(discPct/100):0;
   const roomDiscAmt=discRooms>0&&discRoomPct>0?roomRate*(discRoomPct/100)*discRooms:0;
-  const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight* TAX;
+  const perNight=stdSub-earlyAmt-roomDiscAmt, perNightTax=perNight*TAX;
   const nights=parseInt($('f-nights').value)||7, totalEx=perNight*nights, totalIn=perNightTax*nights;
   return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,parvDiscPct,buddOn,buddOrig,buddDisc,buddDiscPct,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
 }
@@ -40,7 +40,6 @@ function getFormState(){
   s['f-parvati-on']=$('f-parvati-on').checked;
   s['f-buddha-on']=$('f-buddha-on').checked;
   s['extra-services']=getExtraServicesState();
-
   s['price-display']=document.querySelector('input[name="price-display"]:checked')?.value||'both';
   if (window._linkedLeadId) { s['_linkedLeadId'] = window._linkedLeadId; s['_linkedLeadName'] = window._linkedLeadName || ''; }
   return s;
@@ -61,12 +60,10 @@ function buildOfferHTML(){
   const retreatName=$('f-retreatname').value||'Healing Retreat', noteText=$('f-note').value.trim();
   const offerValid=$('f-offervalid').value, depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
   const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
-  const pd=document.querySelector('input[name="price-display"]:checked')?.value||'both';
-  const showDaily=pd==='daily'||pd==='both', showTotal=pd==='total'||pd==='both';
   const P=pricing(), totalPeople=guests+facilitators, days=P.nights+1;
   const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
-  const depositAmt=depositPct>0?(P.totalIn+extraServicesTotal()* TAX)*(depositPct/100):0;
+  const depositAmt=depositPct>0?(P.totalIn+extraServicesTotal()*TAX)*(depositPct/100):0;
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
@@ -74,30 +71,52 @@ function buildOfferHTML(){
   const vBody=vNames.length>0?` We are pleased to include ${vNames.join(' and ')} in this package.`:'';
   const bodyText=$('f-body')?.value.trim()||'Kindly open the attached brochure for pictures of the full property.';
   const nights=P.nights;
-  const cR_=(label,sub,amt)=>`<tr><td>${label}${sub?`<span style="display:block;font-size:9px;color:#9E948A;margin-top:2px;">${sub}</span>`:''}</td><td style="text-align:right;white-space:nowrap;">${amt}</td></tr>`;
-  const baleRow=P.bales<=0?'':P.bales<=5
-    ?cR_(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate*nights,2))
-    :cR_('5 Gladaks',`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(5*P.roomRate*nights,2))
-     +cR_(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt((P.bales-5)*P.roomRate*nights,2));
-  const parvRow=P.parvOn?cR_('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
-  const buddRow=P.buddOn?cR_('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
-  const pkgRow=P.pkgCount>0?cR_(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
+
+  // ── PDF-style three-column pricing table ──────────────────────────────────
   const extTotal=extraServicesTotal();
   const hasExtras=extraServices.length>0;
   const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal*TAX;
-  const ebRow=hasEB?cR_(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?cR_(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
-  const pkgTxRow=cR_('Tax (10%) + Service charge (5%)','',cFmt(P.totalIn-P.totalEx,2));
-  const pkgTotRow=`<tr style="background:#F5ECD7;font-weight:700;"><td>${hasExtras?'Package Total':'Total incl. tax &amp; service charge'}</td><td style="text-align:right;white-space:nowrap;">${cFmt(P.totalIn,0)}</td></tr>`;
-  const extItemRows=hasExtras?extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR_(s.label,`${s.pax} pax · ${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR_(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join(''):'';
-  const extTxRow=hasExtras?cR_('Tax (10%) + Service charge (5%)','',cFmt(extTotal*(TAX-1),2)):'';
-  const extTotRow=hasExtras?`<tr style="background:#F5ECD7;font-weight:700;"><td>Enhancements Total</td><td style="text-align:right;white-space:nowrap;">${cFmt(extTotal*TAX,0)}</td></tr>`:'';
+
+  // Row builder: item | rate/night (with optional strikethrough) | subtotal
+  const pRow3=(label, rateOrig, rateDisc, discPctLabel, subtotal)=>{
+    const rateCell = rateOrig && rateDisc && rateOrig!==rateDisc
+      ? `<span class="rate-orig">${cFmt(rateOrig,0)}</span><span class="rate-disc">${cFmt(rateDisc,0)}<span class="rate-pct">-${discPctLabel}</span></span>`
+      : `<span class="rate-disc">${cFmt(rateDisc||rateOrig,0)}</span>`;
+    return `<tr class="pt-item"><td class="col-item">${label}</td><td class="col-rate">${rateCell}</td><td class="col-sub">${subtotal}</td></tr>`;
+  };
+  const pDiscRow=(label,amt)=>`<tr class="pt-discount"><td class="col-item"><strong>${label}</strong></td><td class="col-rate"></td><td class="col-sub" style="color:#C5A27D;font-weight:600;">${amt}</td></tr>`;
+
+  // Accommodation rows
+  const baleRow=P.bales<=0?'':P.bales<=5
+    ?pRow3(`${P.bales} Gladak${P.bales>1?'s':''}`,null,P.roomRate,null,cFmt(P.bales*P.roomRate*nights,2))
+    :pRow3('5 Gladaks',null,P.roomRate,null,cFmt(5*P.roomRate*nights,2))
+     +pRow3(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,null,P.roomRate,null,cFmt((P.bales-5)*P.roomRate*nights,2));
+  const parvRow=P.parvOn?pRow3('Parvati Villa',P.parvDiscPct>0?P.parvOrig:null,P.parvDisc,P.parvDiscPct>0?P.parvDiscPct+'%':null,cFmt(P.parvDisc*nights,2)):'';
+  const buddRow=P.buddOn?pRow3('Buddha Villa',P.buddDiscPct>0?P.buddOrig:null,P.buddDisc,P.buddDiscPct>0?P.buddDiscPct+'%':null,cFmt(P.buddDisc*nights,2)):'';
+  const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub*nights,2)):'';
+
+  // Subtotal row (before discounts)
+  const subtotalAmt=P.stdSub*nights;
+  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate"></td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(subtotalAmt,2)}</td></tr>`;
+
+  // Discount rows
+  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt*nights,2)}`):'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt*nights,2)}`):'';
+
+  // Extra service rows
+  const extItemRows=hasExtras?extraServices.map(s=>{
+    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return pRow3(`${s.label} (${s.pax} pax)`,null,getIdrRate()>0?s.spppIdr/getIdrRate():0,null,cFmt(t,0));}
+    const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':' × '+s.qty;
+    return pRow3(`${s.label}${qtyStr}`,null,s.unitUsd,null,cFmt(t,0));
+  }).join(''):'';
+
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
   const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
   const ebBadge=hasEB?`<div style="background:#FAF6F0;border:1px solid #C5A27D;border-radius:3px;padding:8px 12px;margin:10px 0;font-size:11px;color:#7A6248;text-align:center;"><strong>${P.discPct}% Early Bird Discount applied</strong> &nbsp;·&nbsp; Book by ${offerValidStr} to secure this rate.</div>`:'';
   const validLine=offerValid?`<p>This offer is valid until ${offerValidStr}.</p>`:'';
   const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (${cFmt(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
+
   return `<div class="contract-doc">
   <div class="c-hd">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
@@ -114,17 +133,34 @@ function buildOfferHTML(){
     <p><strong>${retreatName}</strong> &nbsp;·&nbsp; ${nights} Nights, ${days} Days &nbsp;·&nbsp; ${totalPeople} Guests</p>
     ${fmtDS(checkin)&&fmtDS(checkout)?`<p>Check-in: ${fmtDS(checkin)} &nbsp;·&nbsp; Check-out: ${fmtDS(checkout)}</p>`:''}
     ${ebBadge}
-    <table class="c-table" style="margin-top:12px;">
-      <thead><tr><th>ACCOMMODATION</th><th style="text-align:right;">TOTAL</th></tr></thead>
-      <tbody>${baleRow}${parvRow}${buddRow}${pkgRow}${ebRow}${rdRow}${pkgTxRow}${pkgTotRow}</tbody>
-    </table>
-    ${hasExtras?`<table class="c-table" style="margin-top:16px;">
-      <thead><tr><th>ENHANCEMENTS</th><th style="text-align:right;">TOTAL</th></tr></thead>
-      <tbody>${extItemRows}${extTxRow}${extTotRow}</tbody>
-    </table>
-    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--dark);color:#F5ECD7;border-radius:var(--radius-sm);padding:10px 14px;margin-top:8px;font-weight:700;font-size:12px;">
-      <span>Grand Total incl. tax &amp; service charge</span><span>${cFmt(grandIn,0)}</span>
-    </div>`:''}
+    <div class="e-package" style="margin:12px 0 0;">
+      <table class="ptable">
+        <thead><tr class="pt-colhead"><td class="col-item">ITEM</td><td class="col-rate">RATE / NIGHT</td><td class="col-sub">SUBTOTAL</td></tr></thead>
+        <tbody>${baleRow}${parvRow}${buddRow}${pkgRow}${subtotalRow}${ebRow}${rdRow}</tbody>
+      </table>
+      ${hasExtras?`<table class="ptable" style="margin-top:10px;">
+        <thead><tr class="pt-colhead"><td class="col-item">ENHANCEMENTS</td><td class="col-rate"></td><td class="col-sub">TOTAL</td></tr></thead>
+        <tbody>${extItemRows}</tbody>
+      </table>`:''}
+      <div class="e-investment" style="margin-top:14px;">
+        <div class="e-invest-row">
+          <span>Package Total (${nights} Nights)</span>
+          <span style="font-size:8.5px;color:#9E948A;">excl. tax &amp; service fee</span>
+        </div>
+        <div class="e-invest-row" style="font-size:13px;font-weight:600;color:#3D3935;padding:2px 0 8px;border-bottom:1px solid #E2D9CE;">
+          ${cFmt(hasExtras?grandEx:P.totalEx,0)}
+        </div>
+        <div class="e-invest-grand">
+          <div>
+            <div class="e-invest-grand-lbl">Total Investment</div>
+            <div class="e-invest-grand-sub">incl. tax &amp; service charge</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="e-invest-grand-val">${cFmt(hasExtras?grandIn:P.totalIn,0)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="c-sec">
     <div class="c-sec-hd">What's Included</div>
@@ -155,7 +191,7 @@ function buildContractHTML(){
   const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
   const P=pricing(), nights=P.nights, days=nights+1;
   const extTotal=extraServicesTotal(), hasExtrasC=extraServices.length>0;
-  const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal* TAX;
+  const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal*TAX;
   const finalTotal=hasExtrasC?grandInC:P.totalIn;
   const idrTotal=finalTotal*idrRate;
   const PMT=payments(finalTotal,checkin,depositPct);
@@ -271,9 +307,7 @@ function renderContract(){$('contract-output').innerHTML=buildContractHTML();}
 function render(){}
 
 // ── EXTRA SERVICES ────────────────────────────────────────────────────────────
-// Each extra: { id, label, unitUsd, unit, qty, customLabel }
 let extraServices = [];
-// Live getter so pricing-engine.js can always find the current array via window.extraServices
 Object.defineProperty(window, 'extraServices', { get() { return extraServices }, set(v) { extraServices = v } });
 
 function getIdrRate() {
@@ -295,8 +329,6 @@ function addExtraService(val) {
   if (!val) return;
   const parts = val.split('|');
   const id = parts[0], label = parts[1];
-
-  // Pricing engine template (pe_ prefix)
   if (id.startsWith('pe_')) {
     const templateId = id.slice(3);
     const pax = getTotalPax();
@@ -308,16 +340,13 @@ function addExtraService(val) {
     markDraftActive();
     return;
   }
-
   let unitUsd = parseFloat(parts[2]) || 0;
   const unit = parts[3] || 'per unit';
   let finalLabel = label;
   if (id === 'custom') {
     finalLabel = prompt('Service name:') || 'Custom Service';
-    const customUsd = parseFloat(prompt('Price in USD:') || '0');
-    unitUsd = customUsd;
+    unitUsd = parseFloat(prompt('Price in USD:') || '0');
   }
-
   const item = { id: Date.now(), serviceId: id, label: finalLabel, unitUsd, unit, qty: 1 };
   extraServices.push(item);
   renderExtraServices();
@@ -344,46 +373,19 @@ function renderExtraServices() {
   const list = document.getElementById('extras-list');
   const totalEl = document.getElementById('extras-total');
   if (!list) return;
-
   if (!extraServices.length) {
     list.innerHTML = '';
     if (totalEl) totalEl.style.display = 'none';
     return;
   }
-
   list.innerHTML = extraServices.map(s => {
     if (s.pricingEngine) {
       const totalUsd = getIdrRate() > 0 ? (s.spppIdr * s.pax) / getIdrRate() : 0;
       const priceLabel = s.spppIdr && getIdrRate() > 0 ? `${cFmt(s.spppIdr / getIdrRate(), 0)}/pax` : '—';
-      return `
-        <div class="extra-tag">
-          <div class="extra-tag-label">${s.label}</div>
-          <div class="extra-tag-qty">
-            <span style="font-size:11px;color:var(--muted);">Pax</span>
-            <input type="number" value="${s.pax}" min="1" style="width:54px;"
-              onchange="window.recalculatePeExtra && window.recalculatePeExtra(${s.id}, parseInt(this.value)||1)"
-              onclick="this.select()">
-            <span style="font-size:11px;color:var(--muted);min-width:100px;">${priceLabel}</span>
-          </div>
-          <div class="extra-tag-price">${totalUsd ? cFmt(totalUsd, 0) : '—'}</div>
-          <button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button>
-        </div>
-      `;
+      return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">Pax</span><input type="number" value="${s.pax}" min="1" style="width:54px;" onchange="window.recalculatePeExtra && window.recalculatePeExtra(${s.id}, parseInt(this.value)||1)" onclick="this.select()"><span style="font-size:11px;color:var(--muted);min-width:100px;">${priceLabel}</span></div><div class="extra-tag-price">${totalUsd ? cFmt(totalUsd, 0) : '—'}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
     }
-    return `
-      <div class="extra-tag">
-        <div class="extra-tag-label">${s.label}</div>
-        <div class="extra-tag-qty">
-          <span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>
-          ${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}
-          <input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:70px;" onchange="updateExtraPrice(${s.id}, this.value)" onclick="this.select()" title="USD per unit">
-        </div>
-        <div class="extra-tag-price">${cFmt(s.unitUsd * s.qty, 0)}</div>
-        <button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button>
-      </div>
-    `;
+    return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}<input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:70px;" onchange="updateExtraPrice(${s.id}, this.value)" onclick="this.select()" title="USD per unit"></div><div class="extra-tag-price">${cFmt(s.unitUsd * s.qty, 0)}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
   }).join('');
-
   if (totalEl) {
     totalEl.style.display = 'block';
     totalEl.textContent = `Extra Services Total: ${cFmt(extraServicesTotal(), 0)}`;
@@ -412,8 +414,6 @@ function getExtraServicesState() {
 }
 
 function setExtraServicesState(json) {
-  try {
-    extraServices = JSON.parse(json) || [];
-  } catch { extraServices = []; }
+  try { extraServices = JSON.parse(json) || []; } catch { extraServices = []; }
   renderExtraServices();
 }
