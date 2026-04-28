@@ -143,12 +143,17 @@ function buildOfferHTML(){
         <tbody>${extItemRows}</tbody>
       </table>`:''}
       <div class="e-investment" style="margin-top:14px;">
-        <div class="e-invest-row">
-          <span>Package Total (${nights} Nights)</span>
-          <span style="font-size:8.5px;color:#9E948A;">excl. tax &amp; service fee</span>
+        <div class="e-invest-row" style="border-bottom:1px solid #E2D9CE;padding-bottom:8px;">
+          <span>Package Total (${nights} Nights) <span style="font-size:8.5px;color:#9E948A;">excl. tax &amp; service fee</span></span>
+          <span style="font-size:13px;font-weight:600;color:#3D3935;">${cFmt(hasExtras?grandEx:P.totalEx,0)}</span>
         </div>
-        <div class="e-invest-row" style="font-size:13px;font-weight:600;color:#3D3935;padding:2px 0 8px;border-bottom:1px solid #E2D9CE;">
-          ${cFmt(hasExtras?grandEx:P.totalEx,0)}
+        <div class="e-invest-row" style="padding:6px 0 2px;">
+          <span style="color:#9E948A;">10% Tax</span>
+          <span style="color:#9E948A;">${cFmt((hasExtras?grandEx:P.totalEx)*0.10,2)}</span>
+        </div>
+        <div class="e-invest-row" style="padding:2px 0 8px;border-bottom:1px solid #E2D9CE;">
+          <span style="color:#9E948A;">5% Service Charge</span>
+          <span style="color:#9E948A;">${cFmt((hasExtras?grandEx:P.totalEx)*0.05,2)}</span>
         </div>
         <div class="e-invest-grand">
           <div>
