@@ -88,20 +88,19 @@ function buildOfferHTML(){
 
   // Accommodation rows
   const baleRow=P.bales<=0?'':P.bales<=5
-    ?pRow3(`${P.bales} Gladak${P.bales>1?'s':''}`,null,P.roomRate,null,cFmt(P.bales*P.roomRate*nights,2))
-    :pRow3('5 Gladaks',null,P.roomRate,null,cFmt(5*P.roomRate*nights,2))
-     +pRow3(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,null,P.roomRate,null,cFmt((P.bales-5)*P.roomRate*nights,2));
-  const parvRow=P.parvOn?pRow3('Parvati Villa',P.parvDiscPct>0?P.parvOrig:null,P.parvDisc,P.parvDiscPct>0?P.parvDiscPct+'%':null,cFmt(P.parvDisc*nights,2)):'';
-  const buddRow=P.buddOn?pRow3('Buddha Villa',P.buddDiscPct>0?P.buddOrig:null,P.buddDisc,P.buddDiscPct>0?P.buddDiscPct+'%':null,cFmt(P.buddDisc*nights,2)):'';
-  const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub*nights,2)):'';
+    ?pRow3(`${P.bales} Gladak${P.bales>1?'s':''}`,null,P.roomRate,null,cFmt(P.bales*P.roomRate,2))
+    :pRow3('5 Gladaks',null,P.roomRate,null,cFmt(5*P.roomRate,2))
+     +pRow3(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,null,P.roomRate,null,cFmt((P.bales-5)*P.roomRate,2));
+  const parvRow=P.parvOn?pRow3('Parvati Villa',P.parvDiscPct>0?P.parvOrig:null,P.parvDisc,P.parvDiscPct>0?P.parvDiscPct+'%':null,cFmt(P.parvDisc,2)):'';
+  const buddRow=P.buddOn?pRow3('Buddha Villa',P.buddDiscPct>0?P.buddOrig:null,P.buddDisc,P.buddDiscPct>0?P.buddDiscPct+'%':null,cFmt(P.buddDisc,2)):'';
+  const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub,2)):'';
 
   // Subtotal row (before discounts)
-  const subtotalAmt=P.stdSub*nights;
-  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate"></td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(subtotalAmt,2)}</td></tr>`;
+  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate"></td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td></tr>`;
 
   // Discount rows
-  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt*nights,2)}`):'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt*nights,2)}`):'';
+  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt,2)}`):'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt,2)}`):'';
 
   // Extra service rows
   const extItemRows=hasExtras?extraServices.map(s=>{
@@ -204,12 +203,12 @@ function buildContractHTML(){
   const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
   const cR=(label,sub,amt)=>`<tr><td>${label}${sub?`<span style="display:block;font-size:9px;color:#9E948A;margin-top:2px;">${sub}</span>`:''}</td><td style="text-align:right;white-space:nowrap;">${amt}</td></tr>`;
   const bR=P.bales<=0?'':P.bales<=5
-    ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate*nights,2))
-    :cR('5 Gladaks',`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(5*P.roomRate*nights,2))
-     +cR(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt((P.bales-5)*P.roomRate*nights,2));
-  const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
-  const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
-  const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
+    ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate,2))
+    :cR('5 Gladaks',`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(5*P.roomRate,2))
+     +cR(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt((P.bales-5)*P.roomRate,2));
+  const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc,2)):'';
+  const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc,2)):'';
+  const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub,2)):'';
   const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR(`${s.label} (${s.pax} pax)`,`${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
   const txR=cR('Tax (10%) + Service charge (5%)','',cFmt(finalTotal-(hasExtrasC?grandExC:P.totalEx),2));
   const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
