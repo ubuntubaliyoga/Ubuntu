@@ -757,8 +757,6 @@ function openNewLeadModal() {
   ['nl-name', 'nl-company', 'nl-email', 'nl-insta', 'nl-whatsapp', 'nl-location', 'nl-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  const dbSel = document.getElementById('nl-db');
-  if (dbSel) dbSel.value = crmTab === 'shala' ? 'shala' : 'email';
   document.getElementById('new-lead-modal').classList.add('open');
 }
 
@@ -770,7 +768,7 @@ function closeNewLeadModal(e) {
 async function saveNewLead() {
   const name = document.getElementById('nl-name')?.value;
   if (!name) { alert('Name is required'); return; }
-  const db = document.getElementById('nl-db')?.value || 'email';
+  const db = crmTab === 'shala' ? 'shala' : 'email';
   try {
     const r = await fetch('/api/crm', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
