@@ -122,10 +122,10 @@ export function addPeLibraryRow(): void {
   const tbody = document.getElementById('pe-library-tbody')
   if (!tbody) return
   const tr = document.createElement('tr')
-  tr.dataset.id = '_new_' + Date.now()
-  tr.innerHTML = libraryRowHTML({ id: '', name: '', cost: 0 }, true)
+  tr.dataset.id = genId()
+  tr.innerHTML = libraryRowHTML({ id: '', name: '', cost: 0 })
   tbody.appendChild(tr)
-  ;(tr.querySelector('.pe-lib-id') as HTMLInputElement)?.focus()
+  ;(tr.querySelector('.pe-lib-name') as HTMLInputElement)?.focus()
   triggerPeAutosave()
 }
 
@@ -211,19 +211,18 @@ function renderTabContent(): void {
 function renderLibrary(library: CostItem[]): string {
   const rows = library.map(item => `<tr data-id="${esc(item.id)}">${libraryRowHTML(item)}</tr>`).join('')
   return `
-    <div class="pe-section-hint">Costs in IDR. IDs are referenced by templates — change with care.</div>
+    <div class="pe-section-hint">Costs in IDR.</div>
     <table class="pe-table">
-      <thead><tr><th>ID</th><th>Name</th><th style="text-align:right;">Cost (IDR)</th><th></th></tr></thead>
+      <thead><tr><th>Name</th><th style="text-align:right;">Cost (IDR)</th><th></th></tr></thead>
       <tbody id="pe-library-tbody">${rows}</tbody>
     </table>
     <button class="pill-btn" style="margin-top:12px;" onclick="window.addPeLibraryRow()">＋ Add Item</button>
   `
 }
 
-function libraryRowHTML(item: CostItem, empty = false): string {
+function libraryRowHTML(item: CostItem): string {
   return `
-    <td><input class="pe-input pe-lib-id"   value="${esc(item.id)}"   placeholder="ITEM_ID" style="width:130px;font-family:monospace;font-size:12px;"${empty ? '' : ''}></td>
-    <td><input class="pe-input pe-lib-name" value="${esc(item.name)}" placeholder="Name"    style="width:100%;"></td>
+    <td><input class="pe-input pe-lib-name" value="${esc(item.name)}" placeholder="Name" style="width:100%;"></td>
     <td><input class="pe-input pe-lib-cost" type="number" value="${item.cost}" min="0" step="1" style="width:100px;text-align:right;"></td>
     <td><button class="pe-del-btn" onclick="window.removePeLibraryRow(this)" title="Remove">✕</button></td>
   `
@@ -240,7 +239,7 @@ function renderTemplates(templates: ProductTemplate[], library: CostItem[]): str
 
 function chipHTML(id: string, name: string, isFixed: boolean): string {
   return `
-    <span class="pe-chip-name">${esc(name)} <span class="pe-check-id">${esc(id)}</span></span>
+    <span class="pe-chip-name">${esc(name)}</span>
     <label class="pe-fixed-label">
       <input type="checkbox" class="pe-fixed-check" value="${esc(id)}" ${isFixed ? 'checked' : ''}>
       fixed ÷pax
@@ -291,10 +290,10 @@ function renderTemplateCard(t: ProductTemplate, library: CostItem[]): string {
 function readLibraryFromDOM(): CostItem[] {
   const library: CostItem[] = []
   document.querySelectorAll<HTMLTableRowElement>('#pe-library-tbody tr[data-id]').forEach(row => {
-    const id   = (row.querySelector('.pe-lib-id')   as HTMLInputElement)?.value.trim()
+    const id   = row.dataset.id!
     const name = (row.querySelector('.pe-lib-name') as HTMLInputElement)?.value.trim()
     const cost = parseFloat((row.querySelector('.pe-lib-cost') as HTMLInputElement)?.value) || 0
-    if (id && name) library.push({ id, name, cost })
+    if (name) library.push({ id, name, cost })
   })
   return library
 }
@@ -320,4 +319,8 @@ function readTemplatesFromDOM(): ProductTemplate[] {
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function genId(): string {
+  return 'item_' + Math.random().toString(36).slice(2, 10)
 }
