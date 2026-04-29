@@ -16,7 +16,8 @@ const BRANCH        = 'main';
 // Files the deep agent may read and patch
 const PATCHABLE = new Set([
   'api/notion.js', 'api/crm.js', 'api/exchange-rate.js',
-  'js/core.js', 'js/drafts.js', 'js/offer.js', 'js/crm.js',
+  'api/leadgen-agent.js', 'api/save-pricing.js', 'api/pricing-chat.js',
+  'js/core.js', 'js/drafts.js', 'js/offer.js', 'js/crm.js', 'js/bizdev.js',
 ]);
 
 const notionHdrs = {
@@ -160,6 +161,7 @@ ${JSON.stringify(error, null, 2)}
 Strategy by error type:
 - object_not_found  → call list_notion_databases() to get real UUIDs, then read_file and correct the constant
 - validation_error  → call get_notion_schema(db_id) for the relevant database, then read_file and fix the mismatched property name or type
+- API error (no notion_code, status 500) → read_file for the route in error.url (prefix api/), find the JS crash (TypeError, undefined, etc.), apply minimal fix
 - JS / promise      → read_file for the file named in the stack trace (prefix js/ for client files), identify the root cause, apply minimal fix
 Always read_file before apply_fix. Use auto_merge only when the change is a single constant, property name, or null-safety guard.`,
   }];

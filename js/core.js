@@ -100,11 +100,25 @@ function dbgStructured(obj){
     return;
   }
 
+  // API errors without a Notion code (generic 500s, server crashes) → deep agent directly
+  if(obj.type==='api'&&!obj.notion_code){
+    dbg('[AGENT-2] API error — analyzing...');
+    _agentPost('/api/debug-agent-deep', entry, r=>_logResult(r,2));
+    return;
+  }
+
   // JS / promise errors in known client files → deep agent directly
   if((obj.type==='js'||obj.type==='promise')&&_jsFileMap[obj.file]){
     const enriched={...entry,filePath:_jsFileMap[obj.file]};
     dbg('[AGENT-2] analyzing JS error...');
     _agentPost('/api/debug-agent-deep', enriched, r=>_logResult(r,2));
+    return;
+  }
+
+  // Promise errors without a known file — send with whatever stack we have
+  if(obj.type==='promise'&&!_jsFileMap[obj.file]){
+    dbg('[AGENT-2] unhandled promise rejection — analyzing...');
+    _agentPost('/api/debug-agent-deep', entry, r=>_logResult(r,2));
   }
 }
 
