@@ -172,7 +172,9 @@
       "name": "COOKINGCLASS",
       "markup": 1.4,
       "fixed_cost_refs": [],
-      "variable_cost_refs": []
+      "variable_cost_refs": [
+        "COOKINGCLASS"
+      ]
     }
   ]
 }
