@@ -118,7 +118,7 @@ export default async function handler(req, res) {
   // Circuit breaker (Nygard "Release It!" pattern — open after 2 failures)
   if (att >= 2) {
     console.warn('[debug-agent] circuit open for', fp);
-    return res.status(200).json({ action: 'circuit_open', fingerprint: fp, attempts: att });
+    return res.status(200).json({ action: 'circuit_open', fingerprint: fp, attempts: att, _entry: error });
   }
 
   const route    = String(error.url).split('?')[0];

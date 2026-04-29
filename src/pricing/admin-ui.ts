@@ -26,8 +26,8 @@ export function closeAdmin(): void {
 export function switchPeTab(tab: 'library' | 'templates'): void {
   // Snapshot current tab's DOM edits before switching away
   if (currentData) {
-    if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM() }
-    else currentData = { ...currentData, templates: readTemplatesFromDOM() }
+    if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
+    else currentData = { ...currentData, templates: readTemplatesFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
   }
   currentTab = tab
   renderTabContent()
@@ -56,8 +56,8 @@ export async function savePricingAdmin(isAutosave = false): Promise<void> {
   try {
     // Snapshot the active tab into currentData, then save
     if (currentData) {
-      if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM() }
-      else currentData = { ...currentData, templates: readTemplatesFromDOM() }
+      if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
+      else currentData = { ...currentData, templates: readTemplatesFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
     }
     const data = currentData!
     await savePricingData(data)
@@ -209,7 +209,8 @@ function renderTabContent(): void {
 // ── Library tab ───────────────────────────────────────────────────────────────
 
 function renderLibrary(library: CostItem[]): string {
-  const rows = library.map(item => `<tr data-id="${esc(item.id)}">${libraryRowHTML(item)}</tr>`).join('')
+  const sorted = [...library].sort((a, b) => a.name.localeCompare(b.name))
+  const rows = sorted.map(item => `<tr data-id="${esc(item.id)}">${libraryRowHTML(item)}</tr>`).join('')
   return `
     <div class="pe-section-hint">Costs in IDR.</div>
     <table class="pe-table">
@@ -231,8 +232,9 @@ function libraryRowHTML(item: CostItem): string {
 // ── Templates tab ─────────────────────────────────────────────────────────────
 
 function renderTemplates(templates: ProductTemplate[], library: CostItem[]): string {
+  const sorted = [...templates].sort((a, b) => a.name.localeCompare(b.name))
   return `
-    <div id="pe-templates-list">${templates.map(t => renderTemplateCard(t, library)).join('')}</div>
+    <div id="pe-templates-list">${sorted.map(t => renderTemplateCard(t, library)).join('')}</div>
     <button class="pill-btn" style="margin-top:12px;" onclick="window.addPeTemplate()">＋ Add Template</button>
   `
 }

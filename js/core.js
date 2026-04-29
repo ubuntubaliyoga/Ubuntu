@@ -60,7 +60,7 @@ window.addEventListener('load',()=>{
 });
 
 // Client-side filename → repo path for JS errors
-const _jsFileMap={'core.js':'js/core.js','drafts.js':'js/drafts.js','offer.js':'js/offer.js','crm.js':'js/crm.js'};
+const _jsFileMap={'core.js':'js/core.js','drafts.js':'js/drafts.js','offer.js':'js/offer.js','crm.js':'js/crm.js','bizdev.js':'js/bizdev.js'};
 
 function _agentPost(url, entry, onResult){
   fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)})
