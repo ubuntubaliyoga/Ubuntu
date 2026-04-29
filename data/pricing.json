@@ -79,6 +79,11 @@
       "id": "SOUND",
       "name": "Soundhealing",
       "cost": 3450000
+    },
+    {
+      "id": "COOKINGCLASS",
+      "name": "BALINESSE COOKING",
+      "cost": 0
     }
   ],
   "templates": [
