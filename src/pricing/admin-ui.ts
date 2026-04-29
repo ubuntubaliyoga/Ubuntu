@@ -181,7 +181,7 @@ function renderOverlay(): void {
     <div class="pe-panel" oninput="window.triggerPeAutosave()" onchange="window.triggerPeAutosave()">
       <div class="pe-header">
         <div style="display:flex; flex-direction:column; gap:2px;">
-          <div class="pe-title">Cost Calculation</div>
+          <div class="pe-title">Edit Extra Services</div>
           <div id="pe-autosave-status" style="font-size:10px; color:var(--text-dim); font-family:monospace;">✓ Saved</div>
         </div>
         <button class="pe-header-close" onclick="window.closePricingAdmin()">✕</button>
@@ -193,24 +193,6 @@ function renderOverlay(): void {
           onclick="window.switchPeTab('templates')">Templates</button>
       </div>
       <div class="pe-tab-content" id="pe-tab-body"></div>
-      <div class="pe-chat">
-        <div class="pe-chat-header">
-          <span>AI Assistant</span>
-          <span class="pe-chat-hint">Add items · create templates · explain pricing</span>
-        </div>
-        <div class="pe-chat-messages" id="pe-chat-messages">
-          <div class="pe-chat-msg pe-chat-msg-assistant">Ask me anything — e.g. "Add a rafting guide at 180,000 IDR" or "What's the price per person for 3 people on the trekking tour?"</div>
-        </div>
-        <div class="pe-chat-input-row">
-          <input type="text" id="pe-chat-input" class="pe-input"
-            placeholder="Ask or instruct…"
-            onkeydown="if(event.key==='Enter')window.sendPeChat()">
-          <button class="pill-btn dark" id="pe-chat-send" onclick="window.sendPeChat()">Send</button>
-        </div>
-      </div>
-      <div class="pe-footer">
-        <button class="pill-btn dark" id="pe-save-btn" onclick="window.savePricingAdmin()">Save Changes</button>
-      </div>
     </div>
   `
   renderTabContent()
