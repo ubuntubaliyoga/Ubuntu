@@ -2,7 +2,7 @@
 // Fill in your Supabase project URL and anon key (safe to expose client-side)
 const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-const ALLOWED_EMAIL     = 'ubuntubali@gmail.com';
+const ALLOWED_EMAIL     = 'ubuntubaliyoga@gmail.com';
 
 const _configured = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
 const _sb = _configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -13,7 +13,7 @@ function _handleAuth(session) {
   } else {
     if (session) {
       _sb.auth.signOut();
-      _setGateError('Access is restricted to the Ubuntu Bali team.');
+      _setGateError(`Access denied (signed in as ${session.user.email}). Only the Ubuntu Bali account can log in.`);
     }
   }
 }
