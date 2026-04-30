@@ -86,21 +86,21 @@ function buildOfferHTML(){
   };
   const pDiscRow=(label,amt)=>`<tr class="pt-discount"><td class="col-item"><strong>${label}</strong></td><td class="col-rate"></td><td class="col-sub" style="color:#C5A27D;font-weight:600;">${amt}</td></tr>`;
 
-  // Accommodation rows
+  // Accommodation rows (SUBTOTAL col = full-stay amount)
   const baleRow=P.bales<=0?'':P.bales<=5
-    ?pRow3(`${P.bales} Gladak${P.bales>1?'s':''}`,null,P.roomRate,null,cFmt(P.bales*P.roomRate,2))
-    :pRow3('5 Gladaks',null,P.roomRate,null,cFmt(5*P.roomRate,2))
-     +pRow3(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,null,P.roomRate,null,cFmt((P.bales-5)*P.roomRate,2));
-  const parvRow=P.parvOn?pRow3('Parvati Villa',P.parvDiscPct>0?P.parvOrig:null,P.parvDisc,P.parvDiscPct>0?P.parvDiscPct+'%':null,cFmt(P.parvDisc,2)):'';
-  const buddRow=P.buddOn?pRow3('Buddha Villa',P.buddDiscPct>0?P.buddOrig:null,P.buddDisc,P.buddDiscPct>0?P.buddDiscPct+'%':null,cFmt(P.buddDisc,2)):'';
-  const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub,2)):'';
+    ?pRow3(`${P.bales} Gladak${P.bales>1?'s':''}`,null,P.roomRate,null,cFmt(P.bales*P.roomRate*P.nights,2))
+    :pRow3('5 Gladaks',null,P.roomRate,null,cFmt(5*P.roomRate*P.nights,2))
+     +pRow3(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,null,P.roomRate,null,cFmt((P.bales-5)*P.roomRate*P.nights,2));
+  const parvRow=P.parvOn?pRow3('Parvati Villa',P.parvDiscPct>0?P.parvOrig:null,P.parvDisc,P.parvDiscPct>0?P.parvDiscPct+'%':null,cFmt(P.parvDisc*P.nights,2)):'';
+  const buddRow=P.buddOn?pRow3('Buddha Villa',P.buddDiscPct>0?P.buddOrig:null,P.buddDisc,P.buddDiscPct>0?P.buddDiscPct+'%':null,cFmt(P.buddDisc*P.nights,2)):'';
+  const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub*P.nights,2)):'';
 
-  // Subtotal row (before discounts)
-  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td></tr>`;
+  // Subtotal row: RATE/NIGHT = per-night total; SUBTOTAL = full-stay total before discounts
+  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL <span style="font-size:8.5px;font-weight:400;color:#9E948A;">(${nights} nights)</span></td><td class="col-rate" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub*P.nights,2)}</td></tr>`;
 
-  // Discount rows
-  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt,2)}`):'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt,2)}`):'';
+  // Discount rows (full-stay amounts to match SUBTOTAL column)
+  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt*P.nights,2)}`):'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt*P.nights,2)}`):'';
 
   // Extra service rows
   const pRowExt=(label,total)=>`<tr class="pt-item"><td class="col-item">${label}</td><td class="col-rate"></td><td class="col-sub">${total}</td></tr>`;
