@@ -129,6 +129,13 @@
       ]
     },
     {
+      "id": "TEMPLATE_1777528706544",
+      "name": "New Template",
+      "markup": 1.4,
+      "fixed_cost_refs": [],
+      "variable_cost_refs": []
+    },
+    {
       "id": "TEMPLATE_1777132823367",
       "name": "Soundhealing",
       "markup": 1,
