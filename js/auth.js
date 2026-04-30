@@ -79,9 +79,12 @@ async function signOut() {
   if (!_configured) return; // Gate stays visible until credentials are added
 
   try {
+    // Register BEFORE getSession — OAuth callback fires onAuthStateChange
+    // immediately on client creation; registering late means missing the event
+    _sb.auth.onAuthStateChange((_event, session) => { _handleAuth(session); });
+
     const { data: { session } } = await _sb.auth.getSession();
     _handleAuth(session);
-    _sb.auth.onAuthStateChange((_event, session) => { _handleAuth(session); });
   } catch (e) {
     _setGateError('Auth error: ' + (e.message || 'check Supabase config'));
   }
