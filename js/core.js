@@ -405,3 +405,20 @@ function toggleMoreDetails(btn){
   details.style.display=open?'none':'block';
   btn.textContent=open?btn.textContent.replace('− ','+ '):btn.textContent.replace('+ ','− ');
 }
+
+// Strip beige/coloured backgrounds before printing so they don't bleed into
+// empty page space. @media print overrides can be blocked by the SW cache.
+window.addEventListener('beforeprint',()=>{
+  document.querySelectorAll('.email,.email-wrap,.eb-badge,.e-investment').forEach(el=>{
+    el.dataset._bg=el.style.background;
+    el.dataset._border=el.style.border;
+    el.style.setProperty('background','#fff','important');
+    el.style.setProperty('border','none','important');
+  });
+});
+window.addEventListener('afterprint',()=>{
+  document.querySelectorAll('.email,.email-wrap,.eb-badge,.e-investment').forEach(el=>{
+    el.style.background=el.dataset._bg||'';
+    el.style.border=el.dataset._border||'';
+  });
+});
