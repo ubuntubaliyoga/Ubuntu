@@ -115,7 +115,9 @@
       "name": "Cooking class",
       "markup": 1.4,
       "fixed_cost_refs": [],
-      "variable_cost_refs": []
+      "variable_cost_refs": [
+        "item_9pysxca9"
+      ]
     },
     {
       "id": "TEMPLATE_1777441572880",
