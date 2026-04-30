@@ -103,10 +103,11 @@ function buildOfferHTML(){
   const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt,2)}`):'';
 
   // Extra service rows
+  const pRowExt=(label,total)=>`<tr class="pt-item"><td class="col-item">${label}</td><td class="col-rate"></td><td class="col-sub">${total}</td></tr>`;
   const extItemRows=hasExtras?extraServices.map(s=>{
-    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return pRow3(`${s.label} (${s.pax} pax)`,null,getIdrRate()>0?s.spppIdr/getIdrRate():0,null,cFmt(t,0));}
+    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return pRowExt(`${s.label} (${s.pax} pax)`,cFmt(t,0));}
     const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':' × '+s.qty;
-    return pRow3(`${s.label}${qtyStr}`,null,s.unitUsd,null,cFmt(t,0));
+    return pRowExt(`${s.label}${qtyStr}`,cFmt(t,0));
   }).join(''):'';
 
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
