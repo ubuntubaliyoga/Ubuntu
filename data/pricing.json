@@ -90,6 +90,7 @@
     {
       "id": "TREK_SPIRIT",
       "name": "Trekking Spiritual Purification",
+      "type": "experience",
       "markup": 1.4,
       "fixed_cost_refs": [
         "TRANSPORT_BIG"
@@ -105,6 +106,7 @@
     {
       "id": "TEMPLATE_1777125992656",
       "name": "The Sanctuary of Stillness",
+      "type": "experience",
       "markup": 1.4,
       "fixed_cost_refs": [
         "TRANSPORT_BIG"
@@ -121,6 +123,7 @@
     {
       "id": "TEMPLATE_1777126022820",
       "name": "Uluwatu Beach & Culture",
+      "type": "experience",
       "markup": 1.4,
       "fixed_cost_refs": [
         "TRANSPORT_BIG"
@@ -134,6 +137,7 @@
     {
       "id": "TEMPLATE_1777128704046",
       "name": "2 Meals included - Additional Meal",
+      "type": "service",
       "markup": 1,
       "fixed_cost_refs": [],
       "variable_cost_refs": [
@@ -143,6 +147,7 @@
     {
       "id": "TEMPLATE_1777129122030",
       "name": "Breathwork + Meditation",
+      "type": "service",
       "markup": 1,
       "fixed_cost_refs": [
         "BREATH"
@@ -152,6 +157,7 @@
     {
       "id": "TEMPLATE_1777129348061",
       "name": "Daily Yoga",
+      "type": "service",
       "markup": 1,
       "fixed_cost_refs": [],
       "variable_cost_refs": [
@@ -161,6 +167,7 @@
     {
       "id": "TEMPLATE_1777132823367",
       "name": "Soundhealing",
+      "type": "service",
       "markup": 1,
       "fixed_cost_refs": [
         "SOUND"
@@ -170,6 +177,7 @@
     {
       "id": "TEMPLATE_1777441572880",
       "name": "COOKINGCLASS",
+      "type": "service",
       "markup": 1.4,
       "fixed_cost_refs": [],
       "variable_cost_refs": [

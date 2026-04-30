@@ -7,6 +7,7 @@ export interface CostItem {
 export interface ProductTemplate {
   id: string
   name: string
+  type?: 'experience' | 'service'
   fixed_cost_refs: string[]
   variable_cost_refs: string[]
   markup: number
@@ -41,7 +42,7 @@ declare global {
   interface Window {
     openPricingAdmin(): void
     closePricingAdmin(): void
-    switchPeTab(tab: 'library' | 'templates'): void
+    switchPeTab(tab: 'library' | 'experiences' | 'services'): void
     savePricingAdmin(): void
     triggerPeAutosave(): void
     addPeLibraryRow(): void

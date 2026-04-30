@@ -2,7 +2,7 @@ import type { CostItem, PricingData, ProductTemplate } from './types'
 import { savePricingData, loadPricingData } from './store'
 
 let currentData: PricingData | null = null
-let currentTab: 'library' | 'templates' = 'library'
+let currentTab: 'library' | 'experiences' | 'services' = 'library'
 let autosaveTimer: any = null
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -23,12 +23,8 @@ export function closeAdmin(): void {
   document.getElementById('pricing-overlay')?.classList.remove('open')
 }
 
-export function switchPeTab(tab: 'library' | 'templates'): void {
-  // Snapshot current tab's DOM edits before switching away
-  if (currentData) {
-    if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
-    else currentData = { ...currentData, templates: readTemplatesFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
-  }
+export function switchPeTab(tab: 'library' | 'experiences' | 'services'): void {
+  if (currentData) snapshotTab()
   currentTab = tab
   renderTabContent()
   document.querySelectorAll('.pe-tab').forEach(b => b.classList.remove('active'))
@@ -38,7 +34,7 @@ export function switchPeTab(tab: 'library' | 'templates'): void {
 export function triggerPeAutosave(): void {
   const status = document.getElementById('pe-autosave-status')
   if (status) status.textContent = '● Unsaved changes'
-  
+
   if (autosaveTimer) clearTimeout(autosaveTimer)
   autosaveTimer = setTimeout(() => savePricingAdmin(true), 2000)
 }
@@ -46,7 +42,7 @@ export function triggerPeAutosave(): void {
 export async function savePricingAdmin(isAutosave = false): Promise<void> {
   const btn = document.getElementById('pe-save-btn') as HTMLButtonElement | null
   const status = document.getElementById('pe-autosave-status')
-  
+
   if (!isAutosave && btn) {
     btn.textContent = 'Saving…'
     btn.disabled = true
@@ -54,15 +50,11 @@ export async function savePricingAdmin(isAutosave = false): Promise<void> {
   if (status) status.textContent = '○ Saving…'
 
   try {
-    // Snapshot the active tab into currentData, then save
-    if (currentData) {
-      if (currentTab === 'library') currentData = { ...currentData, library: readLibraryFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
-      else currentData = { ...currentData, templates: readTemplatesFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
-    }
+    if (currentData) snapshotTab()
     const data = currentData!
     await savePricingData(data)
     window.dispatchEvent(new CustomEvent('pricingDataUpdated', { detail: data }))
-    
+
     if (!isAutosave && btn) {
       btn.textContent = 'Saved!'
       setTimeout(() => { if (btn) { btn.textContent = 'Save Changes'; btn.disabled = false } }, 2000)
@@ -95,11 +87,11 @@ export function applyAddLibraryItem(item: CostItem): void {
 
 export function applyCreateTemplate(t: ProductTemplate): void {
   if (!currentData) return
-  if (currentTab !== 'templates') switchPeTab('templates')
+  if (currentTab !== 'experiences') switchPeTab('experiences')
   const list = document.getElementById('pe-templates-list')
   if (!list) return
   const div = document.createElement('div')
-  div.innerHTML = renderTemplateCard(t, currentData.library)
+  div.innerHTML = renderTemplateCard(t, currentData.library, 'experience')
   list.appendChild(div.firstElementChild!)
   div.firstElementChild?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
   triggerPeAutosave()
@@ -137,15 +129,17 @@ export function removePeLibraryRow(btn: HTMLElement): void {
 export function addPeTemplate(): void {
   const list = document.getElementById('pe-templates-list')
   if (!list || !currentData) return
+  const isService = currentTab === 'services'
   const t: ProductTemplate = {
-    id: 'TEMPLATE_' + Date.now(),
-    name: 'New Template',
+    id: (isService ? 'SERVICE_' : 'TEMPLATE_') + Date.now(),
+    name: isService ? 'New Service' : 'New Experience',
+    type: isService ? 'service' : 'experience',
     fixed_cost_refs: [],
     variable_cost_refs: [],
-    markup: 1.4
+    markup: 1.0
   }
   const div = document.createElement('div')
-  div.innerHTML = renderTemplateCard(t, currentData.library)
+  div.innerHTML = renderTemplateCard(t, currentData.library, t.type!)
   list.appendChild(div.firstElementChild!)
   triggerPeAutosave()
 }
@@ -172,6 +166,25 @@ export function peAddCostItem(sel: HTMLSelectElement): void {
   triggerPeAutosave()
 }
 
+// ── Snapshot helper ───────────────────────────────────────────────────────────
+
+function snapshotTab(): void {
+  if (!currentData) return
+  if (currentTab === 'library') {
+    currentData = { ...currentData, library: readLibraryFromDOM().sort((a, b) => a.name.localeCompare(b.name)) }
+  } else {
+    const isService = currentTab === 'services'
+    const fromDOM = readTemplatesFromDOM()
+      .map(t => ({ ...t, type: isService ? 'service' : 'experience' } as ProductTemplate))
+      .sort((a, b) => a.name.localeCompare(b.name))
+    // Preserve the other type's templates from currentData
+    const other = currentData.templates.filter(t =>
+      isService ? t.type !== 'service' : t.type === 'service'
+    )
+    currentData = { ...currentData, templates: [...fromDOM, ...other] }
+  }
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function renderOverlay(): void {
@@ -187,10 +200,12 @@ function renderOverlay(): void {
         <button class="pe-header-close" onclick="window.closePricingAdmin()">✕</button>
       </div>
       <div class="pe-tabs">
-        <button class="pe-tab${currentTab === 'library' ? ' active' : ''}" id="pe-tab-library"
+        <button class="pe-tab${currentTab === 'library'     ? ' active' : ''}" id="pe-tab-library"
           onclick="window.switchPeTab('library')">Library</button>
-        <button class="pe-tab${currentTab === 'templates' ? ' active' : ''}" id="pe-tab-templates"
-          onclick="window.switchPeTab('templates')">Templates</button>
+        <button class="pe-tab${currentTab === 'experiences' ? ' active' : ''}" id="pe-tab-experiences"
+          onclick="window.switchPeTab('experiences')">Experiences</button>
+        <button class="pe-tab${currentTab === 'services'    ? ' active' : ''}" id="pe-tab-services"
+          onclick="window.switchPeTab('services')">Services</button>
       </div>
       <div class="pe-tab-content" id="pe-tab-body"></div>
     </div>
@@ -201,9 +216,15 @@ function renderOverlay(): void {
 function renderTabContent(): void {
   const body = document.getElementById('pe-tab-body')
   if (!body || !currentData) return
-  body.innerHTML = currentTab === 'library'
-    ? renderLibrary(currentData.library)
-    : renderTemplates(currentData.templates, currentData.library)
+  if (currentTab === 'library') {
+    body.innerHTML = renderLibrary(currentData.library)
+  } else if (currentTab === 'experiences') {
+    const experiences = currentData.templates.filter(t => t.type !== 'service')
+    body.innerHTML = renderTemplates(experiences, currentData.library, 'experience')
+  } else {
+    const services = currentData.templates.filter(t => t.type === 'service')
+    body.innerHTML = renderTemplates(services, currentData.library, 'service')
+  }
 }
 
 // ── Library tab ───────────────────────────────────────────────────────────────
@@ -229,13 +250,14 @@ function libraryRowHTML(item: CostItem): string {
   `
 }
 
-// ── Templates tab ─────────────────────────────────────────────────────────────
+// ── Experiences / Services tab ────────────────────────────────────────────────
 
-function renderTemplates(templates: ProductTemplate[], library: CostItem[]): string {
+function renderTemplates(templates: ProductTemplate[], library: CostItem[], type: 'experience' | 'service'): string {
   const sorted = [...templates].sort((a, b) => a.name.localeCompare(b.name))
+  const label = type === 'experience' ? 'Experience' : 'Service'
   return `
-    <div id="pe-templates-list">${sorted.map(t => renderTemplateCard(t, library)).join('')}</div>
-    <button class="pill-btn" style="margin-top:12px;" onclick="window.addPeTemplate()">＋ Add Template</button>
+    <div id="pe-templates-list">${sorted.map(t => renderTemplateCard(t, library, type)).join('')}</div>
+    <button class="pill-btn" style="margin-top:12px;" onclick="window.addPeTemplate()">＋ Add ${label}</button>
   `
 }
 
@@ -250,7 +272,7 @@ function chipHTML(id: string, name: string, isFixed: boolean): string {
   `
 }
 
-function renderTemplateCard(t: ProductTemplate, library: CostItem[]): string {
+function renderTemplateCard(t: ProductTemplate, library: CostItem[], type: 'experience' | 'service'): string {
   const included = [...t.fixed_cost_refs, ...t.variable_cost_refs]
   const chips = included.map(id => {
     const item = library.find(i => i.id === id)
@@ -263,17 +285,17 @@ function renderTemplateCard(t: ProductTemplate, library: CostItem[]): string {
   ).join('')
 
   return `
-    <div class="pe-template-card" data-id="${esc(t.id)}">
+    <div class="pe-template-card" data-id="${esc(t.id)}" data-type="${type}">
       <div class="pe-template-card-head">
         <div style="flex:1;">
-          <input class="pe-input pe-tname" value="${esc(t.name)}" placeholder="Template name"
+          <input class="pe-input pe-tname" value="${esc(t.name)}" placeholder="${type === 'experience' ? 'Experience' : 'Service'} name"
             style="width:100%;font-size:15px;font-weight:600;">
           <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
             <span class="pe-section-hint" style="margin:0;">Markup</span>
             <input class="pe-input pe-markup" type="number" value="${t.markup}" min="1" step="0.01" style="width:80px;">
           </div>
         </div>
-        <button class="pe-del-btn" onclick="window.removePeTemplate(this)" title="Delete template">✕</button>
+        <button class="pe-del-btn" onclick="window.removePeTemplate(this)" title="Delete">✕</button>
       </div>
       <div class="pe-costs-section">
         <div class="pe-costs-label">Costs</div>
@@ -306,6 +328,7 @@ function readTemplatesFromDOM(): ProductTemplate[] {
     const id     = card.dataset.id!
     const name   = (card.querySelector('.pe-tname')  as HTMLInputElement)?.value.trim() || id
     const markup = parseFloat((card.querySelector('.pe-markup') as HTMLInputElement)?.value) || 1.0
+    const type   = (card.dataset.type as 'experience' | 'service' | undefined) ?? 'experience'
     const fixed_cost_refs: string[] = []
     const variable_cost_refs: string[] = []
     card.querySelectorAll<HTMLElement>('.pe-cost-chip[data-item-id]').forEach(chip => {
@@ -314,7 +337,7 @@ function readTemplatesFromDOM(): ProductTemplate[] {
       if (fixedBox?.checked) fixed_cost_refs.push(itemId)
       else variable_cost_refs.push(itemId)
     })
-    templates.push({ id, name, markup, fixed_cost_refs, variable_cost_refs })
+    templates.push({ id, name, markup, type, fixed_cost_refs, variable_cost_refs })
   })
   return templates
 }

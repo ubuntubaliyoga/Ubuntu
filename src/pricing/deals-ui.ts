@@ -13,17 +13,34 @@ function populateExperiencesPicker(data: PricingData): void {
   const picker = document.getElementById('extras-picker')
   if (!picker) return
   picker.querySelector('optgroup[label="Experiences"]')?.remove()
-  if (!data.templates.length) return
+  picker.querySelector('optgroup[label="Services"]')?.remove()
 
-  const group = document.createElement('optgroup')
-  group.label = 'Experiences'
-  data.templates.forEach(t => {
-    const opt = document.createElement('option')
-    opt.value = `pe_${t.id}|${t.name}`
-    opt.textContent = `🧭 ${t.name}`
-    group.appendChild(opt)
-  })
-  picker.appendChild(group)
+  const experiences = data.templates.filter(t => t.type !== 'service')
+  const services    = data.templates.filter(t => t.type === 'service')
+
+  if (experiences.length) {
+    const group = document.createElement('optgroup')
+    group.label = 'Experiences'
+    experiences.forEach(t => {
+      const opt = document.createElement('option')
+      opt.value = `pe_${t.id}|${t.name}`
+      opt.textContent = `🧭 ${t.name}`
+      group.appendChild(opt)
+    })
+    picker.appendChild(group)
+  }
+
+  if (services.length) {
+    const group = document.createElement('optgroup')
+    group.label = 'Services'
+    services.forEach(t => {
+      const opt = document.createElement('option')
+      opt.value = `pe_${t.id}|${t.name}`
+      opt.textContent = `✨ ${t.name}`
+      group.appendChild(opt)
+    })
+    picker.appendChild(group)
+  }
 }
 
 export async function recalculatePeExtra(id: number, pax: number): Promise<void> {
