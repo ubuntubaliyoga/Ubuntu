@@ -10,13 +10,35 @@ The pricing engine (`src/pricing/`) uses Vite + TypeScript — `npm run build` c
 
 ## Deploy
 
+Vercel auto-deploys on every push to `origin/main`. The buildCommand in `vercel.json` stamps `sw.js` with `BUILD_TIMESTAMP`. There is no local dev server — the app only runs on Vercel (https://ubuntu-three-kappa.vercel.app).
+
+### Git workflow — read this carefully
+
+**The local `main` branch is permanently diverged from `origin/main` and must never be used as a base.** Always derive work from `origin/main` directly.
+
+Every session follows this exact pattern — no exceptions:
+
 ```bash
-git push -u origin main   # Vercel auto-deploys; sw.js BUILD_TIMESTAMP replaced by vercel.json buildCommand
+# 1. Fetch the real remote state
+git fetch origin main
+
+# 2. Create a throw-away branch rooted at origin/main
+git checkout -b work origin/main
+
+# 3. Make and commit changes on that branch
+git add <files>
+git commit -m "..."
+
+# 4. Push that branch directly into origin/main
+git push origin work:main
 ```
 
-**Solo project — commit directly to `main`.** Do NOT use feature branches unless the user explicitly asks for one. Always end every session with `git push origin main` so changes go live on Vercel.
+**Why:** The harness running these sessions injects a feature-branch name (e.g. `claude/some-task-XXXX`) that diverges from local `main`. Trying to `git checkout main` and push will fail or silently deploy the wrong code. The only branch that Vercel watches is `origin/main`, and the only safe base for new commits is `origin/main`.
 
-There is no local dev server — the app only runs on Vercel (https://ubuntu-three-kappa.vercel.app).
+**Never do:**
+- `git checkout main && git merge ... && git push origin main` — local main is diverged, merge will be refused
+- `git push origin <feature-branch>` — Vercel does not watch feature branches; changes will be invisible
+- Base any work on local `main` — it is stale by 50+ commits
 
 ## Architecture
 
