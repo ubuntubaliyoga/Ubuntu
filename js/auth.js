@@ -1,28 +1,37 @@
 // ── SUPABASE AUTH ─────────────────────────────────────────────────────────────
-// Fill in your Supabase project URL and anon key (safe to expose client-side)
 const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const ALLOWED_EMAIL     = 'ubuntubaliyoga@gmail.com';
 
 const _configured = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
-const _sb = _configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// implicit flow: tokens arrive in URL hash — no PKCE code exchange,
+// no localStorage code_verifier needed, no silent failure on redirect
+const _sb = _configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
+}) : null;
+
+let _gateDismissed = false;
 
 function _handleAuth(session) {
-  if (session?.user?.email === ALLOWED_EMAIL) {
+  if (!session) return; // no session — gate stays, nothing to do
+  const email = (session.user?.email || '').toLowerCase();
+  if (email === ALLOWED_EMAIL.toLowerCase()) {
     _hideGate();
   } else {
-    if (session) {
-      _sb.auth.signOut();
-      _setGateError(`Access denied (signed in as ${session.user.email}). Only the Ubuntu Bali account can log in.`);
-    }
+    _sb.auth.signOut();
+    _setGateError(`Access denied (${session.user.email}). Only the Ubuntu Bali account can log in.`);
   }
 }
 
 function _hideGate() {
+  if (_gateDismissed) return;
+  _gateDismissed = true;
   const gate = document.getElementById('login-gate');
-  if (!gate || gate.classList.contains('exit')) return;
+  if (!gate) return;
   gate.classList.add('exit');
-  gate.addEventListener('animationend', () => { gate.style.display = 'none'; }, { once: true });
+  // setTimeout is reliable; animationend can silently not fire
+  setTimeout(() => { gate.style.display = 'none'; }, 800);
 }
 
 function _resetBtn() {
@@ -41,33 +50,25 @@ async function loginWithGoogle() {
     _setGateError('Supabase is not configured yet — add credentials to js/auth.js');
     return;
   }
-
   const btn = document.getElementById('login-google-btn');
   const txt = btn?.querySelector('.login-btn-text');
   if (btn) { btn.disabled = true; if (txt) txt.textContent = 'Redirecting…'; }
-
-  // Safety net: reset button if redirect never happens (e.g. popup blocked, network error)
   const resetTimer = setTimeout(_resetBtn, 10000);
-
   try {
     const { error } = await _sb.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin }
     });
-    if (error) {
-      clearTimeout(resetTimer);
-      _setGateError(error.message);
-      _resetBtn();
-    }
-    // On success Supabase navigates away — resetTimer cleans up if it doesn't
+    if (error) { clearTimeout(resetTimer); _setGateError(error.message); _resetBtn(); }
   } catch (e) {
     clearTimeout(resetTimer);
-    _setGateError(e.message || 'Login failed. Check your Supabase configuration.');
+    _setGateError(e.message || 'Login failed. Check Supabase configuration.');
     _resetBtn();
   }
 }
 
 async function signOut() {
+  _gateDismissed = false;
   if (_sb) await _sb.auth.signOut();
   const gate = document.getElementById('login-gate');
   if (gate) { gate.style.display = 'flex'; gate.classList.remove('exit'); }
@@ -76,13 +77,16 @@ async function signOut() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (async () => {
-  if (!_configured) return; // Gate stays visible until credentials are added
-
+  if (!_configured) return;
   try {
-    // Register BEFORE getSession — OAuth callback fires onAuthStateChange
-    // immediately on client creation; registering late means missing the event
-    _sb.auth.onAuthStateChange((_event, session) => { _handleAuth(session); });
-
+    // Register first — catches SIGNED_IN fired during client init (implicit flow)
+    _sb.auth.onAuthStateChange((event, session) => {
+      // Only act on actual sign-in events; ignore SIGNED_OUT (triggered by our own signOut calls)
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        _handleAuth(session);
+      }
+    });
+    // Also check existing session (returning visitor with valid stored session)
     const { data: { session } } = await _sb.auth.getSession();
     _handleAuth(session);
   } catch (e) {
