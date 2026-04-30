@@ -1,44 +1,9 @@
 {
   "library": [
     {
-      "id": "TRANSPORT_BIG",
-      "name": "Transport 14 Seats",
-      "cost": 1500000
-    },
-    {
-      "id": "JATILUWIH_ENTRANCE",
-      "name": "Jatiluwih Entrance Fee",
-      "cost": 85000
-    },
-    {
-      "id": "BATU_KARU_TICKET",
-      "name": "Batu Karu Temple Ticket",
-      "cost": 50000
-    },
-    {
-      "id": "TREKKING_GUIDE",
-      "name": "Trekking Guide",
-      "cost": 250000
-    },
-    {
-      "id": "MEAL_STD",
-      "name": "Standard Meal",
-      "cost": 50000
-    },
-    {
-      "id": "OFFERING",
-      "name": "Offering",
-      "cost": 150000
-    },
-    {
-      "id": "YEHHO_ENTRANCE",
-      "name": "Yeh Hoo Entrance Fee",
-      "cost": 20000
-    },
-    {
-      "id": "MENGWIT_ENTRANCE",
-      "name": "Mengwit Entrance Fee",
-      "cost": 250000
+      "id": "ADD_MEAL",
+      "name": "2 Meals included - Additional Meal",
+      "cost": 155000
     },
     {
       "id": "ANGSERI_ENTRANCE",
@@ -46,24 +11,14 @@
       "cost": 35000
     },
     {
-      "id": "KLIVE_ENTRANCE",
-      "name": "Klive Beachclub Entrance",
+      "id": "COOKINGCLASS",
+      "name": "BALINESSE COOKING",
       "cost": 250000
     },
     {
-      "id": "KECAK_ENTRANCE",
-      "name": "Kecak Dance Entrance",
-      "cost": 150000
-    },
-    {
-      "id": "MEAL_PRM",
-      "name": "Premium Meal",
-      "cost": 150000
-    },
-    {
-      "id": "ADD_MEAL",
-      "name": "2 Meals included - Additional Meal",
-      "cost": 155000
+      "id": "BATU_KARU_TICKET",
+      "name": "Batu Karu Temple Ticket",
+      "cost": 50000
     },
     {
       "id": "BREATH",
@@ -76,14 +31,59 @@
       "cost": 160000
     },
     {
+      "id": "JATILUWIH_ENTRANCE",
+      "name": "Jatiluwih Entrance Fee",
+      "cost": 85000
+    },
+    {
+      "id": "KECAK_ENTRANCE",
+      "name": "Kecak Dance Entrance",
+      "cost": 150000
+    },
+    {
+      "id": "KLIVE_ENTRANCE",
+      "name": "Klive Beachclub Entrance",
+      "cost": 250000
+    },
+    {
+      "id": "MENGWIT_ENTRANCE",
+      "name": "Mengwit Entrance Fee",
+      "cost": 250000
+    },
+    {
+      "id": "OFFERING",
+      "name": "Offering",
+      "cost": 150000
+    },
+    {
+      "id": "MEAL_PRM",
+      "name": "Premium Meal",
+      "cost": 150000
+    },
+    {
       "id": "SOUND",
       "name": "Soundhealing",
       "cost": 3450000
     },
     {
-      "id": "COOKINGCLASS",
-      "name": "BALINESSE COOKING",
+      "id": "MEAL_STD",
+      "name": "Standard Meal",
+      "cost": 50000
+    },
+    {
+      "id": "TRANSPORT_BIG",
+      "name": "Transport 14 Seats",
+      "cost": 1500000
+    },
+    {
+      "id": "TREKKING_GUIDE",
+      "name": "Trekking Guide",
       "cost": 250000
+    },
+    {
+      "id": "YEHHO_ENTRANCE",
+      "name": "Yeh Hoo Entrance Fee",
+      "cost": 20000
     }
   ],
   "templates": [
