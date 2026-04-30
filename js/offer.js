@@ -96,11 +96,11 @@ function buildOfferHTML(){
   const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub,2)):'';
 
   // Subtotal row (before discounts)
-  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate"></td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td></tr>`;
+  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub*P.nights,2)}</td></tr>`;
 
   // Discount rows
-  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt,2)}`):'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt,2)}`):'';
+  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt*P.nights,2)}`):'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt*P.nights,2)}`):'';
 
   // Extra service rows
   const extItemRows=hasExtras?extraServices.map(s=>{
