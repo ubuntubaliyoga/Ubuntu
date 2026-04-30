@@ -127,7 +127,7 @@
 
 /* ── APP STYLES ────────────────────────────────────────────────────────────── */
 :root{
-  --bg:#FDFCFB;--bg2:#EDE9E0;--surface:#FFFFFF;
+  --bg:#FFFFFF;--bg2:#EDE9E0;--surface:#FFFFFF;
   --border:#E5E1DA;--gold:#B8935A;--gold-lt:#D4B896;
   --dark:#4A3728;--text:#3D3935;--muted:#8C9476;
   --radius:12px;--radius-sm:10px;
@@ -232,7 +232,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .email-wrap{background:#DDD8D0;padding:20px 12px;border-radius:var(--radius);overflow-x:auto;}
 .email{background:#fff;width:560px;margin:0 auto;font-family:'Montserrat','Inter',sans-serif;font-size:10px;color:#3D3935;line-height:1.6;}
 /* Header — refined, no heavy dark block */
-.e-header{background:#FDFCFB;text-align:center;padding:32px 40px 22px;border-bottom:1px solid #E2D9CE;}
+.e-header{background:#fff;text-align:center;padding:32px 40px 22px;border-bottom:1px solid #E2D9CE;}
 .e-logo{max-width:52px;margin:0 auto 16px;display:block;opacity:.9;}
 .e-header-label{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:#C5A27D;margin-bottom:6px;font-weight:400;}
 .e-header-line{width:36px;height:1px;background:#C5A27D;margin:8px auto;opacity:.55;}
