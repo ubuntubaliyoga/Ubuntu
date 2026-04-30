@@ -4,9 +4,6 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const ALLOWED_EMAIL     = 'ubuntubaliyoga@gmail.com';
 
 const _configured = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
-
-// implicit flow: tokens arrive in URL hash — no PKCE code exchange,
-// no localStorage code_verifier needed, no silent failure on redirect
 const _sb = _configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
 }) : null;
@@ -14,13 +11,13 @@ const _sb = _configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY,
 let _gateDismissed = false;
 
 function _handleAuth(session) {
-  if (!session) return; // no session — gate stays, nothing to do
+  if (!session) return;
   const email = (session.user?.email || '').toLowerCase();
   if (email === ALLOWED_EMAIL.toLowerCase()) {
     _hideGate();
   } else {
     _sb.auth.signOut();
-    _setGateError(`Access denied (${session.user.email}). Only the Ubuntu Bali account can log in.`);
+    _setGateError(`Access denied: signed in as ${session.user.email}`);
   }
 }
 
@@ -30,7 +27,6 @@ function _hideGate() {
   const gate = document.getElementById('login-gate');
   if (!gate) return;
   gate.classList.add('exit');
-  // setTimeout is reliable; animationend can silently not fire
   setTimeout(() => { gate.style.display = 'none'; }, 800);
 }
 
@@ -46,25 +42,18 @@ function _setGateError(msg) {
 }
 
 async function loginWithGoogle() {
-  if (!_configured) {
-    _setGateError('Supabase is not configured yet — add credentials to js/auth.js');
-    return;
-  }
+  if (!_configured) { _setGateError('Supabase not configured.'); return; }
   const btn = document.getElementById('login-google-btn');
   const txt = btn?.querySelector('.login-btn-text');
   if (btn) { btn.disabled = true; if (txt) txt.textContent = 'Redirecting…'; }
-  const resetTimer = setTimeout(_resetBtn, 10000);
+  const t = setTimeout(_resetBtn, 10000);
   try {
     const { error } = await _sb.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin }
     });
-    if (error) { clearTimeout(resetTimer); _setGateError(error.message); _resetBtn(); }
-  } catch (e) {
-    clearTimeout(resetTimer);
-    _setGateError(e.message || 'Login failed. Check Supabase configuration.');
-    _resetBtn();
-  }
+    if (error) { clearTimeout(t); _setGateError(error.message); _resetBtn(); }
+  } catch (e) { clearTimeout(t); _setGateError(e.message || 'Login failed.'); _resetBtn(); }
 }
 
 async function signOut() {
@@ -79,16 +68,39 @@ async function signOut() {
 (async () => {
   if (!_configured) return;
   try {
-    // Register first — catches SIGNED_IN fired during client init (implicit flow)
+    // 1. Watch for future sign-ins (e.g. token refresh)
     _sb.auth.onAuthStateChange((event, session) => {
-      // Only act on actual sign-in events; ignore SIGNED_OUT (triggered by our own signOut calls)
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-        _handleAuth(session);
-      }
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') _handleAuth(session);
     });
-    // Also check existing session (returning visitor with valid stored session)
+
+    // 2. Check localStorage for an existing session (returning visitor)
     const { data: { session } } = await _sb.auth.getSession();
-    _handleAuth(session);
+    if (session) { _handleAuth(session); return; }
+
+    // 3. Manual fallback: parse URL hash directly in case detectSessionInUrl
+    //    didn't fire (timing issue or browser quirk with the hash)
+    const hash = window.location.hash;
+    if (hash.includes('access_token')) {
+      const p = new URLSearchParams(hash.slice(1));
+      const { data, error } = await _sb.auth.setSession({
+        access_token:  p.get('access_token')  || '',
+        refresh_token: p.get('refresh_token') || ''
+      });
+      if (error) {
+        _setGateError('Token error: ' + error.message);
+      } else if (data.session) {
+        _handleAuth(data.session);
+        window.history.replaceState({}, '', window.location.pathname);
+        return;
+      }
+    }
+
+    // 4. No session found — show debug info so we can diagnose
+    const hashPreview = hash.length > 1 ? hash.substring(0, 60) + '…' : 'none';
+    _setGateError(`No session. Hash: ${hashPreview}`);
+    // Clear debug text after 4s so it doesn't confuse on first visit
+    setTimeout(() => _setGateError(''), 4000);
+
   } catch (e) {
     _setGateError('Auth error: ' + (e.message || 'check Supabase config'));
   }
