@@ -202,6 +202,9 @@ function switchTab(t){
     if(typeof loadCRM==='function') loadCRM();
     if(typeof crmSwitchTab==='function') crmSwitchTab(typeof crmTab!=='undefined'?crmTab:'cold');
   }
+  if(t==='tutorials'){
+    document.querySelectorAll('#view-tutorials iframe[data-src]').forEach(f=>{f.src=f.dataset.src;f.removeAttribute('data-src');});
+  }
 
 }
 
