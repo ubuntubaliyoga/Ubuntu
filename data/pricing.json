@@ -111,6 +111,13 @@
       "variable_cost_refs": []
     },
     {
+      "id": "TEMPLATE_1777528706544",
+      "name": "Cooking class",
+      "markup": 1.4,
+      "fixed_cost_refs": [],
+      "variable_cost_refs": []
+    },
+    {
       "id": "TEMPLATE_1777441572880",
       "name": "COOKINGCLASS",
       "markup": 1.4,
@@ -127,13 +134,6 @@
       "variable_cost_refs": [
         "YOGA_SESSION"
       ]
-    },
-    {
-      "id": "TEMPLATE_1777528706544",
-      "name": "New Template",
-      "markup": 1.4,
-      "fixed_cost_refs": [],
-      "variable_cost_refs": []
     },
     {
       "id": "TEMPLATE_1777132823367",
