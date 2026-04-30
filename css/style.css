@@ -266,6 +266,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
 .rate-orig{display:block;color:#C0B8B0;font-size:8.5px;text-decoration:line-through;}
 .rate-disc{display:block;color:#3D3935;font-weight:500;}
 .rate-pct{display:inline-block;color:#C5A27D;font-size:8px;margin-left:3px;}
+.eb-badge{background:#FAF6F0;border:1px solid #C5A27D;border-radius:3px;padding:8px 12px;margin:10px 0;font-size:11px;color:#7A6248;text-align:center;}
 /* Investment summary block */
 .e-investment{background:#FAF6F0;border:1px solid #E2D9CE;border-radius:2px;padding:14px 18px 16px;margin-top:14px;}
 .e-invest-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-size:9.5px;color:#6A5E54;font-family:'Montserrat',sans-serif;}
@@ -545,9 +546,10 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
   #sub-view-offer { display: block !important; }
 
   .email-wrap { background: #fff !important; padding: 0 !important; }
-  .email { width: 100% !important; max-width: 680px !important; margin: 0 auto !important; background: transparent !important; }
+  .email { width: 100% !important; max-width: 680px !important; margin: 0 auto !important; background: #fff !important; }
 
   .contract-doc { border: none !important; box-shadow: none !important; padding: 20px 0 !important; border-radius: 0 !important; }
+  .eb-badge { background: none !important; border: none !important; font-style: italic !important; }
 
   table.ptable { width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
   .col-item  { width: 52% !important; }

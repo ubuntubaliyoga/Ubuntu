@@ -96,11 +96,11 @@ function buildOfferHTML(){
   const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub,2)):'';
 
   // Subtotal row (before discounts)
-  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub*P.nights,2)}</td></tr>`;
+  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL</td><td class="col-rate" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td></tr>`;
 
   // Discount rows
-  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt*P.nights,2)}`):'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt*P.nights,2)}`):'';
+  const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt,2)}`):'';
+  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt,2)}`):'';
 
   // Extra service rows
   const extItemRows=hasExtras?extraServices.map(s=>{
@@ -112,7 +112,7 @@ function buildOfferHTML(){
   const includedLines=($('f-included')?.value.trim()||'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person').split(/\n+/).filter(l=>l.trim());
   const alsoLines=($('f-also')?.value.trim()||'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.').split(/\n+/).filter(l=>l.trim());
   const signoff=$('f-signoff')?.value.trim()||'Andréa and Tari';
-  const ebBadge=hasEB?`<div style="background:#FAF6F0;border:1px solid #C5A27D;border-radius:3px;padding:8px 12px;margin:10px 0;font-size:11px;color:#7A6248;text-align:center;"><strong>${P.discPct}% Early Bird Discount applied</strong> &nbsp;·&nbsp; Book by ${offerValidStr} to secure this rate.</div>`:'';
+  const ebBadge=hasEB?`<div class="eb-badge"><strong>${P.discPct}% Early Bird Discount applied</strong> &nbsp;·&nbsp; Book by ${offerValidStr} to secure this rate.</div>`:'';
   const validLine=offerValid?`<p>This offer is valid until ${offerValidStr}.</p>`:'';
   const depositLine=depositPct>0?`<p>To secure the property's shala and rooms, a <strong>non-refundable deposit of ${depositPct}% (${cFmt(depositAmt,0)})</strong> of the total investment is required upon booking confirmation.</p>`:'';
 
