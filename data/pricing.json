@@ -93,50 +93,6 @@
   ],
   "templates": [
     {
-      "id": "TREK_SPIRIT",
-      "name": "Trekking Spiritual Purification",
-      "markup": 1.4,
-      "fixed_cost_refs": [
-        "TRANSPORT_BIG"
-      ],
-      "variable_cost_refs": [
-        "JATILUWIH_ENTRANCE",
-        "BATU_KARU_TICKET",
-        "TREKKING_GUIDE",
-        "OFFERING",
-        "MEAL_STD"
-      ]
-    },
-    {
-      "id": "TEMPLATE_1777125992656",
-      "name": "The Sanctuary of Stillness",
-      "markup": 1.4,
-      "fixed_cost_refs": [
-        "TRANSPORT_BIG"
-      ],
-      "variable_cost_refs": [
-        "JATILUWIH_ENTRANCE",
-        "YEHHO_ENTRANCE",
-        "MENGWIT_ENTRANCE",
-        "ANGSERI_ENTRANCE",
-        "OFFERING",
-        "MEAL_STD"
-      ]
-    },
-    {
-      "id": "TEMPLATE_1777126022820",
-      "name": "Uluwatu Beach & Culture",
-      "markup": 1.4,
-      "fixed_cost_refs": [
-        "TRANSPORT_BIG"
-      ],
-      "variable_cost_refs": [
-        "KLIVE_ENTRANCE",
-        "KECAK_ENTRANCE",
-        "MEAL_PRM"
-      ]
-    },
-    {
       "id": "TEMPLATE_1777128704046",
       "name": "2 Meals included - Additional Meal",
       "markup": 1,
@@ -153,6 +109,15 @@
         "BREATH"
       ],
       "variable_cost_refs": []
+    },
+    {
+      "id": "TEMPLATE_1777441572880",
+      "name": "COOKINGCLASS",
+      "markup": 1.4,
+      "fixed_cost_refs": [],
+      "variable_cost_refs": [
+        "COOKINGCLASS"
+      ]
     },
     {
       "id": "TEMPLATE_1777129348061",
@@ -173,12 +138,47 @@
       "variable_cost_refs": []
     },
     {
-      "id": "TEMPLATE_1777441572880",
-      "name": "COOKINGCLASS",
+      "id": "TEMPLATE_1777125992656",
+      "name": "The Sanctuary of Stillness",
       "markup": 1.4,
-      "fixed_cost_refs": [],
+      "fixed_cost_refs": [
+        "TRANSPORT_BIG"
+      ],
       "variable_cost_refs": [
-        "COOKINGCLASS"
+        "JATILUWIH_ENTRANCE",
+        "YEHHO_ENTRANCE",
+        "MENGWIT_ENTRANCE",
+        "ANGSERI_ENTRANCE",
+        "OFFERING",
+        "MEAL_STD"
+      ]
+    },
+    {
+      "id": "TREK_SPIRIT",
+      "name": "Trekking Spiritual Purification",
+      "markup": 1.4,
+      "fixed_cost_refs": [
+        "TRANSPORT_BIG"
+      ],
+      "variable_cost_refs": [
+        "JATILUWIH_ENTRANCE",
+        "BATU_KARU_TICKET",
+        "TREKKING_GUIDE",
+        "OFFERING",
+        "MEAL_STD"
+      ]
+    },
+    {
+      "id": "TEMPLATE_1777126022820",
+      "name": "Uluwatu Beach & Culture",
+      "markup": 1.4,
+      "fixed_cost_refs": [
+        "TRANSPORT_BIG"
+      ],
+      "variable_cost_refs": [
+        "KLIVE_ENTRANCE",
+        "KECAK_ENTRANCE",
+        "MEAL_PRM"
       ]
     }
   ]
