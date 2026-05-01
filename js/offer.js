@@ -200,8 +200,11 @@ function buildContractHTML(){
   const finalTotal=hasExtrasC?grandInC:P.totalIn;
   const idrTotal=finalTotal*idrRate;
   const PMT=payments(finalTotal,checkin,depositPct);
-  const BANK={Currency:'IDR','Account Holder':'PT PURUSA YOGA BALI',Bank:'PT Bank Permata, Tbk','Account Number':'4122048077','BIC / SWIFT':'BBBAIDJAXXX','Bank Address':'Jalan Subak Sari No. 1, Badung, Bali'};
-  const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
+  const _CT=JSON.parse(localStorage.getItem('masterContractTemplate')||'null')||{};
+  const ct=(k)=>_CT[k]!==undefined&&_CT[k]!==''?_CT[k]:CONTRACT_TMPL_DEFS[k]||'';
+  const cls=(k)=>ct(k).split('\n').filter(l=>l.trim());
+  const BANK={Currency:ct('bank_currency'),'Account Holder':ct('bank_holder'),Bank:ct('bank_name'),'Account Number':ct('bank_account'),'BIC / SWIFT':ct('bank_swift'),'Bank Address':ct('bank_address')};
+  const CANCEL=ct('sec_e_cancel').split('\n').filter(l=>l.trim()).map(l=>{const[p,r]=l.split('|');return[p?.trim()||'',r?.trim()||''];});
   const cR=(label,sub,amt)=>`<tr><td>${label}${sub?`<span style="display:block;font-size:9px;color:#9E948A;margin-top:2px;">${sub}</span>`:''}</td><td style="text-align:right;white-space:nowrap;">${amt}</td></tr>`;
   const bR=P.bales<=0?'':P.bales<=5
     ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate*nights,2))
@@ -227,70 +230,70 @@ function buildContractHTML(){
     <div class="c-party"><div class="c-party-title">Retreat Organizer</div>
       <p>Company Name: ${company}</p><p>Contact Person: ${name}</p><p>Address: ${address}</p><p>Phone: ${phone}</p><p>Website: ${website}</p></div>
     <div class="c-party"><div class="c-party-title">Venue Holder</div>
-      <p>Company: PT Purusa Yoga Bali (Ubuntu Bali)</p><p>Director: Witri Utari</p><p>Contract: Andréa Drottholm</p><p>Phone: +62 812 3862 0082</p><p>Email: namaste@ubuntubali.com</p></div>
+      <p>Company: ${ct('ub_company')}</p><p>Director: ${ct('ub_director')}</p><p>Contract: ${ct('ub_contract_person')}</p><p>Phone: ${ct('ub_phone')}</p><p>Email: ${ct('ub_email')}</p></div>
   </div>
   <div class="c-datebar">Date: ${fmtDS(contractDate)} &nbsp;|&nbsp; Check-in: ${fmtDS(checkin)} &nbsp;|&nbsp; Check-out: ${fmtDS(checkout)}</div>
-  <div class="c-validity"><strong style="font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;">Contract Validity: </strong>This contract offer is valid until <strong>${fmtDS(validUntil)}</strong>. If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.</div>
+  <div class="c-validity"><strong style="font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;">Contract Validity: </strong>This contract offer is valid until <strong>${fmtDS(validUntil)}</strong>. ${ct('sec_validity')}</div>
   <div class="c-sec"><div class="c-sec-hd">A) Purpose of Agreement</div>
-    <p>This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.</p>
-    <p>This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.</p></div>
+    <p>${ct('sec_a1')}</p>
+    <p>${ct('sec_a2')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">B) Pricing & Inclusions</div>
-    <p>All prices in this Agreement are stated in ${window.offerCurrency||'USD'}. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.</p>
+    <p>${ct('sec_b_currency').replace('{currency}',window.offerCurrency||'USD')}</p>
     <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
     <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
     <table class="c-table"><thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead>
     <tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
-    <p style="font-size:10.5px;color:#7A6040;font-style:italic;">The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.</p>
+    <p style="font-size:10.5px;color:#7A6040;font-style:italic;">${ct('sec_b_idr')}</p>
     <p><strong>What's Included:</strong></p>
-    <ul><li>2 plant based meals per day</li><li>Tea and afternoon snack</li><li>Shala of your choice and cleaning</li><li>Full staff support and dedicated contact person</li></ul>
-    <p>The package price is fixed for ${totalPeople} guests. Should the group exceed ${totalPeople} people, the room rate remains the same — only meals would be added for each additional guest.</p></div>
+    <ul>${cls('sec_b_included').map(i=>`<li>${i}</li>`).join('')}</ul>
+    <p>${ct('sec_b_pkg').replace(/{guests}/g,totalPeople)}</p></div>
   <div class="c-sec"><div class="c-sec-hd">C) Payments & Bank Details</div>
     <p>Payments must be made to the following account:</p>
     <table class="bank-table">${Object.entries(BANK).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>
-    <p>All bank and transfer fees are the responsibility of the Retreat Organizer.</p></div>
+    <p>${ct('sec_c_fees')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">D) Payment Schedule</div>
     <p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p>
     <table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (${window.offerCurrency||'USD'})</th><th>Due Date</th></tr></thead>
     <tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>${cFmt(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr>
     <tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>${cFmt(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr>
     <tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>${cFmt(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table>
-    <p>Failure to meet payment deadlines may result in cancellation of the booking without refund.</p></div>
+    <p>${ct('sec_d_late')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">E) Cancellation & Refund Policy</div>
-    <p><strong>Standard Bookings:</strong> Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees.</p>
+    <p><strong>${ct('sec_e_standard')}</strong></p>
     <table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead>
     <tbody>${CANCEL.map(([p,r])=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table>
-    <p><strong>Short-Notice Bookings:</strong> Deposits are non-refundable except in cases of force majeure.</p>
+    <p><strong>${ct('sec_e_shortnotice')}</strong></p>
     <p><strong>Rescheduling:</strong></p>
-    <ul><li>One reschedule permitted within 12 months, subject to availability and a 10% administrative fee</li><li>Requests must be made at least 3 months prior to retreat start</li></ul></div>
+    <ul>${cls('sec_e_reschedule').map(l=>`<li>${l}</li>`).join('')}</ul></div>
   <div class="c-sec"><div class="c-sec-hd">F) Liability, Insurance & Indemnification</div>
-    <ul><li>All participants must carry adequate travel and health insurance covering yoga, wellness activities, and medical evacuation</li><li>Retreat Organizer must communicate health restrictions to Ubuntu Bali in writing at least 30 days prior</li><li>Ubuntu Bali shall not be held liable for personal injury, loss, or theft except in cases of gross negligence</li><li>Ubuntu Bali's maximum liability is limited to 50% of the total contract value</li></ul></div>
+    <ul>${cls('sec_f').map(l=>`<li>${l}</li>`).join('')}</ul></div>
   <div class="c-sec"><div class="c-sec-hd">G) Property Use & Conduct</div>
-    <ul><li>Quiet hours: 9:30pm – 7:00am</li><li>No smoking, alcohol, drugs, or intoxicants on the premises</li><li>Yoga Shala must be left tidied, fans and lights switched off</li><li>Participant-caused property damage will be charged to the Retreat Organizer</li></ul></div>
+    <ul>${cls('sec_g').map(l=>`<li>${l}</li>`).join('')}</ul></div>
   <div class="c-sec"><div class="c-sec-hd">H) Meals</div>
-    <p>Two plant based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance.</p></div>
+    <p>${ct('sec_h')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">I) Swimming Pool</div>
-    <p>Available to all registered retreat participants. All users must shower before entering.</p></div>
+    <p>${ct('sec_i')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">J) Wi-Fi</div>
-    <p>Provided across the property in common areas, subject to local service availability.</p></div>
+    <p>${ct('sec_j')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">K) Photography & Media</div>
-    <p>Ubuntu Bali may photograph or film during the retreat for promotional use, subject to retreat leader permission. Participants will not be identified by name without written consent.</p></div>
+    <p>${ct('sec_k')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">L) Force Majeure</div>
-    <p>In the event of circumstances beyond reasonable control, Ubuntu Bali shall provide immediate notice and offer: (a) reschedule within 18 months, (b) 100% credit valid 24 months, or (c) pro-rata refund minus 5% admin fee.</p></div>
+    <p>${ct('sec_l')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">M) Dispute Resolution</div>
-    <ul><li>Informal Resolution (7 days): Written notice</li><li>Management Discussion (14 days): In-person or video meeting</li><li>Mediation (30 days, optional): Neutral third party</li><li>Legal Action: Only after above steps attempted</li></ul></div>
+    <ul>${cls('sec_m').map(l=>`<li>${l}</li>`).join('')}</ul></div>
   <div class="c-sec"><div class="c-sec-hd">N) Ubuntu Bali Cancellation</div>
-    <p>Ubuntu Bali may cancel with 60 days written notice. Retreat Organizer receives 100% refund and priority rebooking within 18 months. Short-notice cancellation (&lt;60 days): full refund plus 5% credit.</p></div>
+    <p>${ct('sec_n')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">O) Termination</div>
-    <p>Either party may terminate for material breach with 14 days written notice.</p></div>
+    <p>${ct('sec_o')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">P) Governing Law</div>
-    <p>Governed by the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.</p></div>
+    <p>${ct('sec_p')}</p></div>
   <div class="c-sec"><div class="c-sec-hd">Q) Entire Agreement</div>
-    <p>This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.</p></div>
+    <p>${ct('sec_q')}</p></div>
   <div class="c-sigs"><div class="c-sigs-title">Signatures</div>
     <div class="c-sigs-grid">
       <div><div class="c-sig-party">For Ubuntu Bali</div>
-        <p style="font-size:12px;margin-bottom:3px;">Name: Andréa Drottholm</p>
-        <p style="font-size:12px;margin-bottom:3px;">Title: Contract Representative</p>
+        <p style="font-size:12px;margin-bottom:3px;">Name: ${ct('ub_sig_name')}</p>
+        <p style="font-size:12px;margin-bottom:3px;">Title: ${ct('ub_sig_title')}</p>
         <p style="font-size:12px;margin-bottom:16px;">Date: ${fmtDS(contractDate)}</p>
         <p style="font-size:12px;margin-bottom:4px;">Signature:</p>
         <div class="c-sig-line"></div>

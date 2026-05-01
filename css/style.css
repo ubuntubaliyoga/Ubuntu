@@ -576,6 +576,24 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
 #agent-toggle{position:absolute;top:6px;right:36px;background:none;border:1px solid #444;border-radius:3px;color:#888;font-family:monospace;font-size:10px;cursor:pointer;padding:1px 6px;letter-spacing:.5px;}
 #agent-toggle.on{border-color:#0f0;color:#0f0;}
 
+/* ── CONTRACT TEMPLATE OVERLAY ── */
+#contract-tmpl-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;overflow-y:auto;}
+#contract-tmpl-overlay.open{display:block;}
+#contract-tmpl-panel{background:var(--bg);max-width:680px;width:calc(100% - 32px);margin:16px auto 48px;border-radius:16px;overflow:hidden;}
+.ctmpl-hd{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1;}
+.ctmpl-hd-title{font-family:'Libre Baskerville',serif;font-size:15px;font-weight:700;color:var(--dark);}
+.ctmpl-hd-actions{display:flex;gap:8px;align-items:center;}
+.ctmpl-save{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.ctmpl-save:active{opacity:.8;}
+.ctmpl-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;padding:4px 8px;line-height:1;}
+.ctmpl-body{padding:20px 20px 8px;}
+.ctmpl-group{margin-bottom:28px;}
+.ctmpl-group-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.ctmpl-row{margin-bottom:10px;}
+.ctmpl-label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;}
+.ctmpl-input{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);background:var(--surface);font-family:inherit;resize:vertical;}
+.ctmpl-input:focus{outline:none;border-color:var(--gold-lt);}
+
 /* ── PRICING ENGINE ADMIN ── */
 #pricing-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:450;align-items:flex-start;justify-content:flex-end;}
 #pricing-overlay.open{display:flex;}
@@ -626,7 +644,7 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
   #top-header, #bottom-nav, #splash, #debug-panel,
   #fab-overlay, #fab-sheet, #drawer-overlay, #side-drawer,
   .ios-modal, #crm-modal, #email-modal, #new-lead-modal,
-  #template-confirm, #marketing-overlay, #pricing-overlay,
+  #template-confirm, #marketing-overlay, #pricing-overlay, #contract-tmpl-overlay,
   .deal-toolbar, .view-hero, .pill-btn, .action-row,
   #view-crm, #view-bizdev, #view-tutorials, #view-philosophy { display: none !important; }
 

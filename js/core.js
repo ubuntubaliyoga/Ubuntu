@@ -313,33 +313,59 @@ function openTemplateEdit(){
 function showTemplateConfirm(){$('template-confirm')?.classList.add('open');}
 function closeTemplateConfirm(){$('template-confirm')?.classList.remove('open');}
 function confirmSaveTemplate(){
-  const key=window._contractTemplateMode?'masterContractTemplate':'masterTemplate';
   const tmpl={};
   TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)tmpl[id]=el.value;});
-  localStorage.setItem(key,JSON.stringify(tmpl));
+  localStorage.setItem('masterTemplate',JSON.stringify(tmpl));
   closeTemplateConfirm();
   const btn=$('save-btn');if(btn){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save as Default';btn.className='save-btn';},3000);}
-  dbg('[TEMPLATE] Master template saved to '+key);
+  dbg('[TEMPLATE] Master offer template saved');
 }
 
+const CONTRACT_TMPL_DEFS={
+  ub_company:'PT Purusa Yoga Bali (Ubuntu Bali)',ub_director:'Witri Utari',ub_contract_person:'Andréa Drottholm',ub_phone:'+62 812 3862 0082',ub_email:'namaste@ubuntubali.com',ub_sig_name:'Andréa Drottholm',ub_sig_title:'Contract Representative',
+  bank_currency:'IDR',bank_holder:'PT PURUSA YOGA BALI',bank_name:'PT Bank Permata, Tbk',bank_account:'4122048077',bank_swift:'BBBAIDJAXXX',bank_address:'Jalan Subak Sari No. 1, Badung, Bali',
+  sec_validity:'If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.',
+  sec_a1:'This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.',
+  sec_a2:'This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.',
+  sec_b_currency:'All prices in this Agreement are stated in {currency}. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.',
+  sec_b_idr:'The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.',
+  sec_b_included:'2 plant based meals per day\nTea and afternoon snack\nShala of your choice and cleaning\nFull staff support and dedicated contact person',
+  sec_b_pkg:'The package price is fixed for {guests} guests. Should the group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.',
+  sec_c_fees:'All bank and transfer fees are the responsibility of the Retreat Organizer.',
+  sec_d_late:'Failure to meet payment deadlines may result in cancellation of the booking without refund.',
+  sec_e_standard:'Standard Bookings: Cancellation refunds are calculated as percentages of the non-refundable deposit only, minus bank transfer fees.',
+  sec_e_cancel:'12+ months prior|100%\n9–12 months prior|80%\n6–9 months prior|60%\n3–6 months prior|40%\n1–3 months prior|20%\nLess than 1 month prior|No refund (0%)',
+  sec_e_shortnotice:'Short-Notice Bookings: Deposits are non-refundable except in cases of force majeure.',
+  sec_e_reschedule:'One reschedule permitted within 12 months, subject to availability and a 10% administrative fee\nRequests must be made at least 3 months prior to retreat start',
+  sec_f:'All participants must carry adequate travel and health insurance covering yoga, wellness activities, and medical evacuation\nRetreat Organizer must communicate health restrictions to Ubuntu Bali in writing at least 30 days prior\nUbuntu Bali shall not be held liable for personal injury, loss, or theft except in cases of gross negligence\nUbuntu Bali\'s maximum liability is limited to 50% of the total contract value',
+  sec_g:'Quiet hours: 9:30pm – 7:00am\nNo smoking, alcohol, drugs, or intoxicants on the premises\nYoga Shala must be left tidied, fans and lights switched off\nParticipant-caused property damage will be charged to the Retreat Organizer',
+  sec_h:'Two plant based meals per day are included for registered overnight guests only. Additional meals must be arranged in advance.',
+  sec_i:'Available to all registered retreat participants. All users must shower before entering.',
+  sec_j:'Provided across the property in common areas, subject to local service availability.',
+  sec_k:'Ubuntu Bali may photograph or film during the retreat for promotional use, subject to retreat leader permission. Participants will not be identified by name without written consent.',
+  sec_l:'In the event of circumstances beyond reasonable control, Ubuntu Bali shall provide immediate notice and offer: (a) reschedule within 18 months, (b) 100% credit valid 24 months, or (c) pro-rata refund minus 5% admin fee.',
+  sec_m:'Informal Resolution (7 days): Written notice\nManagement Discussion (14 days): In-person or video meeting\nMediation (30 days, optional): Neutral third party\nLegal Action: Only after above steps attempted',
+  sec_n:'Ubuntu Bali may cancel with 60 days written notice. Retreat Organizer receives 100% refund and priority rebooking within 18 months. Short-notice cancellation (<60 days): full refund plus 5% credit.',
+  sec_o:'Either party may terminate for material breach with 14 days written notice.',
+  sec_p:'Governed by the laws of Indonesia. Jurisdiction lies exclusively with the courts of Bali.',
+  sec_q:'This Agreement constitutes the entire understanding between the parties. Any amendments must be made in writing and signed by both parties.',
+};
+const CONTRACT_TMPL_KEYS=Object.keys(CONTRACT_TMPL_DEFS);
+
 function openContractTemplateEdit(){
-  switchTab('deal');
-  window._contractTemplateMode=true;
-  window._linkedLeadId=null;window._linkedLeadName=null;currentPageId=null;
-  ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{const el=$(id);if(el)el.value='';});
-  $('f-contractdate').value=todayStr();$('f-validuntil').value=addDays(todayStr(),7);$('f-offervalid').value='';$('notion-status').value='Draft';
-  const tmpl=JSON.parse(localStorage.getItem('masterContractTemplate')||'null');
-  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-signoff2':'Tari, as representative of Andréa Drottholm','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate':'60','f-pkgrate':'30.25','f-deposit':''};
-  TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)el.value=tmpl?.[id]??defs[id]??'';});
-  draftActive=false;intentionalDraft=false;autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
-  const sv=$('autosave-status');if(sv)sv.textContent='';
-  if(typeof extraServices!=='undefined'){extraServices=[];renderExtraServices();}
-  switchDealTab('edit');
-  const title=document.querySelector('#sub-view-edit .view-hero-title');if(title)title.textContent='Contract Master Template';
-  const sub=document.querySelector('#sub-view-edit .view-hero-sub');if(sub)sub.textContent='Set default text & pricing for all new contracts';
-  const btn=$('save-btn');if(btn){btn.textContent='Save as Default';btn.className='save-btn';}
-  const ns=$('notion-status');if(ns)ns.style.display='none';
+  const saved=JSON.parse(localStorage.getItem('masterContractTemplate')||'null')||{};
+  CONTRACT_TMPL_KEYS.forEach(k=>{const el=$('fct-'+k);if(el)el.value=saved[k]!==undefined?saved[k]:CONTRACT_TMPL_DEFS[k];});
+  $('contract-tmpl-overlay')?.classList.add('open');
 }
+function saveContractTemplate(){
+  const tmpl={};
+  CONTRACT_TMPL_KEYS.forEach(k=>{const el=$('fct-'+k);if(el)tmpl[k]=el.value;});
+  localStorage.setItem('masterContractTemplate',JSON.stringify(tmpl));
+  const btn=$('contract-tmpl-save');
+  if(btn){btn.textContent='✓ Saved';setTimeout(()=>{btn.textContent='Save as Default';},2500);}
+  dbg('[CONTRACT TEMPLATE] Saved');
+}
+function closeContractTmplOverlay(e){if(!e||e.target===$('contract-tmpl-overlay'))$('contract-tmpl-overlay')?.classList.remove('open');}
 
 function openMarketing(){$('marketing-overlay')?.classList.add('open');}
 function closeMarketing(e){if(!e||e.target===$('marketing-overlay'))$('marketing-overlay')?.classList.remove('open');}

@@ -841,6 +841,119 @@ Airport pick-up available on request.</textarea>
   </div>
 </div>
 
+<!-- CONTRACT TEMPLATE OVERLAY -->
+<div id="contract-tmpl-overlay" onclick="closeContractTmplOverlay(event)">
+  <div id="contract-tmpl-panel">
+    <div class="ctmpl-hd">
+      <div class="ctmpl-hd-title">Contract Master Template</div>
+      <div class="ctmpl-hd-actions">
+        <button id="contract-tmpl-save" class="ctmpl-save" onclick="saveContractTemplate()">Save as Default</button>
+        <button class="ctmpl-close" onclick="closeContractTmplOverlay()">✕</button>
+      </div>
+    </div>
+    <div class="ctmpl-body">
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">Ubuntu Bali Details</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Company</label><input class="ctmpl-input" id="fct-ub_company" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Director</label><input class="ctmpl-input" id="fct-ub_director" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Contract Person</label><input class="ctmpl-input" id="fct-ub_contract_person" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Phone</label><input class="ctmpl-input" id="fct-ub_phone" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Email</label><input class="ctmpl-input" id="fct-ub_email" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Signatory Name</label><input class="ctmpl-input" id="fct-ub_sig_name" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Signatory Title</label><input class="ctmpl-input" id="fct-ub_sig_title" type="text"></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">Bank Details (Section C)</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Currency</label><input class="ctmpl-input" id="fct-bank_currency" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Account Holder</label><input class="ctmpl-input" id="fct-bank_holder" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Bank Name</label><input class="ctmpl-input" id="fct-bank_name" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Account Number</label><input class="ctmpl-input" id="fct-bank_account" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">BIC / SWIFT</label><input class="ctmpl-input" id="fct-bank_swift" type="text"></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Bank Address</label><input class="ctmpl-input" id="fct-bank_address" type="text"></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">Contract Validity</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Text after "valid until [date]."</label><textarea class="ctmpl-input" id="fct-sec_validity" rows="3"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">A) Purpose of Agreement</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph 1</label><textarea class="ctmpl-input" id="fct-sec_a1" rows="3"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph 2</label><textarea class="ctmpl-input" id="fct-sec_a2" rows="3"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">B) Pricing & Inclusions</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Currency note — use {currency} as placeholder</label><textarea class="ctmpl-input" id="fct-sec_b_currency" rows="3"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">IDR disclaimer (italic note below pricing table)</label><textarea class="ctmpl-input" id="fct-sec_b_idr" rows="3"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">What's Included — one item per line</label><textarea class="ctmpl-input" id="fct-sec_b_included" rows="5"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Package note — use {guests} as placeholder</label><textarea class="ctmpl-input" id="fct-sec_b_pkg" rows="3"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">C) Payments & Bank Details</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Bank fees note</label><textarea class="ctmpl-input" id="fct-sec_c_fees" rows="2"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">D) Payment Schedule</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Late payment warning</label><textarea class="ctmpl-input" id="fct-sec_d_late" rows="2"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">E) Cancellation & Refund Policy</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Standard bookings text</label><textarea class="ctmpl-input" id="fct-sec_e_standard" rows="3"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Cancellation table — one row per line, format: Period|Refund</label><textarea class="ctmpl-input" id="fct-sec_e_cancel" rows="7"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Short-notice bookings text</label><textarea class="ctmpl-input" id="fct-sec_e_shortnotice" rows="2"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Rescheduling — one bullet per line</label><textarea class="ctmpl-input" id="fct-sec_e_reschedule" rows="3"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">F) Liability, Insurance & Indemnification</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Bullet points — one per line</label><textarea class="ctmpl-input" id="fct-sec_f" rows="5"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">G) Property Use & Conduct</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Bullet points — one per line</label><textarea class="ctmpl-input" id="fct-sec_g" rows="5"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">H) Meals</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_h" rows="2"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">I) Swimming Pool</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_i" rows="2"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">J) Wi-Fi</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_j" rows="2"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">K) Photography & Media</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_k" rows="3"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">L) Force Majeure</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_l" rows="3"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">M) Dispute Resolution</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Bullet points — one per line</label><textarea class="ctmpl-input" id="fct-sec_m" rows="5"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">N) Ubuntu Bali Cancellation</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_n" rows="3"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">O) Termination</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_o" rows="2"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">P) Governing Law</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_p" rows="2"></textarea></div>
+      </div>
+      <div class="ctmpl-group">
+        <div class="ctmpl-group-title">Q) Entire Agreement</div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_q" rows="3"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- PRICING ENGINE OVERLAY -->
 <div id="pricing-overlay"></div>
 
