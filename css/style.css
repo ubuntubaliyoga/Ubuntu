@@ -244,8 +244,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:14px 28px;background:none;border:none;color:rgba(245,236,215,.4);font-family:'Inter',sans-serif;font-size:10px;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:color .2s;flex:1;-webkit-tap-highlight-color:transparent;}
 .bn-item.active{color:#F5ECD7;}
 .bn-item svg{flex-shrink:0;}
-#bn-fab{width:50px;height:50px;border-radius:50%;background:var(--gold);border:none;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transform:translateY(-10px);box-shadow:0 4px 18px rgba(74,55,40,.4);cursor:pointer;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;}
+#bn-fab{width:50px;height:50px;border-radius:50%;background:var(--gold);border:none;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transform:translateY(-10px);box-shadow:0 4px 18px rgba(74,55,40,.4);cursor:pointer;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;position:relative;}
 #bn-fab:active{transform:translateY(-7px);box-shadow:0 2px 8px rgba(74,55,40,.25);}
+#bn-fab::after{content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;animation:fabGlow 10s ease-out infinite;}
+@keyframes fabGlow{
+  0%{box-shadow:0 0 0 0 rgba(184,147,90,.7);}
+  7%{box-shadow:0 0 0 18px rgba(184,147,90,0);}
+  7.1%,100%{box-shadow:0 0 0 0 rgba(184,147,90,0);}
+}
 
 /* ── FAB SHEET ── */
 #fab-overlay,#drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:250;}
