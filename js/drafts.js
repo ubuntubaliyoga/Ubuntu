@@ -149,7 +149,7 @@ function dbg(msg){
 }
 
 async function saveToNotion(silent=false){
-  if(window._templateMode){if(!silent)showTemplateConfirm();return;}
+  if(window._templateMode||window._contractTemplateMode){if(!silent)showTemplateConfirm();return;}
   const btn=$('save-btn');
   if(!silent){btn.textContent='Saving…';btn.className='save-btn';}
   const P=pricing();

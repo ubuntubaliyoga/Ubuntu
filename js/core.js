@@ -9,6 +9,7 @@ const addMonths=(date,n)=>{if(!date)return'';const d=new Date(date+'T00:00:00');
 let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 window._templateMode=false;
+window._contractTemplateMode=false;
 const TEMPLATE_FIELDS=['f-intro','f-body','f-included','f-also','f-signoff','f-signoff2','f-note','f-roomrate','f-pkgrate','f-deposit'];
 // crmData, crmTab, crmLoaded declared in crm.js — do NOT redeclare here
 
@@ -219,8 +220,8 @@ function switchDealTab(t){
   });
   if(t==='offer')renderOffer();
   if(t==='contract')renderContract();
-  if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;window._templateMode=false;}
-  if(t==='edit'&&!window._templateMode){
+  if(t==='drafts'){loadDrafts();intentionalDraft=false;draftActive=false;window._templateMode=false;window._contractTemplateMode=false;}
+  if(t==='edit'&&!window._templateMode&&!window._contractTemplateMode){
     const title=document.querySelector('#sub-view-edit .view-hero-title');
     if(title)title.textContent='Edit Deal';
     const sub=document.querySelector('#sub-view-edit .view-hero-sub');
@@ -312,12 +313,32 @@ function openTemplateEdit(){
 function showTemplateConfirm(){$('template-confirm')?.classList.add('open');}
 function closeTemplateConfirm(){$('template-confirm')?.classList.remove('open');}
 function confirmSaveTemplate(){
+  const key=window._contractTemplateMode?'masterContractTemplate':'masterTemplate';
   const tmpl={};
   TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)tmpl[id]=el.value;});
-  localStorage.setItem('masterTemplate',JSON.stringify(tmpl));
+  localStorage.setItem(key,JSON.stringify(tmpl));
   closeTemplateConfirm();
   const btn=$('save-btn');if(btn){btn.textContent='✓ Saved';btn.className='save-btn saved';setTimeout(()=>{btn.textContent='Save as Default';btn.className='save-btn';},3000);}
-  dbg('[TEMPLATE] Master template saved');
+  dbg('[TEMPLATE] Master template saved to '+key);
+}
+
+function openContractTemplateEdit(){
+  switchTab('deal');
+  window._contractTemplateMode=true;
+  window._linkedLeadId=null;window._linkedLeadName=null;currentPageId=null;
+  ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  $('f-contractdate').value=todayStr();$('f-validuntil').value=addDays(todayStr(),7);$('f-offervalid').value='';$('notion-status').value='Draft';
+  const tmpl=JSON.parse(localStorage.getItem('masterContractTemplate')||'null');
+  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-signoff2':'Tari, as representative of Andréa Drottholm','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate':'60','f-pkgrate':'30.25','f-deposit':''};
+  TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)el.value=tmpl?.[id]??defs[id]??'';});
+  draftActive=false;intentionalDraft=false;autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
+  const sv=$('autosave-status');if(sv)sv.textContent='';
+  if(typeof extraServices!=='undefined'){extraServices=[];renderExtraServices();}
+  switchDealTab('edit');
+  const title=document.querySelector('#sub-view-edit .view-hero-title');if(title)title.textContent='Contract Master Template';
+  const sub=document.querySelector('#sub-view-edit .view-hero-sub');if(sub)sub.textContent='Set default text & pricing for all new contracts';
+  const btn=$('save-btn');if(btn){btn.textContent='Save as Default';btn.className='save-btn';}
+  const ns=$('notion-status');if(ns)ns.style.display='none';
 }
 
 function openMarketing(){$('marketing-overlay')?.classList.add('open');}
