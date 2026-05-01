@@ -514,10 +514,19 @@ window.addEventListener('beforeprint',()=>{
     el.style.setProperty('background','#fff','important');
     el.style.setProperty('border','none','important');
   });
+  const rawName=($('f-name')?.value||'').trim();
+  const parts=rawName.split(/\s+/).filter(Boolean);
+  const namePart=parts.length>1?parts[0]+' '+parts[parts.length-1]:parts[0]||'';
+  const d=new Date();
+  const dateStr=String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();
+  const docType=activeDealTab==='contract'?'Contract':'Offer';
+  document._prevTitle=document.title;
+  document.title=[docType,namePart,dateStr].filter(Boolean).join(' ');
 });
 window.addEventListener('afterprint',()=>{
   document.querySelectorAll('.email,.email-wrap,.eb-badge,.e-investment').forEach(el=>{
     el.style.background=el.dataset._bg||'';
     el.style.border=el.dataset._border||'';
   });
+  if(document._prevTitle!==undefined){document.title=document._prevTitle;delete document._prevTitle;}
 });
