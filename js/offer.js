@@ -204,12 +204,12 @@ function buildContractHTML(){
   const CANCEL=[['12+ months prior','100%'],['9–12 months prior','80%'],['6–9 months prior','60%'],['3–6 months prior','40%'],['1–3 months prior','20%'],['Less than 1 month prior','No refund (0%)']];
   const cR=(label,sub,amt)=>`<tr><td>${label}${sub?`<span style="display:block;font-size:9px;color:#9E948A;margin-top:2px;">${sub}</span>`:''}</td><td style="text-align:right;white-space:nowrap;">${amt}</td></tr>`;
   const bR=P.bales<=0?'':P.bales<=5
-    ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate,2))
-    :cR('5 Gladaks',`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(5*P.roomRate,2))
-     +cR(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt((P.bales-5)*P.roomRate,2));
-  const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc,2)):'';
-  const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc,2)):'';
-  const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub,2)):'';
+    ?cR(`${P.bales} Gladak${P.bales>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(P.bales*P.roomRate*nights,2))
+    :cR('5 Gladaks',`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt(5*P.roomRate*nights,2))
+     +cR(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,`${cFmt(P.roomRate,0)}/night · ${nights} nights`,cFmt((P.bales-5)*P.roomRate*nights,2));
+  const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
+  const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
+  const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
   const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR(`${s.label} (${s.pax} pax)`,`${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
   const txR=cR('Tax (10%) + Service charge (5%)','',cFmt(finalTotal-(hasExtrasC?grandExC:P.totalEx),2));
   const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
