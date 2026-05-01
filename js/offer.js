@@ -123,7 +123,7 @@ function buildOfferHTML(){
     <div class="c-hd-title">Retreat Hosting Offer</div>
     <div class="c-hd-sub">Ubuntu Bali &nbsp;·&nbsp; ${monthStr}</div>
   </div>
-  ${name||company?`<div class="c-parties" style="margin-bottom:20px;"><div class="c-party" style="border-right:none;"><div class="c-party-title">Prepared for</div>${company?`<p>${company}</p>`:''}${name?`<p>Attn: ${name}</p>`:''}${address?`<p>${address}</p>`:''}${fmtD(checkin)&&fmtD(checkout)?`<p>Dates: ${fmtD(checkin)} — ${fmtD(checkout)}</p>`:''}</div></div>`:''}
+  ${name||company?`<div class="c-parties" style="margin-bottom:20px;"><div class="c-party"><div class="c-party-title">Prepared for</div>${company?`<p>${company}</p>`:''}${name?`<p>Attn: ${name}</p>`:''}${address?`<p>${address}</p>`:''}${fmtD(checkin)&&fmtD(checkout)?`<p>Dates: ${fmtD(checkin)} — ${fmtD(checkout)}</p>`:''}</div><div class="c-party"><div class="c-party-title">Prepared by</div><p>Company: PT Purusa Yoga Bali (Ubuntu Bali)</p><p>Director: Witri Utari</p><p>Contact: Andréa Drottholm</p><p>Phone: +62 812 3862 0082</p><p>Email: namaste@ubuntubali.com</p></div></div>`:''}
   <div class="c-sec">
     ${introPara||`<p>Please find below our retreat hosting offer for <strong>${retreatName}</strong>.</p>`}
     <p>${vBody}${hasEB?` We have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}</p>
