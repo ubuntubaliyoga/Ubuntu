@@ -599,6 +599,12 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
 .ctmpl-label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;}
 .ctmpl-input{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);background:var(--surface);font-family:inherit;resize:vertical;}
 .ctmpl-input:focus{outline:none;border-color:var(--gold-lt);}
+.ctmpl-drag-handle{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-right:6px;cursor:grab;color:var(--muted);flex-shrink:0;background-image:radial-gradient(circle,currentColor 1.5px,transparent 1.5px);background-size:5px 5px;background-position:0 0,5px 5px;opacity:.5;vertical-align:middle;}
+.ctmpl-drag-handle:active{cursor:grabbing;}
+.ctmpl-section.dragging{opacity:.4;}
+.ctmpl-section.drag-over-top{border-top:2px solid var(--gold);}
+.ctmpl-section.drag-over-bottom{border-bottom:2px solid var(--gold);}
+#ctmpl-sections{outline:none;}
 
 /* ── PRICING ENGINE ADMIN ── */
 #pricing-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:450;align-items:flex-start;justify-content:flex-end;}

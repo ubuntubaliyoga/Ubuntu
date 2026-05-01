@@ -875,80 +875,82 @@ Airport pick-up available on request.</textarea>
         <div class="ctmpl-group-title">Contract Validity</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Text after "valid until [date]."</label><textarea class="ctmpl-input" id="fct-sec_validity" rows="3"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">A) Purpose of Agreement</div>
+      <div id="ctmpl-sections">
+      <div class="ctmpl-group ctmpl-section" data-skey="a" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">A</span>) Purpose of Agreement</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph 1</label><textarea class="ctmpl-input" id="fct-sec_a1" rows="3"></textarea></div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph 2</label><textarea class="ctmpl-input" id="fct-sec_a2" rows="3"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">B) Pricing & Inclusions</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="b" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">B</span>) Pricing &amp; Inclusions</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Currency note — use {currency} as placeholder</label><textarea class="ctmpl-input" id="fct-sec_b_currency" rows="3"></textarea></div>
         <div class="ctmpl-row"><label class="ctmpl-label">IDR disclaimer (italic note below pricing table)</label><textarea class="ctmpl-input" id="fct-sec_b_idr" rows="3"></textarea></div>
         <div class="ctmpl-row"><label class="ctmpl-label">What's Included — one item per line</label><textarea class="ctmpl-input" id="fct-sec_b_included" rows="5"></textarea></div>
         <div class="ctmpl-row"><label class="ctmpl-label">Package note — use {guests} as placeholder</label><textarea class="ctmpl-input" id="fct-sec_b_pkg" rows="3"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">C) Payments & Bank Details</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="c" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">C</span>) Payments &amp; Bank Details</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Bank fees note</label><textarea class="ctmpl-input" id="fct-sec_c_fees" rows="2"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">D) Payment Schedule</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="d" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">D</span>) Payment Schedule</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Late payment warning</label><textarea class="ctmpl-input" id="fct-sec_d_late" rows="2"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">E) Cancellation & Refund Policy</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="e" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">E</span>) Cancellation &amp; Refund Policy</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Standard bookings text</label><textarea class="ctmpl-input" id="fct-sec_e_standard" rows="3"></textarea></div>
         <div class="ctmpl-row"><label class="ctmpl-label">Cancellation table — one row per line, format: Period|Refund</label><textarea class="ctmpl-input" id="fct-sec_e_cancel" rows="7"></textarea></div>
-        <div class="ctmpl-row"><label class="ctmpl-label">Short-notice bookings text</label><textarea class="ctmpl-input" id="fct-sec_e_shortnotice" rows="2"></textarea></div>
+        <div class="ctmpl-row"><label class="ctmpl-label">Short-notice bookings text</label><textarea class="ctmpl-label" id="fct-sec_e_shortnotice" rows="2"></textarea></div>
         <div class="ctmpl-row"><label class="ctmpl-label">Rescheduling — one bullet per line</label><textarea class="ctmpl-input" id="fct-sec_e_reschedule" rows="3"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">F) Liability, Insurance & Indemnification</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="f" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">F</span>) Liability, Insurance &amp; Indemnification</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Bullet points — one per line</label><textarea class="ctmpl-input" id="fct-sec_f" rows="5"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">G) Property Use & Conduct</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="g" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">G</span>) Property Use &amp; Conduct</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Bullet points — one per line</label><textarea class="ctmpl-input" id="fct-sec_g" rows="5"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">H) Meals</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="h" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">H</span>) Meals</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_h" rows="2"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">I) Swimming Pool</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="i" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">I</span>) Swimming Pool</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_i" rows="2"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">J) Wi-Fi</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="j" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">J</span>) Wi-Fi</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_j" rows="2"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">K) Photography & Media</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="k" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">K</span>) Photography &amp; Media</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_k" rows="3"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">L) Force Majeure</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="l" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">L</span>) Force Majeure</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_l" rows="3"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">M) Dispute Resolution</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="m" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">M</span>) Dispute Resolution</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Bullet points — one per line</label><textarea class="ctmpl-input" id="fct-sec_m" rows="5"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">N) Ubuntu Bali Cancellation</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="n" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">N</span>) Ubuntu Bali Cancellation</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_n" rows="3"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">O) Termination</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="o" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">O</span>) Termination</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_o" rows="2"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">P) Governing Law</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="p" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">P</span>) Governing Law</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_p" rows="2"></textarea></div>
       </div>
-      <div class="ctmpl-group">
-        <div class="ctmpl-group-title">Q) Entire Agreement</div>
+      <div class="ctmpl-group ctmpl-section" data-skey="q" draggable="true">
+        <div class="ctmpl-group-title"><span class="ctmpl-drag-handle"></span><span class="ctmpl-sec-letter">Q</span>) Entire Agreement</div>
         <div class="ctmpl-row"><label class="ctmpl-label">Paragraph</label><textarea class="ctmpl-input" id="fct-sec_q" rows="3"></textarea></div>
+      </div>
       </div>
     </div>
   </div>

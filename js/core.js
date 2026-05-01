@@ -352,14 +352,63 @@ const CONTRACT_TMPL_DEFS={
 };
 const CONTRACT_TMPL_KEYS=Object.keys(CONTRACT_TMPL_DEFS);
 
+const CONTRACT_SEC_ORDER_DEFAULT=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q'];
+
+function updateSectionLetters(){
+  document.querySelectorAll('#ctmpl-sections .ctmpl-section').forEach((el,i)=>{
+    const span=el.querySelector('.ctmpl-sec-letter');
+    if(span)span.textContent=String.fromCharCode(65+i);
+  });
+}
+
+function initContractSectionDrag(){
+  const container=$('ctmpl-sections');
+  if(!container)return;
+  let dragSrc=null;
+  container.querySelectorAll('.ctmpl-section').forEach(el=>{
+    el.addEventListener('dragstart',e=>{
+      dragSrc=el;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>el.classList.add('dragging'),0);
+    });
+    el.addEventListener('dragend',()=>{
+      el.classList.remove('dragging');
+      container.querySelectorAll('.ctmpl-section').forEach(s=>s.classList.remove('drag-over-top','drag-over-bottom'));
+      updateSectionLetters();
+    });
+    el.addEventListener('dragover',e=>{
+      e.preventDefault();
+      if(el===dragSrc)return;
+      container.querySelectorAll('.ctmpl-section').forEach(s=>s.classList.remove('drag-over-top','drag-over-bottom'));
+      const mid=el.getBoundingClientRect().top+el.getBoundingClientRect().height/2;
+      el.classList.add(e.clientY<mid?'drag-over-top':'drag-over-bottom');
+    });
+    el.addEventListener('dragleave',()=>el.classList.remove('drag-over-top','drag-over-bottom'));
+    el.addEventListener('drop',e=>{
+      e.preventDefault();
+      el.classList.remove('drag-over-top','drag-over-bottom');
+      if(!dragSrc||dragSrc===el)return;
+      const mid=el.getBoundingClientRect().top+el.getBoundingClientRect().height/2;
+      e.clientY<mid?el.before(dragSrc):el.after(dragSrc);
+      updateSectionLetters();
+    });
+  });
+}
+
 function openContractTemplateEdit(){
   const saved=JSON.parse(localStorage.getItem('masterContractTemplate')||'null')||{};
   CONTRACT_TMPL_KEYS.forEach(k=>{const el=$('fct-'+k);if(el)el.value=saved[k]!==undefined?saved[k]:CONTRACT_TMPL_DEFS[k];});
+  const order=Array.isArray(saved.section_order)?saved.section_order:CONTRACT_SEC_ORDER_DEFAULT;
+  const container=$('ctmpl-sections');
+  if(container)order.forEach(k=>{const el=container.querySelector(`[data-skey="${k}"]`);if(el)container.appendChild(el);});
+  updateSectionLetters();
+  initContractSectionDrag();
   $('contract-tmpl-overlay')?.classList.add('open');
 }
 function saveContractTemplate(){
   const tmpl={};
   CONTRACT_TMPL_KEYS.forEach(k=>{const el=$('fct-'+k);if(el)tmpl[k]=el.value;});
+  tmpl.section_order=[...document.querySelectorAll('#ctmpl-sections .ctmpl-section')].map(el=>el.dataset.skey);
   localStorage.setItem('masterContractTemplate',JSON.stringify(tmpl));
   const btn=$('contract-tmpl-save');
   if(btn){btn.textContent='✓ Saved';setTimeout(()=>{btn.textContent='Save as Default';},2500);}

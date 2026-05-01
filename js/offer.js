@@ -219,6 +219,27 @@ function buildContractHTML(){
   const rdR=P.discRooms>0&&P.discRoomPct>0?cR(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
   const totR=`<tr style="background:#F5ECD7;font-weight:700;"><td>Total incl. tax &amp; service charge</td><td style="text-align:right;white-space:nowrap;">${cFmt(finalTotal,2)}</td></tr>`;
   const idrR=`<tr style="background:#2E1A0A;color:#F5ECD7;"><td style="font-size:9.5px;font-weight:700;">IDR equivalent<span style="display:block;font-size:8px;font-weight:400;opacity:.75;margin-top:2px;">1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue</span></td><td style="text-align:right;white-space:nowrap;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
+  const sectionOrder=Array.isArray(_CT.section_order)?_CT.section_order:['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q'];
+  const secRender={
+    a:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Purpose of Agreement</div><p>${ct('sec_a1')}</p><p>${ct('sec_a2')}</p></div>`,
+    b:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Pricing &amp; Inclusions</div><p>${ct('sec_b_currency').replace('{currency}',window.offerCurrency||'USD')}</p><p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p><p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p><table class="c-table"><thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead><tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table><p style="font-size:10.5px;color:#7A6040;font-style:italic;">${ct('sec_b_idr')}</p><p><strong>What's Included:</strong></p><ul>${cls('sec_b_included').map(i=>`<li>${i}</li>`).join('')}</ul><p>${ct('sec_b_pkg').replace(/{guests}/g,totalPeople)}</p></div>`,
+    c:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Payments &amp; Bank Details</div><p>Payments must be made to the following account:</p><table class="bank-table">${Object.entries(BANK).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table><p>${ct('sec_c_fees')}</p></div>`,
+    d:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Payment Schedule</div><p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p><table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (${window.offerCurrency||'USD'})</th><th>Due Date</th></tr></thead><tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>${cFmt(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr><tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>${cFmt(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr><tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>${cFmt(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table><p>${ct('sec_d_late')}</p></div>`,
+    e:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Cancellation &amp; Refund Policy</div><p><strong>${ct('sec_e_standard')}</strong></p><table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead><tbody>${CANCEL.map(([p,r])=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table><p><strong>${ct('sec_e_shortnotice')}</strong></p><p><strong>Rescheduling:</strong></p><ul>${cls('sec_e_reschedule').map(l=>`<li>${l}</li>`).join('')}</ul></div>`,
+    f:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Liability, Insurance &amp; Indemnification</div><ul>${cls('sec_f').map(l=>`<li>${l}</li>`).join('')}</ul></div>`,
+    g:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Property Use &amp; Conduct</div><ul>${cls('sec_g').map(l=>`<li>${l}</li>`).join('')}</ul></div>`,
+    h:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Meals</div><p>${ct('sec_h')}</p></div>`,
+    i:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Swimming Pool</div><p>${ct('sec_i')}</p></div>`,
+    j:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Wi-Fi</div><p>${ct('sec_j')}</p></div>`,
+    k:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Photography &amp; Media</div><p>${ct('sec_k')}</p></div>`,
+    l:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Force Majeure</div><p>${ct('sec_l')}</p></div>`,
+    m:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Dispute Resolution</div><ul>${cls('sec_m').map(l=>`<li>${l}</li>`).join('')}</ul></div>`,
+    n:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Ubuntu Bali Cancellation</div><p>${ct('sec_n')}</p></div>`,
+    o:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Termination</div><p>${ct('sec_o')}</p></div>`,
+    p:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Governing Law</div><p>${ct('sec_p')}</p></div>`,
+    q:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Entire Agreement</div><p>${ct('sec_q')}</p></div>`,
+  };
+  const sectionsHTML=sectionOrder.map((k,i)=>{const L=String.fromCharCode(65+i);return secRender[k]?secRender[k](L):'';}).join('');
   return`<div class="contract-doc">
   <div class="c-hd">
     <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
@@ -234,61 +255,7 @@ function buildContractHTML(){
   </div>
   <div class="c-datebar">Date: ${fmtDS(contractDate)} &nbsp;|&nbsp; Check-in: ${fmtDS(checkin)} &nbsp;|&nbsp; Check-out: ${fmtDS(checkout)}</div>
   <div class="c-validity"><strong style="font-family:'Libre Baskerville',serif;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;">Contract Validity: </strong>This contract offer is valid until <strong>${fmtDS(validUntil)}</strong>. ${ct('sec_validity')}</div>
-  <div class="c-sec"><div class="c-sec-hd">A) Purpose of Agreement</div>
-    <p>${ct('sec_a1')}</p>
-    <p>${ct('sec_a2')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">B) Pricing & Inclusions</div>
-    <p>${ct('sec_b_currency').replace('{currency}',window.offerCurrency||'USD')}</p>
-    <p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p>
-    <p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p>
-    <table class="c-table"><thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead>
-    <tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table>
-    <p style="font-size:10.5px;color:#7A6040;font-style:italic;">${ct('sec_b_idr')}</p>
-    <p><strong>What's Included:</strong></p>
-    <ul>${cls('sec_b_included').map(i=>`<li>${i}</li>`).join('')}</ul>
-    <p>${ct('sec_b_pkg').replace(/{guests}/g,totalPeople)}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">C) Payments & Bank Details</div>
-    <p>Payments must be made to the following account:</p>
-    <table class="bank-table">${Object.entries(BANK).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>
-    <p>${ct('sec_c_fees')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">D) Payment Schedule</div>
-    <p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p>
-    <table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (${window.offerCurrency||'USD'})</th><th>Due Date</th></tr></thead>
-    <tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>${cFmt(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr>
-    <tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>${cFmt(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr>
-    <tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>${cFmt(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table>
-    <p>${ct('sec_d_late')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">E) Cancellation & Refund Policy</div>
-    <p><strong>${ct('sec_e_standard')}</strong></p>
-    <table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead>
-    <tbody>${CANCEL.map(([p,r])=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table>
-    <p><strong>${ct('sec_e_shortnotice')}</strong></p>
-    <p><strong>Rescheduling:</strong></p>
-    <ul>${cls('sec_e_reschedule').map(l=>`<li>${l}</li>`).join('')}</ul></div>
-  <div class="c-sec"><div class="c-sec-hd">F) Liability, Insurance & Indemnification</div>
-    <ul>${cls('sec_f').map(l=>`<li>${l}</li>`).join('')}</ul></div>
-  <div class="c-sec"><div class="c-sec-hd">G) Property Use & Conduct</div>
-    <ul>${cls('sec_g').map(l=>`<li>${l}</li>`).join('')}</ul></div>
-  <div class="c-sec"><div class="c-sec-hd">H) Meals</div>
-    <p>${ct('sec_h')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">I) Swimming Pool</div>
-    <p>${ct('sec_i')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">J) Wi-Fi</div>
-    <p>${ct('sec_j')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">K) Photography & Media</div>
-    <p>${ct('sec_k')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">L) Force Majeure</div>
-    <p>${ct('sec_l')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">M) Dispute Resolution</div>
-    <ul>${cls('sec_m').map(l=>`<li>${l}</li>`).join('')}</ul></div>
-  <div class="c-sec"><div class="c-sec-hd">N) Ubuntu Bali Cancellation</div>
-    <p>${ct('sec_n')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">O) Termination</div>
-    <p>${ct('sec_o')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">P) Governing Law</div>
-    <p>${ct('sec_p')}</p></div>
-  <div class="c-sec"><div class="c-sec-hd">Q) Entire Agreement</div>
-    <p>${ct('sec_q')}</p></div>
+  ${sectionsHTML}
   <div class="c-sigs"><div class="c-sigs-title">Signatures</div>
     <div class="c-sigs-grid">
       <div><div class="c-sig-party">For Ubuntu Bali</div>
