@@ -5,7 +5,7 @@ const ALLOWED_EMAIL     = 'ubuntubaliyoga@gmail.com';
 
 const _configured = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
 const _sb = _configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
+  auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true }
 }) : null;
 
 let _gateDismissed = false;
@@ -73,33 +73,11 @@ async function signOut() {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') _handleAuth(session);
     });
 
-    // 2. Check localStorage for an existing session (returning visitor)
+    // 2. Check for an existing session or complete a PKCE code exchange.
+    //    With flowType:'pkce' + detectSessionInUrl:true, Supabase automatically
+    //    handles the ?code= parameter on redirect back from Google.
     const { data: { session } } = await _sb.auth.getSession();
     if (session) { _handleAuth(session); return; }
-
-    // 3. Manual fallback: parse URL hash directly in case detectSessionInUrl
-    //    didn't fire (timing issue or browser quirk with the hash)
-    const hash = window.location.hash;
-    if (hash.includes('access_token')) {
-      const p = new URLSearchParams(hash.slice(1));
-      const { data, error } = await _sb.auth.setSession({
-        access_token:  p.get('access_token')  || '',
-        refresh_token: p.get('refresh_token') || ''
-      });
-      if (error) {
-        _setGateError('Token error: ' + error.message);
-      } else if (data.session) {
-        _handleAuth(data.session);
-        window.history.replaceState({}, '', window.location.pathname);
-        return;
-      }
-    }
-
-    // 4. No session found — show debug info so we can diagnose
-    const hashPreview = hash.length > 1 ? hash.substring(0, 60) + '…' : 'none';
-    _setGateError(`No session. Hash: ${hashPreview}`);
-    // Clear debug text after 4s so it doesn't confuse on first visit
-    setTimeout(() => _setGateError(''), 4000);
 
   } catch (e) {
     _setGateError('Auth error: ' + (e.message || 'check Supabase config'));
