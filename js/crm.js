@@ -10,9 +10,10 @@ let _moveLeadId = null; // id of lead selected for tab-move (long-press pattern)
 const NOT_REACHED = 'Not reached out yet';
 const REACHED_OUT_OPTIONS = [NOT_REACHED, 'Email', 'Instagram', 'LinkedIn', 'WhatsApp', 'In Person', 'Cold Call'];
 
-const CLOSED_STATUSES = ['SALE CLOSED', 'Converted to Customer'];
-const WARM_STATUSES   = ['WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY', 'Booked a call', 'Sent an offer'];
-const DEAD_STATUSES   = ['GHOSTED', 'TERMINATED', 'NOT GOOD FIT'];
+const CLOSED_STATUSES     = ['SALE CLOSED', 'Converted to Customer'];
+const WARM_STATUSES       = ['WARM: Booked a call OR asked for help', 'HOT: Past client/strong conversation', 'QUALIFIED TO BUY', 'Booked a call', 'Sent an offer'];
+const DEAD_STATUSES       = ['GHOSTED', 'TERMINATED', 'NOT GOOD FIT'];
+const OWN_A_PLACE_STATUSES = ['OWN A PLACE'];
 
 const SRC_CFG = {
   email:    { label: '📧 Email',    color: '#1565C0', bg: '#E3F2FD' },
@@ -34,9 +35,10 @@ function allLeadsAndConverted() {
 
 function getStageKey(c) {
   const s = Array.isArray(c.status) ? c.status[0] : c.status;
-  if (CLOSED_STATUSES.includes(s)) return 'closed';
-  if (WARM_STATUSES.includes(s))   return 'warm';
-  if (DEAD_STATUSES.includes(s))   return 'dead';
+  if (CLOSED_STATUSES.includes(s))     return 'closed';
+  if (WARM_STATUSES.includes(s))       return 'warm';
+  if (DEAD_STATUSES.includes(s))       return 'dead';
+  if (OWN_A_PLACE_STATUSES.includes(s)) return 'own';
   return 'cold';
 }
 
@@ -79,7 +81,7 @@ function crmSwitchTab(tab) {
     return;
   }
   crmTab = tab;
-  ['cold', 'converted', 'closed'].forEach(t => {
+  ['cold', 'converted', 'closed', 'own'].forEach(t => {
     document.getElementById('crm-tab-' + t)?.classList.toggle('active', t === tab);
   });
   crmRender();
@@ -88,7 +90,7 @@ function crmSwitchTab(tab) {
 function setMoveSelection(id) {
   _moveLeadId = id;
   if (navigator.vibrate) navigator.vibrate(40);
-  ['crm-tab-cold','crm-tab-converted','crm-tab-closed'].forEach(tabId => {
+  ['crm-tab-cold','crm-tab-converted','crm-tab-closed','crm-tab-own'].forEach(tabId => {
     document.getElementById(tabId)?.classList.add('move-target');
   });
   const card = document.querySelector(`[data-lead-id="${id}"]`);
@@ -97,7 +99,7 @@ function setMoveSelection(id) {
 
 function clearMoveSelection() {
   _moveLeadId = null;
-  ['crm-tab-cold','crm-tab-converted','crm-tab-closed'].forEach(tabId => {
+  ['crm-tab-cold','crm-tab-converted','crm-tab-closed','crm-tab-own'].forEach(tabId => {
     document.getElementById(tabId)?.classList.remove('move-target');
   });
   document.querySelectorAll('.crm-card-selected').forEach(c => c.classList.remove('crm-card-selected'));
@@ -106,6 +108,7 @@ function clearMoveSelection() {
 function tabItems() {
   if (crmTab === 'converted') return crmData.converted || [];
   if (crmTab === 'closed')    return allLeads().filter(c => getStageKey(c) === 'closed');
+  if (crmTab === 'own')       return allLeads().filter(c => getStageKey(c) === 'own');
   return allLeads().filter(c => {
     const s = getStageKey(c);
     return s === 'cold' || s === 'warm' || s === 'dead';
@@ -124,11 +127,12 @@ function crmSort(items) {
 function updateTabCounts() {
   const allL = allLeads();
   const counts = {
-    cold:      allL.filter(c => getStageKey(c) !== 'closed').length,
+    cold:      allL.filter(c => { const s = getStageKey(c); return s !== 'closed' && s !== 'own'; }).length,
     converted: (crmData.converted || []).length,
     closed:    allL.filter(c => getStageKey(c) === 'closed').length,
+    own:       allL.filter(c => getStageKey(c) === 'own').length,
   };
-  const names = { cold: 'Cold', converted: 'Warm', closed: 'Closed' };
+  const names = { cold: 'Cold', converted: 'Warm', closed: 'Closed', own: 'Own a Place' };
   Object.entries(counts).forEach(([tab, n]) => {
     const el = document.querySelector(`#crm-tab-${tab} .tab-label`);
     if (el) el.textContent = `${names[tab]} (${n})`;
@@ -355,13 +359,15 @@ function crmDetailHTML(c) {
       <button onclick="if(confirm('Delete?'))deleteLead('${c.id}')" class="pill-btn" style="color:#B71C1C;border-color:#FDECEA;flex-shrink:0;padding:10px 14px;">✕</button>
     </div>
     ${(() => {
-      const stage = c.db === 'converted' ? 'converted' : getStageKey(c) === 'closed' ? 'closed' : 'cold';
+      const stageKey = getStageKey(c);
+      const stage = c.db === 'converted' ? 'converted' : stageKey === 'closed' ? 'closed' : stageKey === 'own' ? 'own' : 'cold';
       const closeModal = `document.getElementById('crm-modal').classList.remove('open');`;
       const btn = (label, tab) => `<button onclick="${closeModal}dropLeadOnTab('${c.id}','${tab}')" class="pill-btn" style="flex:1;">${label}</button>`;
       const rows = [];
       if (stage !== 'converted') rows.push(btn('Move to Warm', 'converted'));
       if (stage !== 'cold')      rows.push(btn('Move to Cold', 'cold'));
       if (stage !== 'closed')    rows.push(btn('Move to Closed', 'closed'));
+      if (stage !== 'own')       rows.push(btn('Move to Own a Place', 'own'));
       return rows.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;">${rows.join('')}</div>` : '';
     })()}`;
 }
@@ -576,7 +582,8 @@ function dropLeadOnTab(id, targetTab) {
   const lead = allLeadsAndConverted().find(x => x.id === id);
   if (!lead) return;
   const sourceTab = lead.db === 'converted' ? 'converted'
-                  : getStageKey(lead) === 'closed' ? 'closed' : 'cold';
+                  : getStageKey(lead) === 'closed' ? 'closed'
+                  : getStageKey(lead) === 'own' ? 'own' : 'cold';
   if (sourceTab === targetTab) return;
 
   if (targetTab === 'converted' && sourceTab !== 'converted') {
@@ -626,6 +633,20 @@ function dropLeadOnTab(id, targetTab) {
     })).catch(e => dbg('Close warm failed: ' + e.message));
 
   } else if (targetTab === 'cold' && sourceTab === 'closed') {
+    lead.status = 'Followed + Engaged';
+    crmSwitchTab('cold');
+    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: 'Followed + Engaged' }),
+    }).catch(e => dbg('Status save failed: ' + e.message));
+
+  } else if (targetTab === 'own') {
+    lead.status = 'OWN A PLACE';
+    crmSwitchTab('own');
+    fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', pageId: id, db: lead.db, status: 'OWN A PLACE' }),
+    }).catch(e => dbg('Status save failed: ' + e.message));
+
+  } else if (targetTab === 'cold' && sourceTab === 'own') {
     lead.status = 'Followed + Engaged';
     crmSwitchTab('cold');
     fetch('/api/crm', { method: 'POST', headers: { 'Content-Type': 'application/json' },
