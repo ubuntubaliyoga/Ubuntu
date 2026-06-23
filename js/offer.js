@@ -24,17 +24,18 @@ function pricing(){
   return{bales,roomRate,pkgRate,pkgCount,discPct,parvOn,parvOrig,parvDisc,parvDiscPct,buddOn,buddOrig,buddDisc,buddDiscPct,discRooms,discRoomPct,villaTotal,accomSub,pkgSub,stdSub,earlyAmt,roomDiscAmt,perNight,perNightTax,nights,totalEx,totalIn};
 }
 
-function payments(total,checkin,depositPct){
+function payments(total,checkin,depositPct,p2Pct,p3Pct){
   const d=depositPct>0?depositPct/100:0.5, rem=1-d;
+  const p2f=p2Pct>0?p2Pct/100:rem*0.6, p3f=p3Pct>0?p3Pct/100:rem*0.4;
   return{
     dep:{pct:Math.round(d*100)+'%',amt:total*d,due:fmtDS(addDays(todayStr(),2))},
-    p2:{pct:Math.round(rem*0.6*100)+'%',amt:total*rem*0.6,due:checkin?fmtDS(addMonths(checkin,-3)):'___________'},
-    p3:{pct:Math.round(rem*0.4*100)+'%',amt:total*rem*0.4,due:checkin?fmtDS(checkin):'___________'},
+    p2:{pct:Math.round(p2f*100)+'%',amt:total*p2f,due:checkin?fmtDS(addMonths(checkin,-3)):'___________'},
+    p3:{pct:Math.round(p3f*100)+'%',amt:total*p3f,due:checkin?fmtDS(checkin):'___________'},
   };
 }
 
 function getFormState(){
-  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-idrrate','f-currency','f-note','f-included','f-also','f-signoff','f-signoff2'];
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-p2pct','f-p3pct','f-idrrate','f-currency','f-note','f-included','f-also','f-signoff','f-signoff2'];
   const s={};
   ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
   s['f-parvati-on']=$('f-parvati-on').checked;
@@ -193,13 +194,15 @@ function buildContractHTML(){
   const totalPeople=guests+facilitators, checkin=$('f-checkin').value, checkout=$('f-checkout').value;
   const contractDate=$('f-contractdate').value||todayStr(), validUntil=$('f-validuntil').value||addDays(contractDate,7);
   const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
+  const p2Pct=Math.min(100,Math.max(0,parseFloat($('f-p2pct').value)||0));
+  const p3Pct=Math.min(100,Math.max(0,parseFloat($('f-p3pct').value)||0));
   const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
   const P=pricing(), nights=P.nights, days=nights+1;
   const extTotal=extraServicesTotal(), hasExtrasC=extraServices.length>0;
   const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal*TAX;
   const finalTotal=hasExtrasC?grandInC:P.totalIn;
   const idrTotal=finalTotal*idrRate;
-  const PMT=payments(finalTotal,checkin,depositPct);
+  const PMT=payments(finalTotal,checkin,depositPct,p2Pct,p3Pct);
   const _CT=JSON.parse(localStorage.getItem('masterContractTemplate')||'null')||{};
   const ct=(k)=>_CT[k]!==undefined&&_CT[k]!==''?_CT[k]:CONTRACT_TMPL_DEFS[k]||'';
   const cls=(k)=>ct(k).split('\n').filter(l=>l.trim());
