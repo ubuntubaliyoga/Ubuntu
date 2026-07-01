@@ -481,7 +481,8 @@ window._allRates         = {};
 
 function onCurrencyChange(code){
   window.offerCurrency=code;
-  window.offerCurrencyRate=code==='USD'?1.0:(window._allRates?.[code]||1.0);
+  const manualIdr=parseFloat(document.getElementById('f-idrrate')?.value)||0;
+  window.offerCurrencyRate=code==='USD'?1.0:code==='IDR'&&manualIdr>0?manualIdr:(window._allRates?.[code]||1.0);
   updateCurrencyTicker();
   if(typeof activeDealTab!=='undefined'){
     if(activeDealTab==='offer'&&typeof renderOffer==='function')renderOffer();
@@ -495,8 +496,9 @@ function updateCurrencyTicker(){
   if(!el)return;
   const code=window.offerCurrency||'USD';
   if(code==='USD'){el.textContent='Base currency';return;}
-  const rate=window._allRates?.[code];
-  el.textContent=rate?`1 USD = ${rate.toFixed(4)} ${code}`:'Rate unavailable';
+  const manualIdr=parseFloat(document.getElementById('f-idrrate')?.value)||0;
+  const rate=code==='IDR'&&manualIdr>0?manualIdr:(window._allRates?.[code]||null);
+  el.textContent=rate?`1 USD = ${code==='IDR'?Number(rate).toLocaleString('id-ID'):rate.toFixed(4)} ${code}`:'Rate unavailable';
 }
 
 function toggleMoreDetails(btn){
