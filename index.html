@@ -220,10 +220,10 @@
           <div class="fg"><label>IDR Exchange Rate</label>
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-size:13px;color:var(--muted);white-space:nowrap;">1 USD =</span>
-              <input type="number" id="f-idrrate" value="17085" style="max-width:140px;">
+              <input type="number" id="f-idrrate" value="17085" style="max-width:140px;" oninput="window._idrRateLocked=true;document.getElementById('idr-use-live').style.display='inline';">
               <span style="font-size:13px;color:var(--muted);">IDR</span>
             </div>
-            <div class="idr-status-row"><div class="idr-dot" id="idr-dot"></div><span class="idr-info" id="idr-info">Fetching live rate…</span></div>
+            <div class="idr-status-row"><div class="idr-dot" id="idr-dot"></div><span class="idr-info" id="idr-info">Fetching live rate…</span> &nbsp;<a id="idr-use-live" href="#" style="display:none;font-size:11px;color:var(--accent);" onclick="event.preventDefault();window._idrRateLocked=false;if(window._liveIdrRate){document.getElementById('f-idrrate').value=window._liveIdrRate;this.style.display='none';}">Use live rate</a></div>
           </div>
         </div>
       </div>

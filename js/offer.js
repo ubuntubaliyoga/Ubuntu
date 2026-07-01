@@ -47,6 +47,7 @@ function getFormState(){
 }
 
 function setFormState(s){
+  if(s['f-idrrate']){window._idrRateLocked=true;const el=$('idr-use-live');if(el)el.style.display='inline';}
   Object.entries(s).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=val;else el.value=val;});
   const r=document.querySelector(`input[name="price-display"][value="${s['price-display']||'both'}"]`);
   if(r)r.checked=true;

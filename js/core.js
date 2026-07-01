@@ -466,7 +466,8 @@ window._allRates         = {};
   try{
     const r=await fetch('/api/exchange-rate');
     const d=await r.json();
-    $('f-idrrate').value=d.rate;
+    window._liveIdrRate=d.rate;
+    if(!window._idrRateLocked){$('f-idrrate').value=d.rate;}
     window._allRates=d.rates||{IDR:d.rate};
     const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     if(d.fallback){dot.className='idr-dot fallback';info.textContent=`⚠ Fallback rate · ${now}`;}
