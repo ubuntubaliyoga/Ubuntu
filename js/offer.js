@@ -6,13 +6,32 @@ function cFmt(usdAmt, decimals=0){
   return `${code} ${fmtN(usdAmt*rate,decimals)}`;
 }
 
+function getRateInputCurrency(){return document.querySelector('input[name="rate-input-currency"]:checked')?.value||'USD';}
+function rateToUsd(v){const idr=getIdrRate();return getRateInputCurrency()==='IDR'&&idr>0?v/idr:v;}
+
+function onRateInputCurrencyChange(code){
+  const idr=getIdrRate();if(!idr)return;
+  const fields=['f-roomrate','f-parvati-orig','f-buddha-orig','f-pkgrate'];
+  fields.forEach(id=>{
+    const el=$(id);if(!el)return;
+    const v=parseFloat(el.value)||0;
+    el.value=code==='IDR'?Math.round(v*idr):parseFloat((v/idr).toFixed(2));
+  });
+  const sfx=code==='IDR'?'(IDR)':'(USD)';
+  [['lbl-roomrate','Rate / night '],['lbl-parvati-orig','Rate / night '],['lbl-buddha-orig','Rate / night '],['lbl-pkgrate','Package Rate ('+sfx.slice(1,-1)+' / person / night)']].forEach(([id,base])=>{
+    const el=document.getElementById(id);if(el)el.textContent=id==='lbl-pkgrate'?'Package Rate ('+sfx.slice(1,-1)+' / person / night)':base+sfx;
+  });
+  const hint=document.getElementById('rate-input-hint');
+  if(hint)hint.textContent=code==='IDR'?`÷ ${idr.toLocaleString('id-ID')} = USD`:'';
+}
+
 function pricing(){
-  const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($('f-roomrate').value)||60;
-  const pkgRate=parseFloat($('f-pkgrate')?.value)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
+  const bales=parseInt($('f-rooms').value)||0, roomRate=rateToUsd(parseFloat($('f-roomrate').value)||0)||60;
+  const pkgRate=rateToUsd(parseFloat($('f-pkgrate')?.value)||0)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
   const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
-  const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($('f-parvati-orig').value)||80;
+  const parvOn=$('f-parvati-on').checked, parvOrig=rateToUsd(parseFloat($('f-parvati-orig').value)||0)||80;
   const parvDiscPct=parseFloat($('f-parvati-disc')?.value)||0; const parvDisc=parvDiscPct>0?parvOrig*(1-parvDiscPct/100):parvOrig;
-  const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($('f-buddha-orig').value)||80;
+  const buddOn=$('f-buddha-on').checked, buddOrig=rateToUsd(parseFloat($('f-buddha-orig').value)||0)||80;
   const buddDiscPct=parseFloat($('f-buddha-disc')?.value)||0; const buddDisc=buddDiscPct>0?buddOrig*(1-buddDiscPct/100):buddOrig;
   const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
   const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
