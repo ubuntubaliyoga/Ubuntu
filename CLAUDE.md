@@ -51,7 +51,7 @@ git push origin work:main
 | `css/style.css` | All app styles (extracted from index.html) |
 | `js/core.js` | Global state, tab routing, error infrastructure, auto-debug agent dispatch, fetch monkey-patch, drift check on load |
 | `js/drafts.js` | Deal drafts list — loads from Offers DB, stores full form state in `Form State` JSON blob |
-| `js/offer.js` | Pricing calculations (`pricing()`, `TAX = 1.15`) and offer/contract PDF-style render |
+| `js/offer.js` | Pricing calculations (`pricing(cur)`, `TAX = 1.15`) and offer/contract PDF-style render |
 | `js/crm.js` | CRM tab — lead cards, modal, email modal, drag-and-drop + long-press tab moves |
 | `js/bizdev.js` | Leadgen tab — city autocomplete, random city, billboard, `lgGenerate()` |
 
@@ -69,7 +69,7 @@ All handlers follow Vercel serverless conventions (`export default async functio
 | `lib/enrich-helpers.js` | *(imported)* | Shared phone extraction utilities — imported by `leadgen-agent.js` and `retro-enrich.js`. Lives in `lib/` not `api/` (Vercel 12-function limit). |
 | `retro-enrich.js` | `GET /api/retro-enrich` | Re-run phone enrichment on today's leads. `?dry=1` = preview only |
 | `clear-reached-out.js` | `GET /api/clear-reached-out` | Clear "Reached out on" for leads created since yesterday. `?dry=1` = preview |
-| `exchange-rate.js` | `GET /api/exchange-rate` | USD→IDR live rate, 1h Vercel edge cache, fallback 17085 |
+| `exchange-rate.js` | `GET /api/exchange-rate` | USD→IDR live rate, 1h Vercel edge cache, fallback 17085. **Unused by the frontend** — pricing is entered manually in both currencies (see Currency model below), nothing calls this route anymore. |
 | `debug-agent.js` | `POST /api/debug-agent` | Level 1: Claude Haiku, pattern-gate auto-fix for safe Notion errors |
 | `debug-agent-deep.js` | `POST /api/debug-agent-deep` | Level 2: Claude Sonnet with tool use — read_file, list_notion_databases, get_notion_schema, apply_fix |
 | `drift-detector.js` | `GET /api/drift-detector` | Compares live Notion schemas vs hardcoded expected; runs daily via Vercel cron |
@@ -133,6 +133,29 @@ Key helpers in `js/crm.js`:
 - **`$('id')`** — shorthand for `document.getElementById` defined in `core.js`.
 - **Meals default text** — always "2 plant based meals per day" everywhere.
 - **`<br>` + inline `<span>` for sub-lines** — sub-text inside flex rows must use `<br><span style="...">` not a block `<div>`.
+
+### Currency model — no exchange rate anywhere
+
+There is **no** live or manual FX rate in this app. Every priced field is a manually-entered
+USD/IDR pair (`f-roomrate-usd`/`f-roomrate-idr`, `f-pkgrate-usd`/`f-pkgrate-idr`,
+`f-parvati-orig-usd`/`-idr`, `f-buddha-orig-usd`/`-idr`; Extra Services rows carry
+`unitUsd`/`unitIdr`). `window.offerCurrency` (`'USD'`|`'IDR'`, set via `#f-currency`, only these
+two options exist) is a pure **display toggle** — it picks which paired field each function reads,
+it does not convert anything.
+
+- `pricing(cur)` in `js/offer.js` takes `'usd'|'idr'` (defaults to `displayCurrency()`) and reads
+  the matching `-usd`/`-idr` field for every rate. Percentages (discounts, tax, deposit %) are
+  unit-less so the same math runs identically on either track.
+- `extraServicesTotal(cur)` / `extraItemAmount(s, cur)` do the equivalent for Extra Services line
+  items.
+- `cFmt(amt, decimals)` is a pure formatter — `${code} ${fmtN(amt, decimals)}` — it never
+  multiplies by anything. Never reintroduce a rate multiply here.
+- Pricing-engine "Experiences" items (`s.pricingEngine === true`) are costed from an IDR-only cost
+  library (`src/pricing/engine.ts`, `calculateSPPP`) — they have no USD figure and are always shown
+  natively in IDR regardless of the display-currency toggle.
+- When adding any new priced field: add both a `-usd` and `-idr` input, list **both** ids in
+  `getFormState()`'s `ids` array (`js/offer.js`) so drafts round-trip them, and read them through
+  `pricing(cur)`/a currency-aware helper — never derive one currency from the other.
 
 ## UI patterns
 

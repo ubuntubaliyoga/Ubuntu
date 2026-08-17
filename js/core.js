@@ -10,7 +10,7 @@ let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 window._templateMode=false;
 window._contractTemplateMode=false;
-const TEMPLATE_FIELDS=['f-intro','f-body','f-included','f-also','f-signoff','f-signoff2','f-note','f-roomrate','f-pkgrate','f-deposit'];
+const TEMPLATE_FIELDS=['f-intro','f-body','f-included','f-also','f-signoff','f-signoff2','f-note','f-roomrate-usd','f-roomrate-idr','f-pkgrate-usd','f-pkgrate-idr','f-deposit'];
 // crmData, crmTab, crmLoaded declared in crm.js — do NOT redeclare here
 
 window._errorLog=[];
@@ -297,7 +297,7 @@ function openTemplateEdit(){
   ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{const el=$(id);if(el)el.value='';});
   $('f-contractdate').value=todayStr();$('f-validuntil').value=addDays(todayStr(),7);$('f-offervalid').value='';$('notion-status').value='Draft';
   const tmpl=JSON.parse(localStorage.getItem('masterTemplate')||'null');
-  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-signoff2':'Tari, as representative of Andréa Drottholm','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate':'60','f-pkgrate':'30.25','f-deposit':''};
+  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-signoff2':'Tari, as representative of Andréa Drottholm','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate-usd':'60','f-roomrate-idr':'1000000','f-pkgrate-usd':'30.25','f-pkgrate-idr':'500000','f-deposit':''};
   TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)el.value=tmpl?.[id]??defs[id]??'';});
   draftActive=false;intentionalDraft=false;autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
   const sv=$('autosave-status');if(sv)sv.textContent='';
@@ -327,8 +327,8 @@ const CONTRACT_TMPL_DEFS={
   sec_validity:'If not confirmed by the Retreat Organizer by this date, the offer lapses and Ubuntu Bali reserves the right to release the reserved dates.',
   sec_a1:'This Agreement is entered into between Ubuntu Bali and the Retreat Organizer for the purpose of hosting a retreat at Ubuntu Bali for the agreed dates.',
   sec_a2:'This Agreement is intended to clearly define responsibilities, financial commitments, and expectations to ensure a smooth, respectful, and professional collaboration.',
-  sec_b_currency:'All prices in this Agreement are stated in {currency}. Payment must be made in IDR, converted at the interbank exchange rate on the date Ubuntu Bali receives payment.',
-  sec_b_idr:'The IDR figure above is provided as a reference conversion at the interbank exchange rate on the date of issue. All payments must be made in IDR at the interbank rate on the actual date of each transaction.',
+  sec_b_currency:'All prices in this Agreement are stated in {currency}. Payment must be made in IDR.',
+  sec_b_idr:'All amounts above are quoted directly in the currency shown; no automatic currency conversion is applied.',
   sec_b_included:'2 plant based meals per day\nTea and afternoon snack\nShala of your choice and cleaning\nFull staff support and dedicated contact person',
   sec_b_pkg:'The package price is fixed for {guests} guests. Should the group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.',
   sec_c_fees:'All bank and transfer fees are the responsibility of the Retreat Organizer.',
@@ -457,48 +457,18 @@ window.addEventListener('load',()=>{
   setTimeout(()=>{ if(typeof loadCRM==='function') loadCRM(); }, 300);
 });
 
-window.offerCurrency     = 'USD';
-window.offerCurrencyRate = 1.0;
-window._allRates         = {};
-
-(async()=>{
-  const dot=$('idr-dot'),info=$('idr-info');
-  try{
-    const r=await fetch('/api/exchange-rate');
-    const d=await r.json();
-    window._liveIdrRate=d.rate;
-    if(!window._idrRateLocked){$('f-idrrate').value=d.rate;}
-    window._allRates=d.rates||{IDR:d.rate};
-    const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    if(d.fallback){dot.className='idr-dot fallback';info.textContent=`⚠ Fallback rate · ${now}`;}
-    else{dot.className='idr-dot live';info.textContent=`Live · ${now}`;}
-    updateCurrencyTicker();
-  }catch{
-    if(dot)dot.className='idr-dot error';
-    if(info)info.textContent='Could not fetch — using default rate';
-  }
-})();
+// Offer currency is purely a display toggle — every priced field is entered
+// manually in both USD and IDR (see -usd/-idr field pairs), so there is no
+// exchange rate anywhere in the app to fetch, lock, or convert with.
+window.offerCurrency = 'USD';
 
 function onCurrencyChange(code){
   window.offerCurrency=code;
-  const manualIdr=typeof getIdrRate==='function'?getIdrRate():(parseFloat(document.getElementById('f-idrrate')?.value)||0);
-  window.offerCurrencyRate=code==='USD'?1.0:code==='IDR'?manualIdr:(window._allRates?.[code]||1.0);
-  updateCurrencyTicker();
   if(typeof activeDealTab!=='undefined'){
     if(activeDealTab==='offer'&&typeof renderOffer==='function')renderOffer();
     if(activeDealTab==='contract'&&typeof renderContract==='function')renderContract();
   }
   if(typeof renderExtraServices==='function')renderExtraServices();
-}
-
-function updateCurrencyTicker(){
-  const el=$('curr-ticker');
-  if(!el)return;
-  const code=window.offerCurrency||'USD';
-  if(code==='USD'){el.textContent='Base currency';return;}
-  const manualIdr=typeof getIdrRate==='function'?getIdrRate():(parseFloat(document.getElementById('f-idrrate')?.value)||0);
-  const rate=code==='IDR'?manualIdr:(window._allRates?.[code]||null);
-  el.textContent=rate?`1 USD = ${code==='IDR'?Number(rate).toLocaleString('id-ID'):rate.toFixed(4)} ${code}`:'Rate unavailable';
 }
 
 function toggleMoreDetails(btn){

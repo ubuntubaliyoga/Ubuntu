@@ -1,37 +1,26 @@
 const TAX = 1.15; // 10% tax + 5% service charge
 
-function cFmt(usdAmt, decimals=0){
+// Every priced field is entered manually in both USD and IDR (paired -usd/-idr
+// inputs) — there is no exchange rate anywhere, so cFmt just formats a number
+// that is already denominated in the currently displayed currency.
+function cFmt(amt, decimals=0){
   const code=window.offerCurrency||'USD';
-  const rate=window.offerCurrencyRate||1;
-  return `${code} ${fmtN(usdAmt*rate,decimals)}`;
+  return `${code} ${fmtN(amt,decimals)}`;
 }
 
-function getRateInputCurrency(){return document.querySelector('input[name="rate-input-currency"]:checked')?.value||'USD';}
-function rateToUsd(v){const idr=getIdrRate();return getRateInputCurrency()==='IDR'&&idr>0?v/idr:v;}
+function displayCurrency(){return (window.offerCurrency||'USD').toLowerCase()==='idr'?'idr':'usd';}
 
-function onRateInputCurrencyChange(code){
-  const idr=getIdrRate();if(!idr)return;
-  const fields=['f-roomrate','f-parvati-orig','f-buddha-orig','f-pkgrate'];
-  fields.forEach(id=>{
-    const el=$(id);if(!el)return;
-    const v=parseFloat(el.value)||0;
-    el.value=code==='IDR'?Math.round(v*idr):parseFloat((v/idr).toFixed(2));
-  });
-  const sfx=code==='IDR'?'(IDR)':'(USD)';
-  [['lbl-roomrate','Rate / night '],['lbl-parvati-orig','Rate / night '],['lbl-buddha-orig','Rate / night '],['lbl-pkgrate','Package Rate ('+sfx.slice(1,-1)+' / person / night)']].forEach(([id,base])=>{
-    const el=document.getElementById(id);if(el)el.textContent=id==='lbl-pkgrate'?'Package Rate ('+sfx.slice(1,-1)+' / person / night)':base+sfx;
-  });
-  const hint=document.getElementById('rate-input-hint');
-  if(hint)hint.textContent=code==='IDR'?`÷ ${idr.toLocaleString('id-ID')} = USD`:'';
-}
-
-function pricing(){
-  const bales=parseInt($('f-rooms').value)||0, roomRate=rateToUsd(parseFloat($('f-roomrate').value)||0)||60;
-  const pkgRate=rateToUsd(parseFloat($('f-pkgrate')?.value)||0)||30.25, pkgCount=parseInt($('f-pkgcount').value)||0;
+function pricing(cur){
+  cur = cur || displayCurrency();
+  const rateDefaults = cur==='idr'
+    ? {room:1000000,pkg:500000,villa:1350000}
+    : {room:60,pkg:30.25,villa:80};
+  const bales=parseInt($('f-rooms').value)||0, roomRate=parseFloat($(`f-roomrate-${cur}`)?.value)||rateDefaults.room;
+  const pkgRate=parseFloat($(`f-pkgrate-${cur}`)?.value)||rateDefaults.pkg, pkgCount=parseInt($('f-pkgcount').value)||0;
   const discPct=Math.min(20,Math.max(0,parseFloat($('f-discount').value)||0));
-  const parvOn=$('f-parvati-on').checked, parvOrig=rateToUsd(parseFloat($('f-parvati-orig').value)||0)||80;
+  const parvOn=$('f-parvati-on').checked, parvOrig=parseFloat($(`f-parvati-orig-${cur}`)?.value)||rateDefaults.villa;
   const parvDiscPct=parseFloat($('f-parvati-disc')?.value)||0; const parvDisc=parvDiscPct>0?parvOrig*(1-parvDiscPct/100):parvOrig;
-  const buddOn=$('f-buddha-on').checked, buddOrig=rateToUsd(parseFloat($('f-buddha-orig').value)||0)||80;
+  const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($(`f-buddha-orig-${cur}`)?.value)||rateDefaults.villa;
   const buddDiscPct=parseFloat($('f-buddha-disc')?.value)||0; const buddDisc=buddDiscPct>0?buddOrig*(1-buddDiscPct/100):buddOrig;
   const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
   const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
@@ -54,7 +43,7 @@ function payments(total,checkin,depositPct,p2Pct,p3Pct){
 }
 
 function getFormState(){
-  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig','f-parvati-disc','f-buddha-orig','f-buddha-disc','f-roomrate','f-pkgrate','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-p2pct','f-p3pct','f-idrrate','f-currency','f-note','f-included','f-also','f-signoff','f-signoff2'];
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig-usd','f-parvati-orig-idr','f-parvati-disc','f-buddha-orig-usd','f-buddha-orig-idr','f-buddha-disc','f-roomrate-usd','f-roomrate-idr','f-pkgrate-usd','f-pkgrate-idr','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-p2pct','f-p3pct','f-currency','f-note','f-included','f-also','f-signoff','f-signoff2'];
   const s={};
   ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
   s['f-parvati-on']=$('f-parvati-on').checked;
@@ -66,7 +55,6 @@ function getFormState(){
 }
 
 function setFormState(s){
-  if(s['f-idrrate']){window._idrRateLocked=true;const el=$('idr-use-live');if(el)el.style.display='inline';}
   Object.entries(s).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=val;else el.value=val;});
   const r=document.querySelector(`input[name="price-display"][value="${s['price-display']||'both'}"]`);
   if(r)r.checked=true;
@@ -81,10 +69,11 @@ function buildOfferHTML(){
   const retreatName=$('f-retreatname').value||'Healing Retreat', noteText=$('f-note').value.trim();
   const offerValid=$('f-offervalid').value, depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
   const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
-  const P=pricing(), totalPeople=guests+facilitators, days=P.nights+1;
+  const cur=displayCurrency();
+  const P=pricing(cur), totalPeople=guests+facilitators, days=P.nights+1;
   const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
-  const depositAmt=depositPct>0?(P.totalIn+extraServicesTotal()*TAX)*(depositPct/100):0;
+  const depositAmt=depositPct>0?(P.totalIn+extraServicesTotal(cur)*TAX)*(depositPct/100):0;
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
@@ -94,7 +83,7 @@ function buildOfferHTML(){
   const nights=P.nights;
 
   // ── PDF-style three-column pricing table ──────────────────────────────────
-  const extTotal=extraServicesTotal();
+  const extTotal=extraServicesTotal(cur);
   const hasExtras=extraServices.length>0;
   const grandEx=P.totalEx+extTotal, grandIn=P.totalIn+extTotal*TAX;
 
@@ -126,8 +115,9 @@ function buildOfferHTML(){
   // Extra service rows
   const pRowExt=(label,total)=>`<tr class="pt-item"><td class="col-item">${label}</td><td class="col-rate"></td><td class="col-sub">${total}</td></tr>`;
   const extItemRows=hasExtras?extraServices.map(s=>{
-    if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return pRowExt(`${s.label} (${s.pax} pax)`,cFmt(t,0));}
-    const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':' × '+s.qty;
+    // Pricing-engine (Experiences) items are computed from an IDR cost library — always shown natively in IDR.
+    if(s.pricingEngine){const t=(s.spppIdr||0)*(s.pax||1);return pRowExt(`${s.label} (${s.pax} pax)`,`IDR ${fmtN(t,0)}`);}
+    const t=extraItemAmount(s,cur);const qtyStr=s.unit==='flat fee'?'':' × '+s.qty;
     return pRowExt(`${s.label}${qtyStr}`,cFmt(t,0));
   }).join(''):'';
 
@@ -216,12 +206,12 @@ function buildContractHTML(){
   const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
   const p2Pct=Math.min(100,Math.max(0,parseFloat($('f-p2pct').value)||0));
   const p3Pct=Math.min(100,Math.max(0,parseFloat($('f-p3pct').value)||0));
-  const idrRate=getIdrRate(), bookingType=$('f-bookingtype').value;
-  const P=pricing(), nights=P.nights, days=nights+1;
-  const extTotal=extraServicesTotal(), hasExtrasC=extraServices.length>0;
+  const bookingType=$('f-bookingtype').value;
+  const cur=displayCurrency();
+  const P=pricing(cur), nights=P.nights, days=nights+1;
+  const extTotal=extraServicesTotal(cur), hasExtrasC=extraServices.length>0;
   const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal*TAX;
   const finalTotal=hasExtrasC?grandInC:P.totalIn;
-  const idrTotal=finalTotal*idrRate;
   const PMT=payments(finalTotal,checkin,depositPct,p2Pct,p3Pct);
   const _CT=JSON.parse(localStorage.getItem('masterContractTemplate')||'null')||{};
   const ct=(k)=>_CT[k]!==undefined&&_CT[k]!==''?_CT[k]:CONTRACT_TMPL_DEFS[k]||'';
@@ -236,17 +226,19 @@ function buildContractHTML(){
   const pR=P.parvOn?cR('Parvati Villa',`${cFmt(P.parvDisc,0)}/night · ${nights} nights`,cFmt(P.parvDisc*nights,2)):'';
   const buR=P.buddOn?cR('Buddha Villa',`${cFmt(P.buddDisc,0)}/night · ${nights} nights`,cFmt(P.buddDisc*nights,2)):'';
   const pkR=P.pkgCount>0?cR(`Per person package — ${P.pkgCount} guests`,`${cFmt(P.pkgRate,2)}/night · ${nights} nights (meals, shala, staff)`,cFmt(P.pkgSub*nights,2)):'';
-  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{if(s.pricingEngine){const t=getIdrRate()>0?(s.spppIdr*s.pax)/getIdrRate():0;return cR(`${s.label} (${s.pax} pax)`,`${getIdrRate()>0?cFmt(s.spppIdr/getIdrRate(),0):'—'}/person`,cFmt(t,0));}const t=s.unitUsd*s.qty;const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));}).join('')}`:'';
+  const extR=hasExtrasC?`<tr><td colspan="2" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B7355;padding:8px 10px 3px;border-top:1px solid #DDD0BA;">Extra Services</td></tr>${extraServices.map(s=>{
+    // Pricing-engine (Experiences) items are computed from an IDR cost library — always shown natively in IDR.
+    if(s.pricingEngine){const t=(s.spppIdr||0)*(s.pax||1);return cR(`${s.label} (${s.pax} pax)`,`IDR ${fmtN(s.spppIdr||0,0)}/person`,`IDR ${fmtN(t,0)}`);}
+    const t=extraItemAmount(s,cur);const qtyStr=s.unit==='flat fee'?'':` × ${s.qty}`;return cR(`${s.label}${qtyStr}`,'',cFmt(t,0));
+  }).join('')}`:'';
   const txR=cR('Tax (10%) + Service charge (5%)','',cFmt(finalTotal-(hasExtrasC?grandExC:P.totalEx),2));
   const ebR=P.discPct>0?cR(`<strong>${P.discPct}% Early Bird Discount</strong>`,'',`<strong>– ${cFmt(P.earlyAmt*nights,2)}</strong>`):'';
   const rdR=P.discRooms>0&&P.discRoomPct>0?cR(`<strong>${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate</strong>`,'',`<strong>– ${cFmt(P.roomDiscAmt*nights,2)}</strong>`):'';
   const totR=`<tr style="background:#F5ECD7;font-weight:700;"><td>Total incl. tax &amp; service charge</td><td style="text-align:right;white-space:nowrap;">${cFmt(finalTotal,2)}</td></tr>`;
-  const idrR=(window.offerCurrency||'USD')==='IDR'?'':
-    `<tr style="background:#2E1A0A;color:#F5ECD7;"><td style="font-size:9.5px;font-weight:700;">IDR equivalent<span style="display:block;font-size:8px;font-weight:400;opacity:.75;margin-top:2px;">1 USD = ${Number(idrRate).toLocaleString('id-ID')} · interbank rate on date of issue</span></td><td style="text-align:right;white-space:nowrap;font-size:11px;font-weight:700;">Rp ${Number(idrTotal).toLocaleString('id-ID',{minimumFractionDigits:0})}</td></tr>`;
   const sectionOrder=Array.isArray(_CT.section_order)?_CT.section_order:['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q'];
   const secRender={
     a:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Purpose of Agreement</div><p>${ct('sec_a1')}</p><p>${ct('sec_a2')}</p></div>`,
-    b:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Pricing &amp; Inclusions</div><p>${ct('sec_b_currency').replace('{currency}',window.offerCurrency||'USD')}</p><p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p><p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p><table class="c-table"><thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead><tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}${idrR}</tbody></table><p style="font-size:10.5px;color:#7A6040;font-style:italic;">${ct('sec_b_idr')}</p><p><strong>What's Included:</strong></p><ul>${cls('sec_b_included').map(i=>`<li>${i}</li>`).join('')}</ul><p>${ct('sec_b_pkg').replace(/{guests}/g,totalPeople)}</p></div>`,
+    b:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Pricing &amp; Inclusions</div><p>${ct('sec_b_currency').replace('{currency}',window.offerCurrency||'USD')}</p><p><strong>Retreat Package: ${retreatName} · ${nights} Nights, ${days} Days · ${totalPeople} Guests</strong></p><p>Check-in: ${fmtDS(checkin)} · Check-out: ${fmtDS(checkout)}</p><table class="c-table"><thead><tr><th>ITEM</th><th style="text-align:right;">TOTAL</th></tr></thead><tbody>${bR}${pR}${buR}${pkR}${extR}${txR}${ebR}${rdR}${totR}</tbody></table><p style="font-size:10.5px;color:#7A6040;font-style:italic;">${ct('sec_b_idr')}</p><p><strong>What's Included:</strong></p><ul>${cls('sec_b_included').map(i=>`<li>${i}</li>`).join('')}</ul><p>${ct('sec_b_pkg').replace(/{guests}/g,totalPeople)}</p></div>`,
     c:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Payments &amp; Bank Details</div><p>Payments must be made to the following account:</p><table class="bank-table">${Object.entries(BANK).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table><p>${ct('sec_c_fees')}</p></div>`,
     d:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Payment Schedule</div><p><strong>This booking qualifies as a ${bookingType} BOOKING ${bookingType==='STANDARD'?'(more than 120 days before retreat start)':'(less than 120 days before retreat start)'}.</strong></p><table class="c-table"><thead><tr><th>Payment</th><th>Percentage</th><th>Amount (${window.offerCurrency||'USD'})</th><th>Due Date</th></tr></thead><tbody><tr><td>Deposit</td><td>${PMT.dep.pct}</td><td>${cFmt(PMT.dep.amt,2)}</td><td>${PMT.dep.due}</td></tr><tr><td>2nd Payment</td><td>${PMT.p2.pct}</td><td>${cFmt(PMT.p2.amt,2)}</td><td>${PMT.p2.due}</td></tr><tr><td>Final Payment</td><td>${PMT.p3.pct}</td><td>${cFmt(PMT.p3.amt,2)}</td><td>${PMT.p3.due}</td></tr></tbody></table><p>${ct('sec_d_late')}</p></div>`,
     e:L=>`<div class="c-sec"><div class="c-sec-hd">${L}) Cancellation &amp; Refund Policy</div><p><strong>${ct('sec_e_standard')}</strong></p><table class="c-table"><thead><tr><th>Cancellation Period</th><th>Refund of Deposit (minus bank fees)</th></tr></thead><tbody>${CANCEL.map(([p,r])=>`<tr><td>${p}</td><td>${r}</td></tr>`).join('')}</tbody></table><p><strong>${ct('sec_e_shortnotice')}</strong></p><p><strong>Rescheduling:</strong></p><ul>${cls('sec_e_reschedule').map(l=>`<li>${l}</li>`).join('')}</ul></div>`,
@@ -309,11 +301,12 @@ function render(){}
 let extraServices = [];
 Object.defineProperty(window, 'extraServices', { get() { return extraServices }, set(v) { extraServices = v } });
 
-function getIdrRate() {
-  const v = parseFloat(document.getElementById('f-idrrate')?.value);
-  // Guard against implausible manual entries (e.g. "15" instead of "15085") —
-  // USD/IDR has not been below 1000 in decades, so anything under that is a typo.
-  return v >= 1000 ? v : (window._liveIdrRate || 17085);
+// Amount for one extra-service line item in the given display currency ('usd'|'idr').
+// Pricing-engine (Experiences) items have no USD figure — they're costed from an IDR
+// library — so they only contribute when viewing in IDR.
+function extraItemAmount(s, cur) {
+  if (s.pricingEngine) return cur === 'idr' ? (s.spppIdr || 0) * (s.pax || 1) : 0;
+  return (cur === 'idr' ? (s.unitIdr || 0) : (s.unitUsd || 0)) * (s.qty || 1);
 }
 
 function getTotalPax() {
@@ -335,7 +328,7 @@ function addExtraService(val) {
     const templateId = id.slice(3);
     const pax = getTotalPax();
     const item = { id: Date.now(), serviceId: id, label, unit: 'per person',
-      pricingEngine: true, templateId, pax, spppIdr: 0, qty: 1, unitUsd: 0 };
+      pricingEngine: true, templateId, pax, spppIdr: 0, qty: 1 };
     extraServices.push(item);
     renderExtraServices();
     if (window.recalculatePeExtra) window.recalculatePeExtra(item.id, pax);
@@ -344,12 +337,14 @@ function addExtraService(val) {
   }
   let unitUsd = parseFloat(parts[2]) || 0;
   const unit = parts[3] || 'per unit';
+  let unitIdr = parseFloat(parts[4]) || 0;
   let finalLabel = label;
   if (id === 'custom') {
     finalLabel = prompt('Service name:') || 'Custom Service';
     unitUsd = parseFloat(prompt('Price in USD:') || '0');
+    unitIdr = parseFloat(prompt('Price in IDR:') || '0');
   }
-  const item = { id: Date.now(), serviceId: id, label: finalLabel, unitUsd, unit, qty: 1 };
+  const item = { id: Date.now(), serviceId: id, label: finalLabel, unitUsd, unitIdr, unit, qty: 1 };
   extraServices.push(item);
   renderExtraServices();
   markDraftActive();
@@ -366,9 +361,13 @@ function updateExtraQty(id, qty) {
   if (s) { s.qty = Math.max(1, parseInt(qty) || 1); renderExtraServices(); markDraftActive(); }
 }
 
-function updateExtraPrice(id, usd) {
+function updateExtraPrice(id, cur, val) {
   const s = extraServices.find(s => s.id === id);
-  if (s) { s.unitUsd = parseFloat(usd) || 0; renderExtraServices(); markDraftActive(); }
+  if (!s) return;
+  if (cur === 'idr') s.unitIdr = parseFloat(val) || 0;
+  else s.unitUsd = parseFloat(val) || 0;
+  renderExtraServices();
+  markDraftActive();
 }
 
 function renderExtraServices() {
@@ -380,33 +379,35 @@ function renderExtraServices() {
     if (totalEl) totalEl.style.display = 'none';
     return;
   }
+  const cur = displayCurrency();
   list.innerHTML = extraServices.map(s => {
     if (s.pricingEngine) {
-      const totalUsd = getIdrRate() > 0 ? (s.spppIdr * s.pax) / getIdrRate() : 0;
-      const priceLabel = s.spppIdr && getIdrRate() > 0 ? `${cFmt(s.spppIdr / getIdrRate(), 0)}/pax` : '—';
-      return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">Pax</span><input type="number" value="${s.pax}" min="1" style="width:54px;" onchange="window.recalculatePeExtra && window.recalculatePeExtra(${s.id}, parseInt(this.value)||1)" onclick="this.select()"><span style="font-size:11px;color:var(--muted);min-width:100px;">${priceLabel}</span></div><div class="extra-tag-price">${totalUsd ? cFmt(totalUsd, 0) : '—'}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
+      // Costed from an IDR cost library — no exchange rate, so always shown natively in IDR.
+      const totalIdr = (s.spppIdr || 0) * (s.pax || 1);
+      const priceLabel = s.spppIdr ? `IDR ${fmtN(s.spppIdr, 0)}/pax` : '—';
+      return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">Pax</span><input type="number" value="${s.pax}" min="1" style="width:54px;" onchange="window.recalculatePeExtra && window.recalculatePeExtra(${s.id}, parseInt(this.value)||1)" onclick="this.select()"><span style="font-size:11px;color:var(--muted);min-width:100px;">${priceLabel}</span></div><div class="extra-tag-price">${totalIdr ? `IDR ${fmtN(totalIdr, 0)}` : '—'}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
     }
-    return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}<input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:70px;" onchange="updateExtraPrice(${s.id}, this.value)" onclick="this.select()" title="USD per unit"></div><div class="extra-tag-price">${cFmt(s.unitUsd * s.qty, 0)}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
+    return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}<input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:64px;" onchange="updateExtraPrice(${s.id}, 'usd', this.value)" onclick="this.select()" title="USD per unit"><input type="number" value="${fmtN(s.unitIdr||0,0)}" min="0" style="width:80px;" onchange="updateExtraPrice(${s.id}, 'idr', this.value)" onclick="this.select()" title="IDR per unit"></div><div class="extra-tag-price">${cFmt(extraItemAmount(s,cur), 0)}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
   }).join('');
   if (totalEl) {
     totalEl.style.display = 'block';
-    totalEl.textContent = `Extra Services Total: ${cFmt(extraServicesTotal(), 0)}`;
+    totalEl.textContent = `Extra Services Total: ${cFmt(extraServicesTotal(cur), 0)}`;
   }
 }
 
-function extraServicesTotal() {
-  return extraServices.reduce((sum, s) => {
-    if (s.pricingEngine) return sum + (getIdrRate() > 0 ? (s.spppIdr * s.pax) / getIdrRate() : 0);
-    return sum + s.unitUsd * s.qty;
-  }, 0);
+function extraServicesTotal(cur) {
+  cur = cur || displayCurrency();
+  return extraServices.reduce((sum, s) => sum + extraItemAmount(s, cur), 0);
 }
 
 function extraServicesHTML() {
   if (!extraServices.length) return '';
+  const cur = displayCurrency();
   const rows = extraServices.map(s => {
-    const total = s.unitUsd * s.qty;
+    const total = extraItemAmount(s, cur);
+    const unit = cur === 'idr' ? (s.unitIdr || 0) : s.unitUsd;
     const qtyStr = s.unit === 'flat fee' ? '' : ` × ${s.qty}`;
-    return `<tr class="pt-item"><td class="col-item">${s.label}</td><td class="col-rate" style="color:#555;">${cFmt(s.unitUsd,0)}${qtyStr}</td><td class="col-sub">${cFmt(total,0)}</td></tr>`;
+    return `<tr class="pt-item"><td class="col-item">${s.label}</td><td class="col-rate" style="color:#555;">${cFmt(unit,0)}${qtyStr}</td><td class="col-sub">${cFmt(total,0)}</td></tr>`;
   }).join('');
   return `<tr class="pt-colhead"><td colspan="3" style="padding-top:8px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;">Extra Services</td></tr>${rows}`;
 }

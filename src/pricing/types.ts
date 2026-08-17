@@ -32,9 +32,8 @@ export interface PeExtraService {
   pricingEngine: true
   templateId: string
   pax: number
-  spppIdr: number
+  spppIdr: number // native IDR selling price — no exchange rate in the app
   qty: 1
-  unitUsd: number
 }
 
 declare global {
@@ -57,6 +56,5 @@ declare global {
     extraServices?: PeExtraService[]
     renderExtraServices?(): void
     markDraftActive?(): void
-    _liveIdrRate?: number
   }
 }

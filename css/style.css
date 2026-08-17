@@ -310,7 +310,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(184,147,90,.1);}
 .fg textarea{resize:vertical;line-height:1.6;}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-@media(max-width:480px){.fg-row{grid-template-columns:1fr;}}
+.fg-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media(max-width:480px){.fg-row{grid-template-columns:1fr;}.fg-row-3{grid-template-columns:1fr;}}
 .hint{font-size:10px;color:var(--muted);font-style:italic;margin-top:4px;}
 .accom-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;}
 .accom-block-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
@@ -318,8 +319,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .villa-box{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;background:#fff;}
 .villa-box-hd{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .villa-box-hd input{width:auto;}
-.villa-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.villa-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .villa-fields.disabled{opacity:.4;pointer-events:none;}
+@media(max-width:480px){.villa-fields{grid-template-columns:1fr;}}
 .radio-grp{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;}
 .radio-grp label{font-size:13px;text-transform:none;letter-spacing:0;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:400;}
 .radio-grp input{width:auto;}
@@ -518,14 +520,6 @@ table.ptable{width:100%;border-collapse:collapse;font-size:9.5px;font-family:'Mo
 .bizdev-empty-icon{font-size:48px;margin-bottom:16px;}
 .bizdev-empty-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--dark);margin-bottom:8px;}
 .bizdev-empty-sub{font-size:13px;color:var(--muted);line-height:1.6;}
-
-/* ── IDR ── */
-.idr-status-row{display:flex;align-items:center;gap:6px;margin-top:5px;}
-.idr-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;}
-.idr-dot.live{background:#27AE60;}
-.idr-dot.fallback{background:#F39C12;}
-.idr-dot.error{background:#E74C3C;}
-.idr-info{font-size:10px;color:var(--muted);font-style:italic;}
 
 /* ── MORE DETAILS ── */
 .more-details{animation:fadeIn .2s ease;}

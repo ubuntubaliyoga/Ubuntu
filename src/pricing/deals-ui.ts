@@ -26,6 +26,8 @@ function populateExperiencesPicker(data: PricingData): void {
   picker.appendChild(group)
 }
 
+// Experiences are costed entirely from the IDR cost library (see engine.ts) — there's
+// no exchange rate in the app, so these items are priced natively in IDR only.
 export async function recalculatePeExtra(id: number, pax: number): Promise<void> {
   pax = Math.max(1, Math.floor(pax))
   const item = window.extraServices?.find(s => s.id === id)
@@ -36,22 +38,13 @@ export async function recalculatePeExtra(id: number, pax: number): Promise<void>
     const template = data.templates.find(t => t.id === item.templateId)
     if (!template) return
 
-    const idrRate = getIdrRate()
     const { sellingPrice } = calculateSPPP(template, buildLibraryMap(data.library), pax)
     item.pax = pax
     item.spppIdr = sellingPrice
-    item.unitUsd = idrRate > 0 ? (sellingPrice * pax) / idrRate : 0
 
     window.renderExtraServices?.()
     window.markDraftActive?.()
   } catch (e) {
     console.error('[PricingEngine] recalculate failed:', e)
   }
-}
-
-function getIdrRate(): number {
-  const v = parseFloat((document.getElementById('f-idrrate') as HTMLInputElement | null)?.value ?? '')
-  // Guard against implausible manual entries (e.g. "15" instead of "15085") —
-  // USD/IDR has not been below 1000 in decades, so anything under that is a typo.
-  return v >= 1000 ? v : (window._liveIdrRate || 17085)
 }

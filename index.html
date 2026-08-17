@@ -204,44 +204,20 @@
               <select id="f-currency" onchange="onCurrencyChange(this.value)" style="flex:1;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:15px;background:var(--surface);color:var(--text);outline:none;cursor:pointer;">
                 <option value="USD">USD — US Dollar</option>
                 <option value="IDR">IDR — Indonesian Rupiah</option>
-                <option value="EUR">EUR — Euro</option>
-                <option value="GBP">GBP — British Pound</option>
-                <option value="AUD">AUD — Australian Dollar</option>
-                <option value="SGD">SGD — Singapore Dollar</option>
-                <option value="CHF">CHF — Swiss Franc</option>
-                <option value="CAD">CAD — Canadian Dollar</option>
-                <option value="CNY">CNY — Chinese Yuan</option>
-                <option value="JPY">JPY — Japanese Yen</option>
-                <option value="RUB">RUB — Russian Ruble</option>
               </select>
-              <span id="curr-ticker" style="font-size:12px;color:var(--muted);white-space:nowrap;text-align:right;min-width:140px;"></span>
             </div>
-          </div>
-          <div class="fg"><label>IDR Exchange Rate</label>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:13px;color:var(--muted);white-space:nowrap;">1 USD =</span>
-              <input type="number" id="f-idrrate" value="17085" min="1000" style="max-width:140px;" oninput="window._idrRateLocked=true;document.getElementById('idr-use-live').style.display='inline';if(typeof onCurrencyChange==='function'&&(window.offerCurrency||'USD')==='IDR')onCurrencyChange('IDR');">
-              <span style="font-size:13px;color:var(--muted);">IDR</span>
-            </div>
-            <div class="idr-status-row"><div class="idr-dot" id="idr-dot"></div><span class="idr-info" id="idr-info">Fetching live rate…</span> &nbsp;<a id="idr-use-live" href="#" style="display:none;font-size:11px;color:var(--accent);" onclick="event.preventDefault();window._idrRateLocked=false;if(window._liveIdrRate){document.getElementById('f-idrrate').value=window._liveIdrRate;this.style.display='none';}">Use live rate</a></div>
+            <div class="hint">All rates below are entered manually in both USD and IDR — no live or computed conversion.</div>
           </div>
         </div>
       </div>
 
       <div class="s-section">Pricing</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <span style="font-size:13px;color:var(--muted);">Enter rates in:</span>
-        <div class="radio-grp">
-          <label><input type="radio" name="rate-input-currency" value="USD" checked onchange="onRateInputCurrencyChange('USD')"> USD</label>
-          <label><input type="radio" name="rate-input-currency" value="IDR" onchange="onRateInputCurrencyChange('IDR')"> IDR</label>
-        </div>
-        <span id="rate-input-hint" style="font-size:11px;color:var(--muted);"></span>
-      </div>
       <div class="accom-block">
         <div class="accom-block-title">Gladaks</div>
-        <div class="fg-row" style="margin-bottom:8px;">
+        <div class="fg-row-3" style="margin-bottom:8px;">
           <div class="fg" style="margin-bottom:0;"><label>Number (max 15)</label><input type="number" id="f-rooms" value="5" min="0" max="15"></div>
-          <div class="fg" style="margin-bottom:0;"><label id="lbl-roomrate">Rate / night (USD)</label><input type="number" id="f-roomrate" value="60" min="0"></div>
+          <div class="fg" style="margin-bottom:0;"><label>Rate / night (USD)</label><input type="number" id="f-roomrate-usd" value="60" min="0"></div>
+          <div class="fg" style="margin-bottom:0;"><label>Rate / night (IDR)</label><input type="number" id="f-roomrate-idr" value="1000000" min="0"></div>
         </div>
         <div class="fg-row" style="margin-bottom:0;">
           <div class="fg" style="margin-bottom:0;"><label>Rooms with discount</label><select id="f-disc-room"><option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
@@ -252,26 +228,31 @@
         <div class="villa-box">
           <div class="villa-box-hd"><input type="checkbox" id="f-parvati-on" onchange="toggleVilla('parvati')" checked> Parvati Villa</div>
           <div class="villa-fields" id="parvati-fields">
-            <div class="fg" style="margin-bottom:0"><label id="lbl-parvati-orig">Rate / night (USD)</label><input type="number" id="f-parvati-orig" value="80" min="0"></div>
+            <div class="fg" style="margin-bottom:0"><label>Rate / night (USD)</label><input type="number" id="f-parvati-orig-usd" value="80" min="0"></div>
+            <div class="fg" style="margin-bottom:0"><label>Rate / night (IDR)</label><input type="number" id="f-parvati-orig-idr" value="1350000" min="0"></div>
             <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-parvati-disc" placeholder="0" min="0" max="100"></div>
           </div>
         </div>
         <div class="villa-box" style="margin-bottom:0;">
           <div class="villa-box-hd"><input type="checkbox" id="f-buddha-on" onchange="toggleVilla('buddha')" checked> Buddha Villa</div>
           <div class="villa-fields" id="buddha-fields">
-            <div class="fg" style="margin-bottom:0"><label id="lbl-buddha-orig">Rate / night (USD)</label><input type="number" id="f-buddha-orig" value="80" min="0"></div>
+            <div class="fg" style="margin-bottom:0"><label>Rate / night (USD)</label><input type="number" id="f-buddha-orig-usd" value="80" min="0"></div>
+            <div class="fg" style="margin-bottom:0"><label>Rate / night (IDR)</label><input type="number" id="f-buddha-orig-idr" value="1350000" min="0"></div>
             <div class="fg" style="margin-bottom:0"><label>Discount %</label><input type="number" id="f-buddha-disc" placeholder="0" min="0" max="100"></div>
           </div>
         </div>
       </div>
-      <div class="fg-row">
+      <div class="fg-row-3">
         <div class="fg"><label>Retreat Packages (people)</label>
           <select id="f-pkgcount">
             <option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15" selected>15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option>
           </select>
         </div>
-        <div class="fg"><label id="lbl-pkgrate">Package Rate (USD / person / night)</label>
-          <input type="number" id="f-pkgrate" value="30.25" min="0" step="0.25">
+        <div class="fg"><label>Package Rate (USD / person / night)</label>
+          <input type="number" id="f-pkgrate-usd" value="30.25" min="0" step="0.25">
+        </div>
+        <div class="fg"><label>Package Rate (IDR / person / night)</label>
+          <input type="number" id="f-pkgrate-idr" value="500000" min="0" step="1000">
         </div>
       </div>
       <div class="fg-row">
@@ -294,31 +275,31 @@
       <div style="margin-bottom:16px;">
         <select id="extras-picker" onchange="addExtraService(this.value);this.value=''" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:16px;color:var(--muted);background:var(--surface);outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;">
           <option value="">＋ Add a service…</option>
-          <optgroup label="Airport"><option value="airport|✈ Airport Transfer|20|per transfer">✈ Airport Transfer — USD 20</option></optgroup>
+          <optgroup label="Airport"><option value="airport|✈ Airport Transfer|20|per transfer|300000">✈ Airport Transfer — USD 20</option></optgroup>
           <optgroup label="Meals">
-            <option value="meals_vegan|🌿 Vegan Meal|9|per meal">🌿 Vegan Meal — USD 9</option>
-            <option value="meals_veg|🥗 Vegetarian Meal|9|per meal">🥗 Vegetarian Meal — USD 9</option>
-            <option value="meals_ayur|🍵 Ayurvedic Meal|9|per meal">🍵 Ayurvedic Meal — USD 9</option>
+            <option value="meals_vegan|🌿 Vegan Meal|9|per meal|150000">🌿 Vegan Meal — USD 9</option>
+            <option value="meals_veg|🥗 Vegetarian Meal|9|per meal|150000">🥗 Vegetarian Meal — USD 9</option>
+            <option value="meals_ayur|🍵 Ayurvedic Meal|9|per meal|150000">🍵 Ayurvedic Meal — USD 9</option>
           </optgroup>
           <optgroup label="Wellness">
-            <option value="wellness_sig60|💆 Signature Massage 60min|22|per session">💆 Signature Massage 60min — USD 22</option>
-            <option value="wellness_sig90|💆 Signature Massage 90min|30|per session">💆 Signature Massage 90min — USD 30</option>
-            <option value="wellness_sig120|💆 Signature Massage 120min|35|per session">💆 Signature Massage 120min — USD 35</option>
-            <option value="wellness_bal60|🌺 Balinese Massage 60min|22|per session">🌺 Balinese Massage 60min — USD 22</option>
-            <option value="wellness_bal90|🌺 Balinese Massage 90min|30|per session">🌺 Balinese Massage 90min — USD 30</option>
-            <option value="wellness_shi60|👐 Shiatsu Dry Massage 60min|22|per session">👐 Shiatsu Dry Massage 60min — USD 22</option>
-            <option value="wellness_ref45|🦶 Foot Reflexology 45min|17|per session">🦶 Foot Reflexology 45min — USD 17</option>
-            <option value="wellness_ref60|🦶 Foot Reflexology 60min|20|per session">🦶 Foot Reflexology 60min — USD 20</option>
-            <option value="wellness_thai90|🧘 Thai Yoga Massage 90min|32|per session">🧘 Thai Yoga Massage 90min — USD 32</option>
-            <option value="wellness_thai120|🧘 Thai Yoga Massage 120min|41|per session">🧘 Thai Yoga Massage 120min — USD 41</option>
-            <option value="wellness_hot60|🔥 Hot Stone Massage 60min|23|per session">🔥 Hot Stone Massage 60min — USD 23</option>
-            <option value="wellness_dam|✨ Bodywork with Damien 75min|59|per session">✨ Bodywork with Damien 75min — USD 59</option>
+            <option value="wellness_sig60|💆 Signature Massage 60min|22|per session|350000">💆 Signature Massage 60min — USD 22</option>
+            <option value="wellness_sig90|💆 Signature Massage 90min|30|per session|480000">💆 Signature Massage 90min — USD 30</option>
+            <option value="wellness_sig120|💆 Signature Massage 120min|35|per session|550000">💆 Signature Massage 120min — USD 35</option>
+            <option value="wellness_bal60|🌺 Balinese Massage 60min|22|per session|350000">🌺 Balinese Massage 60min — USD 22</option>
+            <option value="wellness_bal90|🌺 Balinese Massage 90min|30|per session|480000">🌺 Balinese Massage 90min — USD 30</option>
+            <option value="wellness_shi60|👐 Shiatsu Dry Massage 60min|22|per session|350000">👐 Shiatsu Dry Massage 60min — USD 22</option>
+            <option value="wellness_ref45|🦶 Foot Reflexology 45min|17|per session|270000">🦶 Foot Reflexology 45min — USD 17</option>
+            <option value="wellness_ref60|🦶 Foot Reflexology 60min|20|per session|320000">🦶 Foot Reflexology 60min — USD 20</option>
+            <option value="wellness_thai90|🧘 Thai Yoga Massage 90min|32|per session|500000">🧘 Thai Yoga Massage 90min — USD 32</option>
+            <option value="wellness_thai120|🧘 Thai Yoga Massage 120min|41|per session|650000">🧘 Thai Yoga Massage 120min — USD 41</option>
+            <option value="wellness_hot60|🔥 Hot Stone Massage 60min|23|per session|370000">🔥 Hot Stone Massage 60min — USD 23</option>
+            <option value="wellness_dam|✨ Bodywork with Damien 75min|59|per session|950000">✨ Bodywork with Damien 75min — USD 59</option>
           </optgroup>
           <optgroup label="Ceremonies">
-            <option value="ritual|🕯 Ritual|29|per person">🕯 Ritual — USD 29</option>
-            <option value="mandala|🪷 Mandala|20|flat fee">🪷 Mandala — USD 20</option>
+            <option value="ritual|🕯 Ritual|29|per person|460000">🕯 Ritual — USD 29</option>
+            <option value="mandala|🪷 Mandala|20|flat fee|320000">🪷 Mandala — USD 20</option>
           </optgroup>
-          <optgroup label="Custom"><option value="custom|🛎 Custom Service|0|per unit">🛎 Custom Service…</option></optgroup>
+          <optgroup label="Custom"><option value="custom|🛎 Custom Service|0|per unit|0">🛎 Custom Service…</option></optgroup>
         </select>
       </div>
       <div id="extras-list" style="display:flex;flex-direction:column;gap:8px;"></div>
