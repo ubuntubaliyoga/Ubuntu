@@ -50,5 +50,8 @@ export async function recalculatePeExtra(id: number, pax: number): Promise<void>
 }
 
 function getIdrRate(): number {
-  return parseFloat((document.getElementById('f-idrrate') as HTMLInputElement | null)?.value ?? '') || 17085
+  const v = parseFloat((document.getElementById('f-idrrate') as HTMLInputElement | null)?.value ?? '')
+  // Guard against implausible manual entries (e.g. "15" instead of "15085") —
+  // USD/IDR has not been below 1000 in decades, so anything under that is a typo.
+  return v >= 1000 ? v : (window._liveIdrRate || 17085)
 }

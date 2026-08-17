@@ -216,7 +216,7 @@ function buildContractHTML(){
   const depositPct=Math.min(100,Math.max(0,parseFloat($('f-deposit').value)||0));
   const p2Pct=Math.min(100,Math.max(0,parseFloat($('f-p2pct').value)||0));
   const p3Pct=Math.min(100,Math.max(0,parseFloat($('f-p3pct').value)||0));
-  const idrRate=parseFloat($('f-idrrate').value)||17085, bookingType=$('f-bookingtype').value;
+  const idrRate=getIdrRate(), bookingType=$('f-bookingtype').value;
   const P=pricing(), nights=P.nights, days=nights+1;
   const extTotal=extraServicesTotal(), hasExtrasC=extraServices.length>0;
   const grandExC=P.totalEx+extTotal, grandInC=P.totalIn+extTotal*TAX;
@@ -310,7 +310,10 @@ let extraServices = [];
 Object.defineProperty(window, 'extraServices', { get() { return extraServices }, set(v) { extraServices = v } });
 
 function getIdrRate() {
-  return parseFloat(document.getElementById('f-idrrate')?.value) || 17085;
+  const v = parseFloat(document.getElementById('f-idrrate')?.value);
+  // Guard against implausible manual entries (e.g. "15" instead of "15085") —
+  // USD/IDR has not been below 1000 in decades, so anything under that is a typo.
+  return v >= 1000 ? v : (window._liveIdrRate || 17085);
 }
 
 function getTotalPax() {

@@ -57,5 +57,6 @@ declare global {
     extraServices?: PeExtraService[]
     renderExtraServices?(): void
     markDraftActive?(): void
+    _liveIdrRate?: number
   }
 }
