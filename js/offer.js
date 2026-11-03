@@ -43,7 +43,7 @@ function payments(total,checkin,depositPct,p2Pct,p3Pct){
 }
 
 function getFormState(){
-  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig-usd','f-parvati-orig-idr','f-parvati-disc','f-buddha-orig-usd','f-buddha-orig-idr','f-buddha-disc','f-roomrate-usd','f-roomrate-idr','f-pkgrate-usd','f-pkgrate-idr','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-p2pct','f-p3pct','f-currency','f-note','f-included','f-also','f-signoff','f-signoff2'];
+  const ids=['f-name','f-company','f-address','f-phone','f-website','f-title','f-preparedby','f-intro','f-body','f-checkin','f-checkout','f-contractdate','f-validuntil','f-retreatname','f-guests','f-facilitators','f-nights','f-rooms','f-bookingtype','f-parvati-orig-usd','f-parvati-orig-idr','f-parvati-disc','f-buddha-orig-usd','f-buddha-orig-idr','f-buddha-disc','f-roomrate-usd','f-roomrate-idr','f-pkgrate-usd','f-pkgrate-idr','f-pkgcount','f-discount','f-disc-room','f-disc-pct','f-offervalid','f-deposit','f-p2pct','f-p3pct','f-currency','f-note','f-included','f-also','f-signoff','f-signoff2'];
   const s={};
   ids.forEach(id=>{const el=$(id);if(el)s[id]=el.value;});
   s['f-parvati-on']=$('f-parvati-on').checked;
@@ -55,6 +55,7 @@ function getFormState(){
 }
 
 function setFormState(s){
+  if(s['f-preparedby']===undefined&&$('f-preparedby'))$('f-preparedby').value=PREPARED_BY_DEFAULT;
   Object.entries(s).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=val;else el.value=val;});
   const r=document.querySelector(`input[name="price-display"][value="${s['price-display']||'both'}"]`);
   if(r)r.checked=true;
@@ -74,6 +75,7 @@ function buildOfferHTML(){
   const monthStr=new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const offerValidStr=fmtD(offerValid), hasEB=P.discPct>0;
   const depositAmt=depositPct>0?(P.totalIn+extraServicesTotal(cur)*TAX)*(depositPct/100):0;
+  const preparedByHtml=(($('f-preparedby')?.value.trim())||PREPARED_BY_DEFAULT).split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l.trim()}</p>`).join('');
   const introPara=intro.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
   const noteRes=noteText.replace(/\{guests\}/g,totalPeople);
   const notePara=noteRes.split(/\n+/).filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
@@ -142,7 +144,7 @@ function buildOfferHTML(){
     <div class="c-hd-title">Retreat Hosting Offer</div>
     <div class="c-hd-sub">Ubuntu Bali &nbsp;·&nbsp; ${monthStr}</div>
   </div>
-  ${name||company?`<div class="c-parties" style="margin-bottom:20px;"><div class="c-party"><div class="c-party-title">Prepared for</div>${company?`<p>${company}</p>`:''}${name?`<p>Attn: ${name}</p>`:''}${address?`<p>${address}</p>`:''}${fmtD(checkin)&&fmtD(checkout)?`<p>Dates: ${fmtD(checkin)} — ${fmtD(checkout)}</p>`:''}</div><div class="c-party"><div class="c-party-title">Prepared by</div><p>Company: PT Purusa Yoga Bali (Ubuntu Bali)</p><p>Director: Witri Utari</p><p>Contact: Andréa Drottholm</p><p>Phone: +62 812 3862 0082</p><p>Email: namaste@ubuntubali.com</p></div></div>`:''}
+  ${name||company?`<div class="c-parties" style="margin-bottom:20px;"><div class="c-party"><div class="c-party-title">Prepared for</div>${company?`<p>${company}</p>`:''}${name?`<p>Attn: ${name}</p>`:''}${address?`<p>${address}</p>`:''}${fmtD(checkin)&&fmtD(checkout)?`<p>Dates: ${fmtD(checkin)} — ${fmtD(checkout)}</p>`:''}</div><div class="c-party"><div class="c-party-title">Prepared by</div>${preparedByHtml}</div></div>`:''}
   <div class="c-sec">
     ${introPara||`<p>Please find below our retreat hosting offer for <strong>${retreatName}</strong>.</p>`}
     <p>${vBody}${hasEB?` We have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}</p>

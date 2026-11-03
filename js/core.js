@@ -10,7 +10,8 @@ let activeTab='deal', activeDealTab='drafts';
 let currentPageId=null, autosaveOn=false, autosaveInterval=null, draftActive=false, intentionalDraft=false;
 window._templateMode=false;
 window._contractTemplateMode=false;
-const TEMPLATE_FIELDS=['f-intro','f-body','f-included','f-also','f-signoff','f-signoff2','f-note','f-roomrate-usd','f-roomrate-idr','f-pkgrate-usd','f-pkgrate-idr','f-deposit'];
+const PREPARED_BY_DEFAULT='Company: PT Purusa Yoga Bali (Ubuntu Bali)\nDirector: Witri Utari\nContact: Andréa Drottholm\nPhone: +62 812 3862 0082\nEmail: namaste@ubuntubali.com';
+const TEMPLATE_FIELDS=['f-preparedby','f-intro','f-body','f-included','f-also','f-signoff','f-signoff2','f-note','f-roomrate-usd','f-roomrate-idr','f-pkgrate-usd','f-pkgrate-idr','f-deposit'];
 // crmData, crmTab, crmLoaded declared in crm.js — do NOT redeclare here
 
 window._errorLog=[];
@@ -278,6 +279,7 @@ function newDraft(){
   const _fal=$('f-also');if(_fal)_fal.value='Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.';
   const _fso=$('f-signoff');if(_fso)_fso.value='Andréa and Tari';
   const _fso2=$('f-signoff2');if(_fso2)_fso2.value='Tari, as representative of Andréa Drottholm';
+  const _fpb=$('f-preparedby');if(_fpb)_fpb.value=PREPARED_BY_DEFAULT;
   draftActive=false;intentionalDraft=true;
   autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
   const s=$('autosave-status');if(s)s.textContent='';
@@ -297,7 +299,7 @@ function openTemplateEdit(){
   ['f-name','f-company','f-address','f-phone','f-website','f-title','f-checkin','f-checkout','f-retreatname'].forEach(id=>{const el=$(id);if(el)el.value='';});
   $('f-contractdate').value=todayStr();$('f-validuntil').value=addDays(todayStr(),7);$('f-offervalid').value='';$('notion-status').value='Draft';
   const tmpl=JSON.parse(localStorage.getItem('masterTemplate')||'null');
-  const defs={'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-signoff2':'Tari, as representative of Andréa Drottholm','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate-usd':'60','f-roomrate-idr':'1000000','f-pkgrate-usd':'30.25','f-pkgrate-idr':'500000','f-deposit':''};
+  const defs={'f-preparedby':PREPARED_BY_DEFAULT,'f-intro':'It was a delight to chat with you and show you around Ubuntu. I hope our meeting let you breathe a little Bali air. Below you will find the offer you requested.','f-body':'Kindly open the attached brochure for pictures of the full property.','f-included':'2 plant based meals per day\nTea & afternoon snack\nShala of your choice + cleaning\nFull staff support\nDedicated contact person','f-also':'Ayurvedic or Balinese menus available on request.\nDay trips and activities around Bali can be arranged.\nMassages, rituals, and photography available.\nAirport pick-up available on request.','f-signoff':'Andréa and Tari','f-signoff2':'Tari, as representative of Andréa Drottholm','f-note':'The package price is fixed for up to {guests} guests. Should your group exceed {guests} people, the room rate remains the same — only meals would be added for each additional guest.','f-roomrate-usd':'60','f-roomrate-idr':'1000000','f-pkgrate-usd':'30.25','f-pkgrate-idr':'500000','f-deposit':''};
   TEMPLATE_FIELDS.forEach(id=>{const el=$(id);if(el)el.value=tmpl?.[id]??defs[id]??'';});
   draftActive=false;intentionalDraft=false;autosaveOn=false;clearInterval(autosaveInterval);autosaveInterval=null;
   const sv=$('autosave-status');if(sv)sv.textContent='';
