@@ -316,8 +316,11 @@ function getTotalPax() {
 function syncPeExtrasPax() {
   const pax = getTotalPax();
   extraServices.forEach(s => {
-    if (s.pricingEngine && window.recalculatePeExtra) window.recalculatePeExtra(s.id, pax);
+    if (!s.pricingEngine) return;
+    if (s.spppManual) s.pax = pax;
+    else if (window.recalculatePeExtra) window.recalculatePeExtra(s.id, pax);
   });
+  if (extraServices.some(s => s.pricingEngine && s.spppManual)) renderExtraServices();
 }
 
 function addExtraService(val) {
@@ -364,10 +367,29 @@ function updateExtraQty(id, qty) {
 function updateExtraPrice(id, cur, val) {
   const s = extraServices.find(s => s.id === id);
   if (!s) return;
-  if (cur === 'idr') s.unitIdr = parseFloat(val) || 0;
-  else s.unitUsd = parseFloat(val) || 0;
+  const n = parseFloat(String(val).replace(/[^\d.]/g, '')) || 0;
+  if (s.pricingEngine) { s.spppIdr = n; s.spppManual = true; }
+  else if (cur === 'idr') s.unitIdr = n;
+  else s.unitUsd = n;
   renderExtraServices();
   markDraftActive();
+}
+
+// Pax change on an Experiences item: re-cost from the pricing engine unless the
+// per-pax price was overridden by hand, in which case keep that price.
+function updateExtraPax(id, val) {
+  const s = extraServices.find(s => s.id === id);
+  if (!s) return;
+  const pax = Math.max(1, parseInt(val) || 1);
+  if (s.spppManual || !window.recalculatePeExtra) { s.pax = pax; renderExtraServices(); markDraftActive(); }
+  else window.recalculatePeExtra(id, pax);
+}
+
+function extraUnitSuffix(s) {
+  if (s.pricingEngine || s.unit === 'per person') return '/pax';
+  if (s.unit === 'flat fee') return '';
+  const u = String(s.unit || '').replace(/^per\s+/, '');
+  return u ? '/' + u : '';
 }
 
 function renderExtraServices() {
@@ -381,13 +403,19 @@ function renderExtraServices() {
   }
   const cur = displayCurrency();
   list.innerHTML = extraServices.map(s => {
-    if (s.pricingEngine) {
-      // Costed from an IDR cost library — no exchange rate, so always shown natively in IDR.
-      const totalIdr = (s.spppIdr || 0) * (s.pax || 1);
-      const priceLabel = s.spppIdr ? `IDR ${fmtN(s.spppIdr, 0)}/pax` : '—';
-      return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">Pax</span><input type="number" value="${s.pax}" min="1" style="width:54px;" onchange="window.recalculatePeExtra && window.recalculatePeExtra(${s.id}, parseInt(this.value)||1)" onclick="this.select()"><span style="font-size:11px;color:var(--muted);min-width:100px;">${priceLabel}</span></div><div class="extra-tag-price">${totalIdr ? `IDR ${fmtN(totalIdr, 0)}` : '—'}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
-    }
-    return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty"><span style="font-size:11px;color:var(--muted);">${s.unit === 'flat fee' ? '' : 'Qty'}</span>${s.unit === 'flat fee' ? '' : `<input type="number" value="${s.qty}" min="1" onchange="updateExtraQty(${s.id}, this.value)" onclick="this.select()">`}<input type="number" value="${fmtN(s.unitUsd,0)}" min="0" style="width:64px;" onchange="updateExtraPrice(${s.id}, 'usd', this.value)" onclick="this.select()" title="USD per unit"><input type="number" value="${fmtN(s.unitIdr||0,0)}" min="0" style="width:80px;" onchange="updateExtraPrice(${s.id}, 'idr', this.value)" onclick="this.select()" title="IDR per unit"></div><div class="extra-tag-price">${cFmt(extraItemAmount(s,cur), 0)}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
+    // Experiences items are costed from an IDR library — always edited/shown in IDR.
+    const pCur = s.pricingEngine ? 'idr' : cur;
+    const unitPrice = s.pricingEngine ? (s.spppIdr || 0) : (pCur === 'idr' ? (s.unitIdr || 0) : (s.unitUsd || 0));
+    const isFlat = !s.pricingEngine && s.unit === 'flat fee';
+    const qtyLabel = s.pricingEngine || s.unit === 'per person' ? 'Pax' : 'Qty';
+    const qtyVal = s.pricingEngine ? (s.pax || 1) : (s.qty || 1);
+    const qtyHandler = s.pricingEngine ? `updateExtraPax(${s.id}, this.value)` : `updateExtraQty(${s.id}, this.value)`;
+    const qtyHtml = isFlat
+      ? `<span class="extra-tag-qtylbl">Flat</span><span class="extra-tag-qtyspacer"></span>`
+      : `<span class="extra-tag-qtylbl">${qtyLabel}</span><input type="number" value="${qtyVal}" min="1" onchange="${qtyHandler}" onclick="this.select()">`;
+    const total = s.pricingEngine ? (s.spppIdr || 0) * (s.pax || 1) : extraItemAmount(s, cur);
+    const code = pCur.toUpperCase();
+    return `<div class="extra-tag"><div class="extra-tag-label">${s.label}</div><div class="extra-tag-qty">${qtyHtml}<span class="extra-tag-x">${isFlat ? '' : '×'}</span><label class="extra-tag-unit"><span>${code}</span><input type="text" inputmode="decimal" value="${Number(unitPrice).toLocaleString('en-US', { maximumFractionDigits: 2 })}" onchange="updateExtraPrice(${s.id}, '${pCur}', this.value)" onclick="this.select()" title="${code} price${extraUnitSuffix(s) ? ' per ' + extraUnitSuffix(s).slice(1) : ''}"><span>${extraUnitSuffix(s)}</span></label></div><div class="extra-tag-price">${total ? `${code} ${fmtN(total, 0)}` : '—'}</div><button class="extra-tag-del" onclick="removeExtraService(${s.id})">✕</button></div>`;
   }).join('');
   if (totalEl) {
     totalEl.style.display = 'block';
