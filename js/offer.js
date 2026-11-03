@@ -22,7 +22,7 @@ function pricing(cur){
   const parvDiscPct=parseFloat($('f-parvati-disc')?.value)||0; const parvDisc=parvDiscPct>0?parvOrig*(1-parvDiscPct/100):parvOrig;
   const buddOn=$('f-buddha-on').checked, buddOrig=parseFloat($(`f-buddha-orig-${cur}`)?.value)||rateDefaults.villa;
   const buddDiscPct=parseFloat($('f-buddha-disc')?.value)||0; const buddDisc=buddDiscPct>0?buddOrig*(1-buddDiscPct/100):buddOrig;
-  const discRooms=parseInt($('f-disc-room').value)||0, discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
+  const discRooms=Math.min(bales,parseInt($('f-disc-room').value)||0), discRoomPct=Math.min(50,Math.max(0,parseFloat($('f-disc-pct').value)||0));
   const villaTotal=(parvOn?parvDisc:0)+(buddOn?buddDisc:0);
   const accomSub=bales*roomRate+villaTotal, pkgSub=pkgCount*pkgRate, stdSub=accomSub+pkgSub;
   const earlyAmt=discPct>0?stdSub*(discPct/100):0;
@@ -97,20 +97,28 @@ function buildOfferHTML(){
   const pDiscRow=(label,amt)=>`<tr class="pt-discount"><td class="col-item"><strong>${label}</strong></td><td class="col-rate"></td><td class="col-sub" style="color:#C5A27D;font-weight:600;">${amt}</td></tr>`;
 
   // Accommodation rows (SUBTOTAL col = full-stay amount)
-  const baleRow=P.bales<=0?'':P.bales<=5
-    ?pRow3(`${P.bales} Gladak${P.bales>1?'s':''}`,null,P.roomRate,null,cFmt(P.bales*P.roomRate*P.nights,2))
-    :pRow3('5 Gladaks',null,P.roomRate,null,cFmt(5*P.roomRate*P.nights,2))
-     +pRow3(`${P.bales-5} Partner Hotel Room${P.bales-5>1?'s':''}`,null,P.roomRate,null,cFmt((P.bales-5)*P.roomRate*P.nights,2));
+  // Room Special Rate is shown inline on the Gladak rows (strikethrough like the villas),
+  // applied to the first N rooms: Gladaks first, then Partner Hotel Rooms.
+  const roomDiscRate=P.roomRate*(1-P.discRoomPct/100);
+  let discLeft=P.discRoomPct>0?P.discRooms:0;
+  const roomGroupRows=(count,name)=>{
+    if(count<=0)return '';
+    const d=Math.min(discLeft,count); discLeft-=d;
+    const lbl=n=>`${n} ${name}${n>1?'s':''}`;
+    const discR=d>0?pRow3(lbl(d),P.roomRate,roomDiscRate,P.discRoomPct+'%',cFmt(d*roomDiscRate*P.nights,2)):'';
+    const fullR=count-d>0?pRow3(lbl(count-d),null,P.roomRate,null,cFmt((count-d)*P.roomRate*P.nights,2)):'';
+    return discR+fullR;
+  };
+  const baleRow=roomGroupRows(Math.min(P.bales,5),'Gladak')+roomGroupRows(P.bales-5,'Partner Hotel Room');
   const parvRow=P.parvOn?pRow3('Parvati Villa',P.parvDiscPct>0?P.parvOrig:null,P.parvDisc,P.parvDiscPct>0?P.parvDiscPct+'%':null,cFmt(P.parvDisc*P.nights,2)):'';
   const buddRow=P.buddOn?pRow3('Buddha Villa',P.buddDiscPct>0?P.buddOrig:null,P.buddDisc,P.buddDiscPct>0?P.buddDiscPct+'%':null,cFmt(P.buddDisc*P.nights,2)):'';
   const pkgRow=P.pkgCount>0?pRow3(`Additional cost per person (Meals, Shala, Staff) — ${P.pkgCount} people`,null,P.pkgRate,null,cFmt(P.pkgSub*P.nights,2)):'';
 
   // Subtotal row: RATE/NIGHT = per-night total; SUBTOTAL = full-stay total before discounts
-  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL <span style="font-size:8.5px;font-weight:400;color:#9E948A;">(${nights} nights)</span></td><td class="col-rate" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub,2)}</td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub*P.nights,2)}</td></tr>`;
+  const subtotalRow=`<tr class="pt-subtotal"><td class="col-item">SUBTOTAL <span style="font-size:8.5px;font-weight:400;color:#9E948A;">(${nights} nights)</span></td><td class="col-rate" style="color:#3D3935;font-weight:600;">${cFmt(P.stdSub-P.roomDiscAmt,2)}</td><td class="col-sub" style="color:#3D3935;font-weight:600;">${cFmt((P.stdSub-P.roomDiscAmt)*P.nights,2)}</td></tr>`;
 
   // Discount rows (full-stay amounts to match SUBTOTAL column)
   const ebRow=hasEB?pDiscRow(`${P.discPct}% Early Bird Discount`,`– ${cFmt(P.earlyAmt*P.nights,2)}`):'';
-  const rdRow=P.discRooms>0&&P.discRoomPct>0?pDiscRow(`${P.discRooms} Room${P.discRooms>1?'s':''} — ${P.discRoomPct}% Special Rate`,`– ${cFmt(P.roomDiscAmt*P.nights,2)}`):'';
 
   // Extra service rows
   const pRowExt=(label,total)=>`<tr class="pt-item"><td class="col-item">${label}</td><td class="col-rate"></td><td class="col-sub">${total}</td></tr>`;
@@ -147,7 +155,7 @@ function buildOfferHTML(){
     <div class="e-package" style="margin:12px 0 0;">
       <table class="ptable">
         <thead><tr class="pt-colhead"><td class="col-item">ITEM</td><td class="col-rate">RATE / NIGHT</td><td class="col-sub">SUBTOTAL</td></tr></thead>
-        <tbody>${baleRow}${parvRow}${buddRow}${pkgRow}${subtotalRow}${ebRow}${rdRow}</tbody>
+        <tbody>${baleRow}${parvRow}${buddRow}${pkgRow}${subtotalRow}${ebRow}</tbody>
       </table>
       ${hasExtras?`<table class="ptable" style="margin-top:10px;">
         <thead><tr class="pt-colhead"><td class="col-item">ENHANCEMENTS</td><td class="col-rate"></td><td class="col-sub">TOTAL</td></tr></thead>
