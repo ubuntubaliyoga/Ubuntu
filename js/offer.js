@@ -140,7 +140,7 @@ function buildOfferHTML(){
 
   return `<div class="contract-doc">
   <div class="c-hd">
-    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" style="height:44px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
+    <img src="https://images.squarespace-cdn.com/content/v1/601cf6a4fabc2a27672c7e92/1612600900318-S8C53NTKP4MK405H0BTU/Ubuntu+logo+9-12-20-09.png?format=400w" class="c-logo" style="height:64px;display:block;margin:0 auto 14px;filter:brightness(0) sepia(1) saturate(3) hue-rotate(5deg) brightness(.35);">
     <div class="c-hd-title">Retreat Hosting Offer</div>
     <div class="c-hd-sub">Ubuntu Bali &nbsp;·&nbsp; ${monthStr}</div>
   </div>
@@ -149,7 +149,7 @@ function buildOfferHTML(){
     ${introPara||`<p>Please find below our retreat hosting offer for <strong>${retreatName}</strong>.</p>`}
     <p>${vBody}${hasEB?` We have applied a <strong>${P.discPct}% early booking discount</strong> — valid if you confirm your booking by ${offerValidStr}.`:''} ${bodyText}</p>
   </div>
-  <div class="c-sec">
+  <div class="c-sec c-sec-pricing">
     <div class="c-sec-hd">Package &amp; Pricing</div>
     <p><strong>${retreatName}</strong> &nbsp;·&nbsp; ${nights} Nights, ${days} Days &nbsp;·&nbsp; ${totalPeople} Guests</p>
     ${fmtDS(checkin)&&fmtDS(checkout)?`<p>Check-in: ${fmtDS(checkin)} &nbsp;·&nbsp; Check-out: ${fmtDS(checkout)}</p>`:''}
